@@ -1,0 +1,89 @@
+{
+    "window": {
+        "width": 1200,
+        "height": 800,
+        "maximized": false,
+        "x": 680,
+        "y": 278
+    },
+    "overlay": {
+        "enabled": true,
+        "x": null,
+        "y": null,
+        "show_progress": true,
+        "show_time": true
+    },
+    "music": {
+        "volume": 0.5,
+        "shuffle": false,
+        "repeat": false,
+        "show_notifications": true,
+        "music_folder": null,
+        "lastfm_enabled": false,
+        "lastfm_username": null,
+        "lastfm_password_hash": null,
+        "graph_color": "#0078d4"
+    },
+    "discord": {
+        "enabled": true,
+        "show_game_name": true,
+        "show_time_elapsed": true,
+        "show_library_size": true
+    },
+    "notifications": {
+        "enabled": true,
+        "show_on_game_launch": true,
+        "show_on_achievement": true,
+        "show_on_music_change": false
+    },
+    "appearance": {
+        "theme": "dark",
+        "accent_color": "#0078d4",
+        "font_size": 9,
+        "show_thumbnails": true,
+        "thumbnail_size": "medium"
+    },
+    "gamepad": {
+        "enabled": true,
+        "vibration": true,
+        "deadzone": 0.2,
+        "button_mapping": {}
+    },
+    "chat": {
+        "enabled": false,
+        "server_host": "0.0.0.0",
+        "server_port": 5000,
+        "username": null,
+        "servers_list": []
+    },
+    "stats": {
+        "track_playtime": true,
+        "track_launches": true,
+        "show_in_discord": true
+    },
+    "auto": {
+        "save_enabled": true,
+        "save_interval": 300,
+        "backup_enabled": true,
+        "check_updates": true
+    },
+    "advanced": {
+        "debug_mode": false,
+        "log_level": "INFO",
+        "cache_enabled": true,
+        "max_cache_size": 500,
+        "use_hardware_acceleration": true
+    },
+    "system": {
+        "minimize_to_tray": true,
+        "start_with_windows": false,
+        "close_to_tray": true,
+        "language": "pl"
+    },
+    "recent": {
+        "last_game_id": null,
+        "last_profile_id": null,
+        "last_tab": "games",
+        "recent_searches": []
+    }
+}
