@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from .shared_imports import *
+
+
 class ToolTip:
     """Prosta klasa do tworzenia podpowiedzi (tooltip) dla widgetów Tkinter."""
     def __init__(self, widget, text):

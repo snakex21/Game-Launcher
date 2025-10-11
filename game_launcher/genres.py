@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from .shared_imports import *
+
+
 class ManageGenresWindow:
     def __init__(self, parent_root, launcher_instance):
         self.top = tk.Toplevel(parent_root)

@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from .shared_imports import *
+
+
 class MusicPlayerPage:
     def __init__(self, parent_frame, launcher_instance):
             self.parent_frame = parent_frame

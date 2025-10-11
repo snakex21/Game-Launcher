@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from .shared_imports import *
+
+
 class TrackOverlayWindow(tk.Toplevel):
     def __init__(self, parent, initial_x=None, initial_y=None, launcher_instance=None): # Dodajemy launcher_instance
         super().__init__(parent)

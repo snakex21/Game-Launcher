@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from .shared_imports import *
+
+
 def get_contrast_color(hex_color):
     """Zwraca 'black' lub 'white' w zależności od jasności koloru HEX."""
     try:

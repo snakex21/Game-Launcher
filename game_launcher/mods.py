@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from .shared_imports import *
+
+
 class ExtendedModManager:
     def __init__(self, parent_launcher, root):
         self.launcher = parent_launcher

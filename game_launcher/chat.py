@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from .shared_imports import *
+
+
 class ChatServerEditorDialog(tk.Toplevel):
     def __init__(self, parent, launcher_instance, existing_server_data=None):
         super().__init__(parent)

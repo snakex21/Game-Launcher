@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from .shared_imports import *
+
+
 class DummyTranslator:
     """Prosta klasa zastępująca Translator, zwracająca polski tekst (jeśli zdefiniowany)."""
     def __init__(self):

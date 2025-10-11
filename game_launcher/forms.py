@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from .shared_imports import *
+
+
 class GameForm:
     def __init__(self, parent, title, game_name="", game_data=None):
         self.parent = parent

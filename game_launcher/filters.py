@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from .shared_imports import *
+
+
 class AdvancedFilterManager(tk.Toplevel):
     """Okno do zarządzania zapisanymi filtrami zaawansowanymi."""
     def __init__(self, parent, launcher_instance):
