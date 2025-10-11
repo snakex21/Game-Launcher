@@ -1,0 +1,39 @@
+# Game Launcher - Wymagane biblioteki
+# Instalacja: pip install -r requirements.txt
+
+# GUI i interfejs
+Pillow>=10.0.0
+tkcalendar>=1.6.1
+tkhtmlview>=0.2.0
+
+# Multimedia
+pygame>=2.5.0
+mutagen>=1.47.0
+
+# System
+psutil>=5.9.0
+plyer>=2.1.0
+pystray>=0.19.0
+
+# Sieć
+requests>=2.31.0
+Flask>=3.0.0
+python-socketio>=5.10.0
+Flask-SocketIO>=5.3.0
+
+# Wykresy i dane
+matplotlib>=3.7.0
+feedparser>=6.0.10
+
+# Integracje
+pylast>=5.2.0
+pypresence>=4.3.0
+PyGithub>=2.1.0
+
+# Input
+pynput>=1.7.6
+inputs>=0.5
+
+# Narzędzia
+packaging>=23.0
+pywin32>=306
