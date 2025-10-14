@@ -3,12 +3,19 @@ Library View - Widok biblioteki gier z kafelkami
 AI-Friendly: Grid layout z okładkami gier
 """
 
+import os
+import subprocess
+import sys
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-from PIL import Image, ImageTk
 from pathlib import Path
-from utils.logger import get_logger
+from tkinter import filedialog, messagebox, ttk
+
+from PIL import Image, ImageTk
+
+from features import ScreenshotManager
+from integrations import GitHubBackup, LastFMIntegration, RAWGApi
 from utils.helpers import format_time
+from utils.logger import get_logger
 
 
 class LibraryView(tk.Frame):
@@ -38,6 +45,17 @@ class LibraryView(tk.Frame):
         # Dane
         self.games = []
         self.filtered_games = []
+
+        # Funkcje dodatkowe / integracje
+        screenshots_path = self.config.get(
+            'paths',
+            'screenshots',
+            default='data/screenshots',
+        )
+        self.screenshot_manager = ScreenshotManager(screenshots_path)
+        self.github_backup = None
+        self.lastfm_client = None
+        self.rawg_client = None
         
         # Konfiguracja stylu
         self._load_theme()
@@ -191,7 +209,7 @@ class LibraryView(tk.Frame):
         """
         footer = tk.Frame(self, bg=self.colors['bg'])
         footer.grid(row=2, column=0, sticky='ew', pady=(10, 0))
-        
+
         # Przycisk dodawania gry
         add_btn = tk.Button(
             footer,
@@ -206,7 +224,35 @@ class LibraryView(tk.Frame):
             command=self._add_game_dialog
         )
         add_btn.pack(side='left', padx=10)
-        
+
+        # Panel opcji dodatkowych
+        options_frame = tk.Frame(footer, bg=self.colors['bg'])
+        options_frame.pack(side='left', padx=5)
+
+        option_style = {
+            'font': ('Arial', 10),
+            'bg': self.colors['card_bg'],
+            'fg': self.colors['text'],
+            'activebackground': self.colors['hover'],
+            'activeforeground': self.colors['text'],
+            'cursor': 'hand2',
+            'relief': 'flat',
+            'padx': 12,
+            'pady': 6,
+        }
+
+        buttons = [
+            ("📸 Zrzut", self._capture_screenshot),
+            ("🖼️ Galeria", self._show_screenshots_browser),
+            ("☁️ GitHub", self._open_backup_dialog),
+            ("🎵 Last.fm", self._open_lastfm_dialog),
+            ("ℹ️ RAWG", self._open_rawg_dialog),
+        ]
+
+        for text, command in buttons:
+            btn = tk.Button(options_frame, text=text, command=command, **option_style)
+            btn.pack(side='left', padx=4)
+
         # Info o liczbie gier
         self.games_count_label = tk.Label(
             footer,
@@ -501,4 +547,438 @@ class LibraryView(tk.Frame):
     
     def _on_mousewheel(self, event):
         """Scroll with mouse wheel."""
-        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), 'units')
+        if getattr(self, 'canvas', None) and self.canvas.winfo_exists():
+            delta = int(-1 * (event.delta / 120))
+            if delta != 0:
+                self.canvas.yview_scroll(delta, 'units')
+
+    # ------------------------------------------------------------------
+    def destroy(self):
+        """Ensure global bindings są sprzątane przy niszczeniu widoku."""
+        if getattr(self, 'canvas', None):
+            self.canvas.unbind_all('<MouseWheel>')
+        super().destroy()
+
+    # ------------------------------------------------------------------
+    def _capture_screenshot(self):
+        """Wykonuje szybki zrzut ekranu korzystając z ScreenshotManagera."""
+        path = self.screenshot_manager.capture_screenshot()
+
+        if path:
+            messagebox.showinfo("Zapisano zrzut", f"Plik zapisano w:\n{path}")
+        else:
+            messagebox.showerror(
+                "Błąd zrzutu",
+                "Nie udało się wykonać zrzutu ekranu. Upewnij się, że środowisko"
+                " graficzne jest dostępne.",
+            )
+
+    # ------------------------------------------------------------------
+    def _show_screenshots_browser(self):
+        """Pokazuje proste okno z listą zapisanych zrzutów ekranu."""
+        screenshots = self.screenshot_manager.list_screenshots()
+
+        if not screenshots:
+            messagebox.showinfo(
+                "Brak zrzutów",
+                "Katalog zrzutów ekranu jest pusty.",
+            )
+            return
+
+        browser = tk.Toplevel(self)
+        browser.title("Zapisane zrzuty ekranu")
+        browser.configure(bg=self.colors['bg'])
+        browser.geometry("400x320")
+
+        listbox = tk.Listbox(browser, activestyle='none')
+        listbox.pack(fill='both', expand=True, padx=10, pady=10)
+
+        for item in screenshots:
+            listbox.insert('end', item.name)
+
+        def open_selected():
+            selection = listbox.curselection()
+            if not selection:
+                return
+            path = screenshots[selection[0]]
+            try:
+                if sys.platform.startswith('win'):
+                    os.startfile(path)  # type: ignore[attr-defined]
+                elif sys.platform == 'darwin':
+                    subprocess.run(['open', str(path)], check=False)
+                else:
+                    subprocess.run(['xdg-open', str(path)], check=False)
+            except Exception as exc:
+                messagebox.showerror("Błąd", f"Nie można otworzyć pliku:\n{exc}")
+
+        def delete_selected():
+            selection = listbox.curselection()
+            if not selection:
+                return
+
+            index = selection[0]
+            path = screenshots[index]
+
+            if messagebox.askyesno(
+                "Usuń zrzut",
+                f"Czy na pewno usunąć plik {path.name}?",
+            ):
+                if self.screenshot_manager.delete_screenshot(path):
+                    listbox.delete(index)
+                    screenshots.pop(index)
+                else:
+                    messagebox.showerror(
+                        "Błąd",
+                        "Nie udało się usunąć wskazanego zrzutu.",
+                    )
+
+        buttons_frame = tk.Frame(browser, bg=self.colors['bg'])
+        buttons_frame.pack(fill='x', padx=10, pady=(0, 10))
+
+        tk.Button(
+            buttons_frame,
+            text="Otwórz",
+            command=open_selected,
+            bg=self.colors['accent'],
+            fg='white',
+            relief='flat',
+            cursor='hand2',
+            padx=14,
+            pady=6,
+        ).pack(side='left', padx=5)
+
+        tk.Button(
+            buttons_frame,
+            text="Usuń",
+            command=delete_selected,
+            bg='#c0392b',
+            fg='white',
+            relief='flat',
+            cursor='hand2',
+            padx=14,
+            pady=6,
+        ).pack(side='right', padx=5)
+
+    # ------------------------------------------------------------------
+    def _open_backup_dialog(self):
+        """Wyświetla panel obsługi kopii zapasowej GitHub."""
+        config = self.config.get('integrations', 'github', default={}) or {}
+
+        if not config.get('enabled'):
+            messagebox.showinfo(
+                "GitHub Backup",
+                "Integracja GitHub jest wyłączona. Włącz ją w ustawieniach.",
+            )
+            return
+
+        token = config.get('token')
+        repo = config.get('repo')
+        branch = config.get('branch', 'main')
+
+        if not token or not repo:
+            messagebox.showwarning(
+                "GitHub Backup",
+                "Brakuje tokenu lub nazwy repozytorium w konfiguracji.",
+            )
+            return
+
+        if self.github_backup is None:
+            self.github_backup = GitHubBackup(token, repo, branch=branch)
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Kopia zapasowa - GitHub")
+        dialog.configure(bg=self.colors['bg'])
+        dialog.geometry("420x240")
+
+        status_var = tk.StringVar(value="Nie połączono")
+
+        def connect():
+            if self.github_backup and self.github_backup.connect():
+                status_var.set(f"Połączono z {repo}")
+            else:
+                status_var.set("Błąd połączenia")
+
+        def upload_file():
+            if not self.github_backup:
+                return
+            if not self.github_backup.repo and not self.github_backup.connect():
+                messagebox.showerror("GitHub", "Nie udało się połączyć z repozytorium.")
+                return
+
+            local_path = filedialog.askopenfilename(title="Wybierz plik do wysłania")
+            if not local_path:
+                return
+
+            default_remote = Path(local_path).name
+            remote_path = remote_entry.get().strip() or default_remote
+
+            if self.github_backup.upload_file(local_path, remote_path):
+                messagebox.showinfo(
+                    "GitHub",
+                    f"Plik {remote_path} został wysłany do repozytorium.",
+                )
+            else:
+                messagebox.showerror(
+                    "GitHub",
+                    "Nie udało się przesłać pliku.",
+                )
+
+        def download_file():
+            if not self.github_backup:
+                return
+            if not self.github_backup.repo and not self.github_backup.connect():
+                messagebox.showerror("GitHub", "Nie udało się połączyć z repozytorium.")
+                return
+
+            remote_path = remote_entry.get().strip()
+            if not remote_path:
+                messagebox.showwarning("GitHub", "Podaj ścieżkę pliku w repozytorium.")
+                return
+
+            local_path = filedialog.asksaveasfilename(initialfile=Path(remote_path).name)
+            if not local_path:
+                return
+
+            if self.github_backup.download_file(remote_path, local_path):
+                messagebox.showinfo(
+                    "GitHub",
+                    f"Plik zapisano jako:\n{local_path}",
+                )
+            else:
+                messagebox.showerror("GitHub", "Nie udało się pobrać pliku.")
+
+        tk.Label(
+            dialog,
+            text="Status:",
+            bg=self.colors['bg'],
+            fg=self.colors['text'],
+            anchor='w'
+        ).pack(fill='x', padx=10, pady=(15, 2))
+
+        tk.Label(
+            dialog,
+            textvariable=status_var,
+            bg=self.colors['card_bg'],
+            fg=self.colors['text'],
+            anchor='w',
+            relief='flat',
+            padx=10,
+            pady=6,
+        ).pack(fill='x', padx=10)
+
+        tk.Button(
+            dialog,
+            text="Połącz", 
+            command=connect,
+            bg=self.colors['accent'],
+            fg='white',
+            relief='flat',
+            cursor='hand2',
+            padx=16,
+            pady=8,
+        ).pack(padx=10, pady=10, anchor='w')
+
+        tk.Label(
+            dialog,
+            text="Ścieżka w repozytorium:",
+            bg=self.colors['bg'],
+            fg=self.colors['text'],
+            anchor='w',
+        ).pack(fill='x', padx=10, pady=(10, 2))
+
+        remote_entry = tk.Entry(dialog)
+        remote_entry.pack(fill='x', padx=10)
+
+        actions = tk.Frame(dialog, bg=self.colors['bg'])
+        actions.pack(fill='x', padx=10, pady=15)
+
+        tk.Button(
+            actions,
+            text="Wyślij plik",
+            command=upload_file,
+            bg=self.colors['accent'],
+            fg='white',
+            relief='flat',
+            cursor='hand2',
+            padx=16,
+            pady=8,
+        ).pack(side='left', padx=5)
+
+        tk.Button(
+            actions,
+            text="Pobierz plik",
+            command=download_file,
+            bg=self.colors['card_bg'],
+            fg=self.colors['text'],
+            relief='flat',
+            cursor='hand2',
+            padx=16,
+            pady=8,
+        ).pack(side='left', padx=5)
+
+    # ------------------------------------------------------------------
+    def _open_lastfm_dialog(self):
+        """Wyświetla ostatnio odtwarzane utwory z Last.fm."""
+        config = self.config.get('integrations', 'lastfm', default={}) or {}
+
+        if not config.get('enabled'):
+            messagebox.showinfo(
+                "Last.fm",
+                "Integracja Last.fm jest wyłączona. Aktywuj ją w ustawieniach.",
+            )
+            return
+
+        api_key = config.get('api_key')
+        api_secret = config.get('api_secret')
+
+        if not api_key or not api_secret:
+            messagebox.showwarning(
+                "Last.fm",
+                "Brakuje danych API w konfiguracji.",
+            )
+            return
+
+        if self.lastfm_client is None:
+            self.lastfm_client = LastFMIntegration(
+                api_key,
+                api_secret,
+                username=config.get('username') or None,
+                password_hash=config.get('password_hash') or None,
+            )
+
+        if not getattr(self.lastfm_client, 'network', None):
+            if not self.lastfm_client.connect():
+                messagebox.showerror("Last.fm", "Nie udało się połączyć z API Last.fm.")
+                return
+
+        recent_tracks = self.lastfm_client.get_recent_tracks(limit=10)
+
+        if not recent_tracks:
+            messagebox.showinfo("Last.fm", "Brak historii do wyświetlenia.")
+            return
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Ostatnie utwory - Last.fm")
+        dialog.configure(bg=self.colors['bg'])
+        dialog.geometry("420x320")
+
+        listbox = tk.Listbox(dialog, activestyle='none')
+        listbox.pack(fill='both', expand=True, padx=10, pady=10)
+
+        for played in recent_tracks:
+            track = getattr(played, 'track', None)
+            if track is None:
+                listbox.insert('end', str(played))
+                continue
+
+            artist = getattr(track, 'artist', None)
+            artist_name = getattr(artist, 'name', str(artist)) if artist else 'Nieznany'
+            title = getattr(track, 'title', str(track))
+            played_at = getattr(played, 'playback_date', None)
+            if played_at:
+                listbox.insert('end', f"{artist_name} – {title} ({played_at})")
+            else:
+                listbox.insert('end', f"{artist_name} – {title}")
+
+    # ------------------------------------------------------------------
+    def _open_rawg_dialog(self):
+        """Umożliwia wyszukanie gry w API RAWG."""
+        config = self.config.get('integrations', 'rawg', default={}) or {}
+
+        if self.rawg_client is None:
+            self.rawg_client = RAWGApi(config.get('api_key'))
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Wyszukiwarka RAWG")
+        dialog.configure(bg=self.colors['bg'])
+        dialog.geometry("460x360")
+
+        tk.Label(
+            dialog,
+            text="Nazwa gry:",
+            bg=self.colors['bg'],
+            fg=self.colors['text'],
+            anchor='w',
+        ).pack(fill='x', padx=10, pady=(15, 2))
+
+        search_var = tk.StringVar()
+        search_entry = tk.Entry(dialog, textvariable=search_var)
+        search_entry.pack(fill='x', padx=10)
+
+        results_list: list[dict] = []
+
+        listbox = tk.Listbox(dialog, activestyle='none')
+        listbox.pack(fill='both', expand=True, padx=10, pady=10)
+
+        def perform_search():
+            query = search_var.get().strip()
+            if not query:
+                messagebox.showinfo("RAWG", "Wpisz frazę wyszukiwania.")
+                return
+
+            listbox.delete(0, 'end')
+            listbox.insert('end', 'Wyszukiwanie...')
+            dialog.update_idletasks()
+
+            nonlocal results_list
+            results_list = self.rawg_client.search_games(query, page_size=10)
+
+            listbox.delete(0, 'end')
+            if not results_list:
+                listbox.insert('end', 'Brak wyników dla podanej frazy.')
+                return
+
+            for item in results_list:
+                name = item.get('name', 'Nieznana gra')
+                released = item.get('released') or 'brak daty'
+                rating = item.get('rating')
+                if rating is None:
+                    listbox.insert('end', f"{name} (premiera: {released})")
+                else:
+                    listbox.insert('end', f"{name} • ocena {rating}/5 (premiera: {released})")
+
+        def show_details(event=None):
+            selection = listbox.curselection()
+            if not selection:
+                return
+            index = selection[0]
+            if index >= len(results_list):
+                return
+
+            item = results_list[index]
+            game_id = item.get('id')
+            details = self.rawg_client.get_game_details(game_id) if game_id else None
+
+            if not details:
+                messagebox.showinfo("RAWG", "Nie udało się pobrać szczegółów gry.")
+                return
+
+            description = details.get('description_raw') or 'Brak opisu.'
+            genres = ', '.join(g['name'] for g in details.get('genres', [])) or 'brak danych'
+            platforms = ', '.join(p['platform']['name'] for p in details.get('platforms', [])) or 'brak danych'
+
+            info = (
+                f"Tytuł: {details.get('name', 'Nieznana gra')}\n"
+                f"Premiera: {details.get('released', 'brak danych')}\n"
+                f"Ocena: {details.get('rating', 'brak danych')}\n"
+                f"Gatunki: {genres}\n"
+                f"Platformy: {platforms}\n\n"
+                f"Opis:\n{description[:800]}"
+            )
+
+            messagebox.showinfo("Szczegóły gry", info)
+
+        tk.Button(
+            dialog,
+            text="Szukaj",
+            command=perform_search,
+            bg=self.colors['accent'],
+            fg='white',
+            relief='flat',
+            cursor='hand2',
+            padx=16,
+            pady=8,
+        ).pack(padx=10, pady=(0, 10), anchor='w')
+
+        listbox.bind('<Double-Button-1>', show_details)
+        search_entry.bind('<Return>', lambda _event: perform_search())
