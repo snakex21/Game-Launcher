@@ -1,0 +1,249 @@
+2025-10-14 01:14:01 | INFO     | GameLauncher | === Starting Game Launcher ===
+2025-10-14 01:14:01 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 01:14:01 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 01:14:01 | INFO     | GameLauncher | Database initialized: data/games.db
+2025-10-14 01:14:01 | INFO     | GameLauncher | Database initialized successfully
+2025-10-14 01:14:01 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 01:14:01 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 01:14:01 | INFO     | GameLauncher | Main window initialized
+2025-10-14 01:14:01 | INFO     | GameLauncher | Main window created successfully
+2025-10-14 01:14:05 | INFO     | GameLauncher | Switched to view: home
+2025-10-14 01:14:06 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 01:14:06 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 01:14:07 | INFO     | GameLauncher | Switched to view: roadmap
+2025-10-14 01:14:08 | INFO     | GameLauncher | Switched to view: achievements
+2025-10-14 01:14:09 | INFO     | GameLauncher | Switched to view: news
+2025-10-14 01:14:10 | INFO     | GameLauncher | Switched to view: stats
+2025-10-14 01:14:10 | INFO     | GameLauncher | Switched to view: music
+2025-10-14 01:14:11 | INFO     | GameLauncher | Switched to view: chat
+2025-10-14 01:14:11 | INFO     | GameLauncher | Switched to view: settings
+2025-10-14 01:14:15 | INFO     | GameLauncher | Switched to view: home
+2025-10-14 01:14:20 | INFO     | GameLauncher | Closing application
+2025-10-14 01:14:20 | INFO     | GameLauncher | Database connection closed
+2025-10-14 01:14:20 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:14:20 | INFO     | GameLauncher | === Game Launcher closed ===
+2025-10-14 01:21:56 | INFO     | GameLauncher | === Starting Game Launcher ===
+2025-10-14 01:21:56 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 01:21:56 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 01:21:56 | INFO     | GameLauncher | Database initialized: data/games.db
+2025-10-14 01:21:56 | INFO     | GameLauncher | Database initialized successfully
+2025-10-14 01:21:56 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 01:21:56 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 01:21:56 | INFO     | GameLauncher | Main window initialized
+2025-10-14 01:21:56 | INFO     | GameLauncher | Main window created successfully
+2025-10-14 01:21:59 | INFO     | GameLauncher | Roadmap refreshed: 0 items
+2025-10-14 01:21:59 | INFO     | GameLauncher | Switched to view: roadmap
+2025-10-14 01:22:01 | INFO     | GameLauncher | Date selected: 10/1/25
+2025-10-14 01:22:02 | INFO     | GameLauncher | Date selected: 10/8/25
+2025-10-14 01:22:02 | INFO     | GameLauncher | Date selected: 10/21/25
+2025-10-14 01:22:12 | INFO     | GameLauncher | Switched to view: achievements
+2025-10-14 01:22:13 | INFO     | GameLauncher | Switched to view: news
+2025-10-14 01:22:13 | INFO     | GameLauncher | Stats refreshed for period: week
+2025-10-14 01:22:13 | INFO     | GameLauncher | Switched to view: stats
+2025-10-14 01:22:16 | INFO     | GameLauncher | Stats refreshed for period: all
+2025-10-14 01:22:19 | INFO     | GameLauncher | Switched to view: chat
+2025-10-14 01:22:19 | INFO     | GameLauncher | Switched to view: settings
+2025-10-14 01:22:20 | INFO     | GameLauncher | Switched to view: music
+2025-10-14 01:22:22 | INFO     | GameLauncher | Closing application
+2025-10-14 01:22:22 | INFO     | GameLauncher | Database connection closed
+2025-10-14 01:22:22 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:22:22 | INFO     | GameLauncher | === Game Launcher closed ===
+2025-10-14 01:27:39 | INFO     | GameLauncher | === Starting Game Launcher ===
+2025-10-14 01:27:39 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 01:27:39 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 01:27:39 | INFO     | GameLauncher | Database initialized: data/games.db
+2025-10-14 01:27:39 | INFO     | GameLauncher | Database initialized successfully
+2025-10-14 01:27:39 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 01:27:39 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 01:27:39 | INFO     | GameLauncher | Main window initialized
+2025-10-14 01:27:39 | INFO     | GameLauncher | Main window created successfully
+2025-10-14 01:27:41 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 01:27:41 | INFO     | GameLauncher | RSS auto-refresh started
+2025-10-14 01:27:41 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 01:27:41 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 01:27:41 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 01:27:41 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 01:27:41 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 01:27:41 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 01:27:42 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 01:27:42 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 01:27:42 | INFO     | GameLauncher | News refreshed: 0 items
+2025-10-14 01:27:42 | INFO     | GameLauncher | Switched to view: news
+2025-10-14 01:27:44 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 01:27:44 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 01:27:44 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 01:27:44 | INFO     | GameLauncher | News refreshed: 0 items
+2025-10-14 01:27:49 | INFO     | GameLauncher | RSS auto-refresh stopped
+2025-10-14 01:27:49 | INFO     | GameLauncher | Stats refreshed for period: week
+2025-10-14 01:27:49 | INFO     | GameLauncher | Switched to view: stats
+2025-10-14 01:27:50 | INFO     | GameLauncher | Achievements refreshed: 0 total
+2025-10-14 01:27:50 | INFO     | GameLauncher | Switched to view: achievements
+2025-10-14 01:27:58 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 01:27:58 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 01:27:58 | INFO     | GameLauncher | Achievements refreshed: 0 total
+2025-10-14 01:27:58 | INFO     | GameLauncher | Switched to view: achievements
+2025-10-14 01:27:59 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 01:27:59 | INFO     | GameLauncher | RSS auto-refresh started
+2025-10-14 01:27:59 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 01:27:59 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 01:27:59 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 01:27:59 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 01:27:59 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 01:27:59 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 01:27:59 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 01:27:59 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 01:27:59 | INFO     | GameLauncher | News refreshed: 0 items
+2025-10-14 01:27:59 | INFO     | GameLauncher | Switched to view: news
+2025-10-14 01:28:02 | INFO     | GameLauncher | RSS auto-refresh stopped
+2025-10-14 01:28:02 | INFO     | GameLauncher | Stats refreshed for period: week
+2025-10-14 01:28:02 | INFO     | GameLauncher | Switched to view: stats
+2025-10-14 01:28:04 | INFO     | GameLauncher | Switched to view: music
+2025-10-14 01:28:05 | INFO     | GameLauncher | Switched to view: chat
+2025-10-14 01:28:06 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 01:28:06 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 01:28:08 | INFO     | GameLauncher | Switched to view: home
+2025-10-14 01:28:10 | INFO     | GameLauncher | Closing application
+2025-10-14 01:28:10 | INFO     | GameLauncher | Database connection closed
+2025-10-14 01:28:10 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:28:10 | INFO     | GameLauncher | === Game Launcher closed ===
+2025-10-14 01:32:48 | INFO     | GameLauncher | === Starting Game Launcher ===
+2025-10-14 01:32:48 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 01:32:48 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 01:32:48 | INFO     | GameLauncher | Database initialized: data/games.db
+2025-10-14 01:32:48 | INFO     | GameLauncher | Database initialized successfully
+2025-10-14 01:32:48 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 01:32:48 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 01:32:48 | INFO     | GameLauncher | Main window initialized
+2025-10-14 01:32:48 | INFO     | GameLauncher | Main window created successfully
+2025-10-14 01:32:50 | INFO     | GameLauncher | Switched to view: chat
+2025-10-14 01:32:52 | INFO     | GameLauncher | Settings loaded
+2025-10-14 01:32:52 | INFO     | GameLauncher | Switched to view: settings
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:32:58 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:33:00 | INFO     | GameLauncher | Settings saved successfully
+2025-10-14 01:33:03 | INFO     | GameLauncher | Closing application
+2025-10-14 01:33:03 | INFO     | GameLauncher | Database connection closed
+2025-10-14 01:33:03 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:33:03 | INFO     | GameLauncher | === Game Launcher closed ===
+2025-10-14 01:33:05 | INFO     | GameLauncher | === Starting Game Launcher ===
+2025-10-14 01:33:05 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 01:33:05 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 01:33:05 | INFO     | GameLauncher | Database initialized: data/games.db
+2025-10-14 01:33:05 | INFO     | GameLauncher | Database initialized successfully
+2025-10-14 01:33:06 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 01:33:06 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 01:33:06 | INFO     | GameLauncher | Main window initialized
+2025-10-14 01:33:06 | INFO     | GameLauncher | Main window created successfully
+2025-10-14 01:33:09 | INFO     | GameLauncher | Switched to view: home
+2025-10-14 01:33:10 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 01:33:10 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 01:33:10 | INFO     | GameLauncher | Roadmap refreshed: 0 items
+2025-10-14 01:33:10 | INFO     | GameLauncher | Switched to view: roadmap
+2025-10-14 01:33:11 | INFO     | GameLauncher | Achievements refreshed: 0 total
+2025-10-14 01:33:11 | INFO     | GameLauncher | Switched to view: achievements
+2025-10-14 01:33:12 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 01:33:12 | INFO     | GameLauncher | RSS auto-refresh started
+2025-10-14 01:33:12 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 01:33:12 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 01:33:12 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 01:33:12 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 01:33:12 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 01:33:12 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 01:33:12 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 01:33:12 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 01:33:12 | INFO     | GameLauncher | News refreshed: 0 items
+2025-10-14 01:33:12 | INFO     | GameLauncher | Switched to view: news
+2025-10-14 01:33:16 | INFO     | GameLauncher | RSS auto-refresh stopped
+2025-10-14 01:33:16 | INFO     | GameLauncher | Switched to view: music
+2025-10-14 01:33:22 | INFO     | GameLauncher | Stats refreshed for period: week
+2025-10-14 01:33:22 | INFO     | GameLauncher | Switched to view: stats
+2025-10-14 01:33:23 | INFO     | GameLauncher | Switched to view: chat
+2025-10-14 01:33:24 | INFO     | GameLauncher | Settings loaded
+2025-10-14 01:33:24 | INFO     | GameLauncher | Switched to view: settings
+2025-10-14 01:33:27 | INFO     | GameLauncher | Switched to view: home
+2025-10-14 01:33:27 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 01:33:27 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 01:33:28 | INFO     | GameLauncher | Achievements refreshed: 0 total
+2025-10-14 01:33:28 | INFO     | GameLauncher | Switched to view: achievements
+2025-10-14 01:33:31 | INFO     | GameLauncher | Roadmap refreshed: 0 items
+2025-10-14 01:33:31 | INFO     | GameLauncher | Switched to view: roadmap
+2025-10-14 01:33:34 | INFO     | GameLauncher | Closing application
+2025-10-14 01:33:34 | INFO     | GameLauncher | Database connection closed
+2025-10-14 01:33:34 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 01:33:34 | INFO     | GameLauncher | === Game Launcher closed ===
+2025-10-14 12:50:09 | INFO     | GameLauncher | === Starting Game Launcher ===
+2025-10-14 12:50:09 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 12:50:09 | INFO     | GameLauncher | Configuration loaded successfully
+2025-10-14 12:50:09 | INFO     | GameLauncher | Database initialized: data/games.db
+2025-10-14 12:50:09 | INFO     | GameLauncher | Database initialized successfully
+2025-10-14 12:50:09 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 12:50:09 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 12:50:09 | INFO     | GameLauncher | Main window initialized
+2025-10-14 12:50:09 | INFO     | GameLauncher | Main window created successfully
+2025-10-14 12:50:13 | INFO     | GameLauncher | Home view data refreshed
+2025-10-14 12:50:13 | INFO     | GameLauncher | Switched to view: home
+2025-10-14 12:50:27 | INFO     | GameLauncher | Loaded 0 games
+2025-10-14 12:50:27 | INFO     | GameLauncher | Switched to view: library
+2025-10-14 12:50:28 | INFO     | GameLauncher | Roadmap refreshed: 0 items
+2025-10-14 12:50:28 | INFO     | GameLauncher | Switched to view: roadmap
+2025-10-14 12:50:32 | INFO     | GameLauncher | Achievements refreshed: 0 total
+2025-10-14 12:50:32 | INFO     | GameLauncher | Switched to view: achievements
+2025-10-14 12:50:34 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 12:50:34 | INFO     | GameLauncher | RSS auto-refresh started
+2025-10-14 12:50:34 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 12:50:34 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 12:50:34 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 12:50:34 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 12:50:34 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 12:50:34 | INFO     | GameLauncher | Fetching news from RSS feeds...
+2025-10-14 12:50:35 | INFO     | GameLauncher | Fetched 0 news from https://www.ign.com/feed.xml
+2025-10-14 12:50:35 | INFO     | GameLauncher | Total news fetched: 0
+2025-10-14 12:50:35 | INFO     | GameLauncher | News refreshed: 0 items
+2025-10-14 12:50:35 | INFO     | GameLauncher | Switched to view: news
+2025-10-14 12:50:38 | INFO     | GameLauncher | RSS auto-refresh stopped
+2025-10-14 12:50:38 | INFO     | GameLauncher | Stats refreshed for period: week
+2025-10-14 12:50:38 | INFO     | GameLauncher | Switched to view: stats
+2025-10-14 12:50:39 | INFO     | GameLauncher | Music player initialized
+2025-10-14 12:50:39 | ERROR    | GameLauncher | Failed to load view music: video system not initialized
+2025-10-14 12:50:42 | INFO     | GameLauncher | Music player initialized
+2025-10-14 12:50:42 | ERROR    | GameLauncher | Failed to load view music: video system not initialized
+2025-10-14 12:50:46 | INFO     | GameLauncher | Switched to view: chat
+2025-10-14 12:50:51 | INFO     | GameLauncher | Chat server started on port 5000
+2025-10-14 12:50:55 | INFO     | GameLauncher | Chat server started from UI
+2025-10-14 12:50:57 | INFO     | GameLauncher | Client connected to chat
+2025-10-14 12:51:08 | INFO     | GameLauncher | Chat message from Gracz: Cześć
+2025-10-14 12:51:16 | INFO     | GameLauncher | Chat server stopped
+2025-10-14 12:51:17 | INFO     | GameLauncher | Chat server stopped from UI
+2025-10-14 12:51:19 | INFO     | GameLauncher | Client disconnected from chat
+2025-10-14 12:51:25 | INFO     | GameLauncher | Settings loaded
+2025-10-14 12:51:25 | INFO     | GameLauncher | Switched to view: settings
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:41 | INFO     | GameLauncher | Configuration saved successfully
+2025-10-14 12:51:42 | INFO     | GameLauncher | Settings saved successfully
+2025-10-14 12:51:43 | INFO     | GameLauncher | Home view data refreshed
+2025-10-14 12:51:43 | INFO     | GameLauncher | Switched to view: home
+2025-10-14 12:52:06 | INFO     | GameLauncher | Switched to view: chat
+2025-10-14 12:52:08 | INFO     | GameLauncher | Home view data refreshed
+2025-10-14 12:52:08 | INFO     | GameLauncher | Switched to view: home
