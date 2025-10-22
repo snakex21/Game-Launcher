@@ -6,6 +6,9 @@ from .theme_service import ThemeService
 from .notification_service import NotificationService
 from .discord_service import DiscordService
 from .cloud_service import CloudService
+from .backup_service import BackupService
+from .mod_service import ModService
+from .achievement_service import AchievementService
 
 __all__ = [
     'GameService',
@@ -16,4 +19,7 @@ __all__ = [
     'NotificationService',
     'DiscordService',
     'CloudService',
+    'BackupService',
+    'ModService',
+    'AchievementService',
 ]

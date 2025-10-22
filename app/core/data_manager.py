@@ -68,11 +68,13 @@ class DataManager:
             "roadmap": [],
             "reminders": [],
             "achievements": {},
+            "achievements_catalog": [],
             "emulators": {},
             "saved_filters": {},
             "user": {
                 "username": "Gracz",
                 "avatar": "",
+                "bio": "",
                 "achievements": {}
             },
             "settings": {
@@ -103,6 +105,12 @@ class DataManager:
         if "settings" in self.data:
             for key, value in defaults["settings"].items():
                 self.data["settings"].setdefault(key, value)
+
+        if "user" in self.data:
+            self.data["user"].setdefault("username", "Gracz")
+            self.data["user"].setdefault("avatar", "")
+            self.data["user"].setdefault("bio", "")
+            self.data["user"].setdefault("achievements", {})
         
         for game in self.data.get("games", []):
             game.setdefault("name", "Nieznana Gra")
