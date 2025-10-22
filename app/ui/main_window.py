@@ -55,9 +55,11 @@ class MainWindow(ctk.CTk):
             ("Statystyki", "statistics"),
             ("Roadmapa", "roadmap"),
             ("Mody", "mods"),
+            ("Osiągnięcia", "achievements"),
             ("Newsy", "news"),
             ("Przypomnienia", "reminders"),
             ("Odtwarzacz", "music"),
+            ("Profil", "profile"),
             ("Ustawienia", "settings"),
         ]
 
@@ -66,9 +68,11 @@ class MainWindow(ctk.CTk):
             "statistics": "📊",
             "roadmap": "🗺️",
             "mods": "🔧",
+            "achievements": "🏆",
             "news": "📰",
             "reminders": "⏰",
             "music": "🎵",
+            "profile": "👤",
             "settings": "⚙️"
         }
 
@@ -136,6 +140,15 @@ class MainWindow(ctk.CTk):
         elif view_id == "statistics":
             from app.plugins.statistics import StatisticsView
             self.current_view = StatisticsView(self.main_content, self.context)
+        elif view_id == "roadmap":
+            from app.plugins.roadmap import RoadmapView
+            self.current_view = RoadmapView(self.main_content, self.context)
+        elif view_id == "mods":
+            from app.plugins.mods import ModsView
+            self.current_view = ModsView(self.main_content, self.context)
+        elif view_id == "achievements":
+            from app.plugins.achievements import AchievementsView
+            self.current_view = AchievementsView(self.main_content, self.context)
         elif view_id == "news":
             from app.plugins.news import NewsView
             self.current_view = NewsView(self.main_content, self.context)
@@ -145,6 +158,9 @@ class MainWindow(ctk.CTk):
         elif view_id == "music":
             from app.plugins.music_player import MusicPlayerView
             self.current_view = MusicPlayerView(self.main_content, self.context)
+        elif view_id == "profile":
+            from app.plugins.profile import ProfileView
+            self.current_view = ProfileView(self.main_content, self.context)
         elif view_id == "settings":
             from app.plugins.settings import SettingsView
             self.current_view = SettingsView(self.main_content, self.context)
