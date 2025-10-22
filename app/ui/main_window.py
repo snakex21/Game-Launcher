@@ -34,19 +34,22 @@ class MainWindow(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        self.sidebar = ctk.CTkFrame(self, width=220, corner_radius=0, fg_color=theme.surface)
+        self.sidebar = ctk.CTkFrame(self, width=240, corner_radius=0, fg_color=theme.surface)
         self.sidebar.grid(row=0, column=0, sticky="nsew")
         self.sidebar.grid_rowconfigure(8, weight=1)
 
         self.logo_label = ctk.CTkLabel(
             self.sidebar,
             text="🎮 Game Launcher",
-            font=ctk.CTkFont(size=20, weight="bold"),
+            font=ctk.CTkFont(size=22, weight="bold"),
             text_color=theme.text
         )
-        self.logo_label.grid(row=0, column=0, padx=20, pady=(30, 15))
+        self.logo_label.grid(row=0, column=0, padx=24, pady=(32, 18))
 
-        self.nav_buttons = {}
+        self.nav_font = ctk.CTkFont(size=14)
+        self.nav_font_active = ctk.CTkFont(size=14, weight="bold")
+
+        self.nav_buttons: dict[str, ctk.CTkButton] = {}
         nav_items = [
             ("Biblioteka", "library"),
             ("Statystyki", "statistics"),
@@ -58,24 +61,34 @@ class MainWindow(ctk.CTk):
             ("Ustawienia", "settings"),
         ]
 
+        icons = {
+            "library": "📚",
+            "statistics": "📊",
+            "roadmap": "🗺️",
+            "mods": "🔧",
+            "news": "📰",
+            "reminders": "⏰",
+            "music": "🎵",
+            "settings": "⚙️"
+        }
+
         for index, (label, view_id) in enumerate(nav_items, start=1):
+            icon = icons.get(view_id, "•")
             btn = ctk.CTkButton(
                 self.sidebar,
-                text=label,
+                text=f"{icon}  {label}",
                 command=lambda v=view_id: self.show_view(v),
                 corner_radius=8,
-                height=42,
+                height=44,
                 border_spacing=12,
                 fg_color="transparent",
                 hover_color=theme.surface_alt,
-                text_color=theme.text,
+                text_color=theme.text_muted,
+                anchor="w",
+                font=self.nav_font
             )
-            btn.grid(row=index, column=0, padx=12, pady=4, sticky="ew")
+            btn.grid(row=index, column=0, padx=12, pady=3, sticky="ew")
             self.nav_buttons[view_id] = btn
-
-        accent_color = theme.accent
-        self.highlight = ctk.CTkFrame(self.sidebar, height=3, fg_color=accent_color)
-        self.highlight.grid(row=1, column=0, sticky="ew", padx=20)
 
         self.main_content = ctk.CTkFrame(self, corner_radius=12, fg_color=theme.surface)
         self.main_content.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
@@ -101,13 +114,14 @@ class MainWindow(ctk.CTk):
         self.logo_label.configure(text_color=theme.text)
         self.main_content.configure(fg_color=theme.surface)
         for button in self.nav_buttons.values():
-            button.configure(text_color=theme.text, hover_color=theme.surface_alt)
-        self.highlight.configure(fg_color=theme.accent)
+            button.configure(hover_color=theme.surface_alt)
         if self.current_view and hasattr(self.current_view, "configure"):
             try:
                 self.current_view.configure(fg_color=theme.surface)
             except Exception:
                 pass
+        if self.current_view_id:
+            self._update_nav_highlight(self.current_view_id)
 
     def show_view(self, view_id: str) -> None:
         if self.current_view:
@@ -150,8 +164,20 @@ class MainWindow(ctk.CTk):
             self.current_view.pack(fill="both", expand=True)
 
     def _update_nav_highlight(self, view_id: str) -> None:
-        nav_items = ["library", "statistics", "roadmap", "mods", "news", "reminders", "music", "settings"]
-        if view_id in nav_items:
-            row = nav_items.index(view_id) + 1
-            self.highlight.grid(row=row, column=0, sticky="ew", padx=20)
+        theme = self.theme
+        for btn_id, btn in self.nav_buttons.items():
+            if btn_id == view_id:
+                btn.configure(
+                    fg_color=theme.accent,
+                    text_color=theme.text,
+                    hover_color=theme.accent,
+                    font=self.nav_font_active
+                )
+            else:
+                btn.configure(
+                    fg_color="transparent",
+                    text_color=theme.text_muted,
+                    hover_color=theme.surface_alt,
+                    font=self.nav_font
+                )
 
