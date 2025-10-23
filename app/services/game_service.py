@@ -90,11 +90,13 @@ class GameService:
         games = self.data_manager.get("games", [])
         for index, data in enumerate(games):
             if data.get("id") == game_id:
-                data.update(updates)
+                for key, value in updates.items():
+                    data[key] = value
                 games[index] = data
                 self.data_manager.set("games", games)
                 logger.info("Zaktualizowano grę %s", data.get("name"))
                 self.event_bus.emit("games_changed")
+                self.event_bus.emit("game_updated", game_id=game_id)
                 return Game(**data)
         return None
 
@@ -120,18 +122,36 @@ class GameService:
         self.data_manager.set("games", games)
         self.event_bus.emit("games_changed")
 
-    def launch(self, game: Game) -> None:
+    def launch(self, game: Game) -> int | None:
+        """Uruchamia grę i zwraca PID procesu."""
         exe = Path(game.exe_path)
         if not exe.exists():
             raise FileNotFoundError(f"Nie znaleziono pliku wykonywalnego: {exe}")
 
         try:
+            pid = None
             if os.name == "nt":
-                os.startfile(str(exe))  # type: ignore[attr-defined]
+                # Na Windows używamy subprocess zamiast os.startfile, żeby dostać PID
+                args = [str(exe)]
+                if game.arguments:
+                    args.extend(game.arguments.split())
+                process = subprocess.Popen(args, cwd=exe.parent)
+                pid = process.pid
             else:
-                subprocess.Popen([str(exe), *game.arguments.split()])
-            logger.info("Uruchomiono grę %s", game.name)
-            self.event_bus.emit("game_launched", game_id=game.id, game_name=game.name)
-        except Exception as exc:  # pragma: no cover - zależne od systemu
+                args = [str(exe)]
+                if game.arguments:
+                    args.extend(game.arguments.split())
+                process = subprocess.Popen(args, cwd=exe.parent)
+                pid = process.pid
+                
+            logger.info("Uruchomiono grę %s (PID: %s)", game.name, pid)
+            
+            # Aktualizuj last_played
+            now = datetime.now().isoformat()
+            self.update(game.id, {"last_played": now})
+            
+            self.event_bus.emit("game_launched", game_id=game.id, game_name=game.name, pid=pid)
+            return pid
+        except Exception as exc:
             logger.exception("Nie udało się uruchomić gry %s", game.name)
             raise exc

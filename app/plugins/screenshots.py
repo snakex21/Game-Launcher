@@ -195,6 +195,9 @@ class ScreenshotsView(ctk.CTkFrame):
             img_label.image = photo  # type: ignore[attr-defined]  # Zachowaj referencję
             img_label.pack(padx=5, pady=5)
             
+            img_label.bind("<Button-1>", lambda e, p=screenshot_path: self._open_screenshot(p))
+            img_label.configure(cursor="hand2")
+            
         except Exception as e:
             logger.error("Błąd ładowania obrazka %s: %s", screenshot_path, e)
             error_label = ctk.CTkLabel(
@@ -250,6 +253,25 @@ class ScreenshotsView(ctk.CTkFrame):
             self.context.service("screenshots").add_manual_screenshot(self.selected_game_id, file_path)
             self._load_games()
             self._load_screenshots()
+
+    def _open_screenshot(self, screenshot_path: str) -> None:
+        """Otwiera screenshot w domyślnej aplikacji systemowej."""
+        import os
+        import platform
+        import subprocess
+        
+        try:
+            if platform.system() == "Windows":
+                os.startfile(screenshot_path)  # type: ignore[attr-defined]
+            elif platform.system() == "Darwin":
+                subprocess.Popen(["open", screenshot_path])
+            else:
+                subprocess.Popen(["xdg-open", screenshot_path])
+            logger.info("Otwarto screenshot: %s", screenshot_path)
+        except Exception as e:
+            logger.error("Błąd otwierania screenshota: %s", e)
+            from tkinter import messagebox
+            messagebox.showerror("Błąd", f"Nie udało się otworzyć obrazu:\n{e}")
 
     def _delete_screenshot(self, screenshot_path: str) -> None:
         """Usuwa screenshot."""

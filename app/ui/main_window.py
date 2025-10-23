@@ -51,6 +51,7 @@ class MainWindow(ctk.CTk):
 
         self.nav_buttons: dict[str, ctk.CTkButton] = {}
         nav_items = [
+            ("Home", "home"),
             ("Biblioteka", "library"),
             ("Statystyki", "statistics"),
             ("Roadmapa", "roadmap"),
@@ -65,6 +66,7 @@ class MainWindow(ctk.CTk):
         ]
 
         icons = {
+            "home": "🏠",
             "library": "📚",
             "statistics": "📊",
             "roadmap": "🗺️",
@@ -96,9 +98,9 @@ class MainWindow(ctk.CTk):
             btn.grid(row=index, column=0, padx=12, pady=3, sticky="ew")
             self.nav_buttons[view_id] = btn
 
-        # Mini kontrolka muzyki na dole
+        # Mini kontrolka muzyki na dole (początkowo ukryta)
         self.music_control_frame = ctk.CTkFrame(self.sidebar, fg_color=theme.base_color, corner_radius=8)
-        self.music_control_frame.grid(row=11, column=0, padx=12, pady=12, sticky="ew")
+        self.music_control_visible = False
         
         self.music_track_label = ctk.CTkLabel(
             self.music_control_frame,
@@ -139,7 +141,7 @@ class MainWindow(ctk.CTk):
 
         self.current_view = None
         self.current_view_id = ""
-        self.show_view("library")
+        self.show_view("home")
 
     def _connect_events(self) -> None:
         self.context.event_bus.subscribe("theme_changed", self._on_theme_changed)
@@ -172,7 +174,10 @@ class MainWindow(ctk.CTk):
         logger.info("Pokazuję widok: %s", view_id)
         self.current_view_id = view_id
 
-        if view_id == "library":
+        if view_id == "home":
+            from app.plugins.home import HomeView
+            self.current_view = HomeView(self.main_content, self.context)
+        elif view_id == "library":
             from app.plugins.library import LibraryView
             self.current_view = LibraryView(self.main_content, self.context)
         elif view_id == "statistics":
@@ -263,6 +268,15 @@ class MainWindow(ctk.CTk):
     def _update_music_status(self) -> None:
         """Aktualizuj status muzyki w mini kontrolce."""
         music = self.context.music
+        
+        should_show = music.current_track and music.is_playing or music.playlist
+        
+        if should_show and not self.music_control_visible:
+            self.music_control_frame.grid(row=11, column=0, padx=12, pady=12, sticky="ew")
+            self.music_control_visible = True
+        elif not should_show and self.music_control_visible:
+            self.music_control_frame.grid_forget()
+            self.music_control_visible = False
         
         if music.current_track and music.is_playing:
             track_name = music.current_track.name

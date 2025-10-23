@@ -27,6 +27,8 @@ class LibraryView(ctk.CTkFrame):
         self.context = context
         self.context.event_bus.subscribe("games_changed", self._on_games_changed)
         self.context.event_bus.subscribe("theme_changed", self._on_theme_changed)
+        self.context.event_bus.subscribe("session_started", self._on_session_changed)
+        self.context.event_bus.subscribe("session_ended", self._on_session_ended)
         self._setup_ui()
         self._load_games()
 
@@ -58,18 +60,6 @@ class LibraryView(ctk.CTkFrame):
         )
         self.btn_add.pack(side="right", padx=10)
 
-        self.btn_refresh = ctk.CTkButton(
-            header,
-            text="🔄 Odśwież",
-            command=self._load_games,
-            width=120,
-            height=36,
-            corner_radius=10,
-            fg_color=self.theme.base_color,
-            hover_color=self.theme.surface_alt
-        )
-        self.btn_refresh.pack(side="right", padx=6)
-
         self.summary_container = ctk.CTkFrame(self, fg_color="transparent")
         self.summary_container.grid(row=1, column=0, sticky="ew", padx=16, pady=(0, 6))
         self.summary_container.grid_columnconfigure((0, 1, 2), weight=1)
@@ -80,6 +70,32 @@ class LibraryView(ctk.CTkFrame):
 
     def _on_games_changed(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         self._load_games()
+
+    def _on_session_changed(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        self._load_games()
+    
+    def _on_session_ended(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        game_id = kwargs.get("game_id")
+        game_name = kwargs.get("game_name", "")
+        ask_completion = kwargs.get("ask_completion", False)
+        
+        if ask_completion:
+            self.after(100, lambda: self._ask_completion(game_id, game_name))
+        
+        self._load_games()
+    
+    def _ask_completion(self, game_id: str, game_name: str) -> None:
+        """Pyta użytkownika o procent ukończenia gry."""
+        from tkinter import simpledialog
+        completion = simpledialog.askinteger(
+            "Procent ukończenia",
+            f"Ile procent gry '{game_name}' ukończyłeś?",
+            minvalue=0,
+            maxvalue=100,
+            parent=self
+        )
+        if completion is not None:
+            self.context.games.update(game_id, {"completion": completion})
 
     def _on_theme_changed(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         self.theme = self.context.theme.get_active_theme()
@@ -165,6 +181,8 @@ class LibraryView(ctk.CTkFrame):
     def destroy(self) -> None:
         self.context.event_bus.unsubscribe("games_changed", self._on_games_changed)
         self.context.event_bus.unsubscribe("theme_changed", self._on_theme_changed)
+        self.context.event_bus.unsubscribe("session_started", self._on_session_changed)
+        self.context.event_bus.unsubscribe("session_ended", self._on_session_ended)
         super().destroy()
 
     def _adjust_color(self, hex_color: str, amount: int) -> str:
@@ -261,31 +279,63 @@ class LibraryView(ctk.CTkFrame):
         btn_frame = ctk.CTkFrame(card, fg_color="transparent")
         btn_frame.pack(side="bottom", pady=12)
 
-        btn_launch = ctk.CTkButton(
-            btn_frame,
-            text="▶️ Uruchom",
-            command=lambda: self._launch_game(game.id),
-            width=110,
-            height=35,
-            corner_radius=8,
-            fg_color=theme.accent,
-            hover_color=self._adjust_color(theme.accent, -20),
-            font=ctk.CTkFont(size=13, weight="bold")
-        )
-        btn_launch.pack(side="left", padx=4)
+        is_running = self.context.sessions.is_game_running(game.id)
+        
+        if is_running:
+            btn_launch = ctk.CTkButton(
+                btn_frame,
+                text="⏹️ Zatrzymaj",
+                command=lambda: self._stop_game(game.id),
+                width=110,
+                height=35,
+                corner_radius=8,
+                fg_color="#e74c3c",
+                hover_color="#c0392b",
+                font=ctk.CTkFont(size=13, weight="bold")
+            )
+            btn_launch.pack(side="left", padx=4)
+            
+            session_duration = self.context.sessions.get_session_duration(game.id)
+            hours = session_duration // 3600
+            minutes = (session_duration % 3600) // 60
+            if hours > 0:
+                duration_text = f"⏱️ {hours}h {minutes}m"
+            else:
+                duration_text = f"⏱️ {minutes}m"
+            
+            duration_label = ctk.CTkLabel(
+                btn_frame,
+                text=duration_text,
+                font=ctk.CTkFont(size=11),
+                text_color=theme.accent
+            )
+            duration_label.pack(side="left", padx=4)
+        else:
+            btn_launch = ctk.CTkButton(
+                btn_frame,
+                text="▶️ Uruchom",
+                command=lambda: self._launch_game(game.id),
+                width=110,
+                height=35,
+                corner_radius=8,
+                fg_color=theme.accent,
+                hover_color=self._adjust_color(theme.accent, -20),
+                font=ctk.CTkFont(size=13, weight="bold")
+            )
+            btn_launch.pack(side="left", padx=4)
 
-        btn_edit = ctk.CTkButton(
-            btn_frame,
-            text="✏️ Edytuj",
-            command=lambda: self._edit_game(game.id),
-            width=90,
-            height=35,
-            corner_radius=8,
-            fg_color=theme.base_color,
-            hover_color=theme.surface,
-            font=ctk.CTkFont(size=13)
-        )
-        btn_edit.pack(side="left", padx=4)
+            btn_edit = ctk.CTkButton(
+                btn_frame,
+                text="✏️ Edytuj",
+                command=lambda: self._edit_game(game.id),
+                width=90,
+                height=35,
+                corner_radius=8,
+                fg_color=theme.base_color,
+                hover_color=theme.surface,
+                font=ctk.CTkFont(size=13)
+            )
+            btn_edit.pack(side="left", padx=4)
 
         return card
 
@@ -296,15 +346,29 @@ class LibraryView(ctk.CTkFrame):
 
     def _edit_game(self, game_id: str) -> None:
         logger.info("Edycja gry: %s", game_id)
+        game = self.context.games.get(game_id)
+        if game:
+            dialog = EditGameDialog(self, self.context, game)
+            dialog.grab_set()
 
     def _launch_game(self, game_id: str) -> None:
         game = self.context.games.get(game_id)
         if game:
             try:
-                self.context.games.launch(game)
+                pid = self.context.games.launch(game)
+                self.context.sessions.start_session(game, pid)
                 self.context.notifications.show("Uruchomiono", f"Gra {game.name} została uruchomiona!")
             except Exception as e:
                 logger.error("Błąd uruchamiania gry: %s", e)
+                from tkinter import messagebox
+                messagebox.showerror("Błąd", f"Nie udało się uruchomić gry:\n{e}")
+    
+    def _stop_game(self, game_id: str) -> None:
+        if self.context.sessions.stop_game(game_id):
+            self.context.notifications.show("Zatrzymano", "Gra została zatrzymana")
+        else:
+            from tkinter import messagebox
+            messagebox.showerror("Błąd", "Nie udało się zatrzymać gry")
 
 
 class AddGameDialog(ctk.CTkToplevel):
@@ -460,5 +524,197 @@ class AddGameDialog(ctk.CTkToplevel):
 
         self.context.games.add(game_data)
         logger.info("Dodano grę: %s", name)
+        self.destroy()
+        self.master._load_games()  # type: ignore[attr-defined]
+
+
+class EditGameDialog(ctk.CTkToplevel):
+    def __init__(self, parent, context: AppContext, game) -> None:  # type: ignore[no-untyped-def]
+        super().__init__(parent)
+        self.context = context
+        self.game = game
+        self.theme = context.theme.get_active_theme()
+        
+        self.title("Edytuj Grę")
+        self.geometry("650x620")
+        self.resizable(False, False)
+        
+        self.configure(fg_color=self.theme.background)
+
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
+        header = ctk.CTkFrame(self, fg_color=self.theme.surface, corner_radius=0)
+        header.pack(fill="x", pady=(0, 20))
+        
+        title = ctk.CTkLabel(
+            header,
+            text="✏️ Edytuj Grę",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        title.pack(pady=20)
+
+        form = ctk.CTkScrollableFrame(self, fg_color=self.theme.surface, corner_radius=12)
+        form.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+
+        ctk.CTkLabel(
+            form, 
+            text="Nazwa gry:", 
+            font=ctk.CTkFont(size=14, weight="bold")
+        ).pack(anchor="w", padx=20, pady=(20, 5))
+        self.entry_name = ctk.CTkEntry(form, width=560, height=40, corner_radius=8)
+        self.entry_name.insert(0, self.game.name)
+        self.entry_name.pack(padx=20, pady=(0, 15))
+
+        ctk.CTkLabel(
+            form, 
+            text="Ścieżka do pliku wykonywalnego:", 
+            font=ctk.CTkFont(size=14, weight="bold")
+        ).pack(anchor="w", padx=20, pady=5)
+        path_frame = ctk.CTkFrame(form, fg_color="transparent")
+        path_frame.pack(padx=20, pady=(0, 15))
+        self.entry_exe = ctk.CTkEntry(path_frame, width=450, height=40, corner_radius=8)
+        self.entry_exe.insert(0, self.game.exe_path)
+        self.entry_exe.pack(side="left", padx=(0, 8))
+        btn_browse = ctk.CTkButton(
+            path_frame, 
+            text="📁 Przeglądaj", 
+            width=100, 
+            height=40,
+            corner_radius=8,
+            command=self._browse_exe
+        )
+        btn_browse.pack(side="left")
+
+        ctk.CTkLabel(
+            form, 
+            text="Gatunki (oddzielone przecinkami):", 
+            font=ctk.CTkFont(size=14, weight="bold")
+        ).pack(anchor="w", padx=20, pady=5)
+        self.entry_genres = ctk.CTkEntry(form, width=560, height=40, corner_radius=8)
+        self.entry_genres.insert(0, ", ".join(self.game.genres))
+        self.entry_genres.pack(padx=20, pady=(0, 15))
+
+        rating_frame = ctk.CTkFrame(form, fg_color="transparent")
+        rating_frame.pack(fill="x", padx=20, pady=(0, 15))
+        
+        ctk.CTkLabel(
+            rating_frame, 
+            text="Ocena (0-10):", 
+            font=ctk.CTkFont(size=14, weight="bold")
+        ).pack(side="left")
+        
+        self.rating_slider = ctk.CTkSlider(
+            rating_frame,
+            from_=0,
+            to=10,
+            number_of_steps=20,
+            width=300
+        )
+        self.rating_slider.set(self.game.rating)
+        self.rating_slider.pack(side="left", padx=(15, 10))
+        
+        self.rating_label = ctk.CTkLabel(
+            rating_frame,
+            text=f"{self.game.rating:.1f}",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=self.theme.accent,
+            width=50
+        )
+        self.rating_label.pack(side="left")
+        self.rating_slider.configure(command=self._update_rating_label)
+
+        ctk.CTkLabel(
+            form, 
+            text="Procent ukończenia:", 
+            font=ctk.CTkFont(size=14, weight="bold")
+        ).pack(anchor="w", padx=20, pady=5)
+        completion_frame = ctk.CTkFrame(form, fg_color="transparent")
+        completion_frame.pack(fill="x", padx=20, pady=(0, 15))
+        self.completion_slider = ctk.CTkSlider(
+            completion_frame,
+            from_=0,
+            to=100,
+            number_of_steps=100,
+            width=450
+        )
+        self.completion_slider.set(self.game.completion)
+        self.completion_slider.pack(side="left", padx=(0, 10))
+        self.completion_label = ctk.CTkLabel(
+            completion_frame,
+            text=f"{self.game.completion}%",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=self.theme.accent,
+            width=50
+        )
+        self.completion_label.pack(side="left")
+        self.completion_slider.configure(command=self._update_completion_label)
+
+        buttons = ctk.CTkFrame(self, fg_color="transparent")
+        buttons.pack(pady=15)
+
+        btn_save = ctk.CTkButton(
+            buttons, 
+            text="💾 Zapisz", 
+            command=self._save, 
+            width=160,
+            height=40,
+            corner_radius=10,
+            fg_color=self.theme.accent,
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        btn_save.pack(side="left", padx=10)
+
+        btn_cancel = ctk.CTkButton(
+            buttons,
+            text="❌ Anuluj",
+            command=self.destroy,
+            width=160,
+            height=40,
+            corner_radius=10,
+            fg_color=self.theme.base_color,
+            hover_color=self.theme.surface,
+            font=ctk.CTkFont(size=14)
+        )
+        btn_cancel.pack(side="left", padx=10)
+
+    def _update_rating_label(self, value: float) -> None:
+        self.rating_label.configure(text=f"{value:.1f}")
+    
+    def _update_completion_label(self, value: float) -> None:
+        self.completion_label.configure(text=f"{int(value)}%")
+
+    def _browse_exe(self) -> None:
+        from tkinter import filedialog
+        path = filedialog.askopenfilename(
+            title="Wybierz plik wykonywalny",
+            filetypes=[("Pliki wykonywalne", "*.exe"), ("Wszystkie pliki", "*.*")]
+        )
+        if path:
+            self.entry_exe.delete(0, "end")
+            self.entry_exe.insert(0, path)
+
+    def _save(self) -> None:
+        name = self.entry_name.get().strip()
+        exe = self.entry_exe.get().strip()
+
+        if not name:
+            logger.warning("Nazwa gry nie może być pusta")
+            return
+
+        genres = [g.strip() for g in self.entry_genres.get().split(",") if g.strip()]
+        rating = float(self.rating_slider.get())
+        completion = int(self.completion_slider.get())
+
+        updates = {
+            "name": name,
+            "exe_path": exe,
+            "genres": genres,
+            "rating": rating,
+            "completion": completion,
+        }
+
+        self.context.games.update(self.game.id, updates)
+        logger.info("Zaktualizowano grę: %s", name)
         self.destroy()
         self.master._load_games()  # type: ignore[attr-defined]
