@@ -34,7 +34,12 @@ class MusicPlayerView(ctk.CTkFrame):
 
         controls = ctk.CTkFrame(self, corner_radius=15)
         controls.pack(pady=20, padx=20)
-
+        
+        self._setup_ui(controls)
+        self._sync_with_music_state()  # Synchronizuj stan przy wejściu
+    
+    def _setup_ui(self, controls) -> None:  # type: ignore[no-untyped-def]
+        """Ustawia elementy UI."""
         self.track_label = ctk.CTkLabel(
             controls,
             text="Nie wybrano playlisty",
@@ -242,3 +247,51 @@ class MusicPlayerView(ctk.CTkFrame):
         if self.update_timer_id is not None:
             self.after_cancel(self.update_timer_id)
             self.update_timer_id = None
+    
+    def _sync_with_music_state(self) -> None:
+        """Synchronizuje widok z aktualnym stanem muzyki."""
+        music = self.context.music
+        
+        # Sprawdź czy jest playlista
+        if music.playlist:
+            self._enable_controls()
+            
+            # Sprawdź czy coś gra
+            if music.current_track:
+                track_name = music.current_track.name
+                self.track_label.configure(text=f"Odtwarzanie: {track_name}")
+                
+                # Zaktualizuj przyciski
+                if music.is_paused:
+                    self.btn_pause.configure(text="▶")
+                else:
+                    self.btn_pause.configure(text="⏸")
+                
+                # Zaktualizuj pasek postępu
+                current_pos = music.get_pos()
+                track_length = music.get_length()
+                
+                self.progress_slider.configure(to=track_length)
+                self.progress_slider.set(current_pos)
+                
+                # Zaktualizuj czasy
+                curr_min = int(current_pos // 60)
+                curr_sec = int(current_pos % 60)
+                self.time_label_current.configure(text=f"{curr_min}:{curr_sec:02d}")
+                
+                total_min = int(track_length // 60)
+                total_sec = int(track_length % 60)
+                self.time_label_total.configure(text=f"{total_min}:{total_sec:02d}")
+                
+                # Uruchom timer jeśli muzyka gra
+                if music.is_playing and not music.is_paused:
+                    self._start_progress_updates()
+            else:
+                self.track_label.configure(text="Playlista załadowana - kliknij ▶")
+        else:
+            self.track_label.configure(text="Nie wybrano playlisty")
+    
+    def destroy(self) -> None:
+        """Zatrzymaj timer przed zniszczeniem widoku."""
+        self._stop_progress_updates()
+        super().destroy()

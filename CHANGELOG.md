@@ -1,5 +1,23 @@
 # 📝 Changelog - Game Launcher
 
+## [2.1.2] - 2024-01-XX
+
+### 🐛 Naprawione Błędy
+
+#### 🎵 Odtwarzacz Muzyki - Synchronizacja stanu
+- **Problem:** Widok odtwarzacza "zapominał" stan po wyjściu i powrocie
+  - Pokazywał "Nie wybrano playlisty" mimo że muzyka grała
+  - Suwak był na 0:00, brak informacji o aktualnym utworze
+- **Rozwiązanie:** Dodano synchronizację stanu przy wejściu na stronę
+  - Nowa metoda `_sync_with_music_state()` aktualizuje UI według stanu `MusicService`
+  - Pokazuje aktualny utwór, czas, pozycję suwaka
+  - Automatycznie uruchamia timer jeśli muzyka gra
+  - Dodano `destroy()` aby zapobiec memory leaks
+
+**Przykład:** Muzyka gra "Utwór X" na 1:20 → wychodzę → wracam → ✅ widok pokazuje "Utwór X" 1:20 / 3:45
+
+---
+
 ## [2.1.1] - 2024-01-XX
 
 ### ✨ Nowe Funkcje
