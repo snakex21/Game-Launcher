@@ -16,7 +16,11 @@ Szczegóły architektury opisane są w pliku [`README_REFACTOR.md`](README_REFAC
 ## 🎉 Co nowego w v2.1?
 - **🏆 Rozbudowany system osiągnięć** z automatycznym śledzeniem postępów i paskami postępu
 - **🎵 Odtwarzacz muzyki z seekiem** - przewijaj utwory jak chcesz!
+- **🎵 Mini kontrolka muzyki** - steruj muzyką z każdego miejsca w aplikacji (w sidebar)!
+- **📸 Manager zrzutów ekranu** - galeria ze screenshotami, auto-scan i przypisywanie do gier!
 - Zobacz [`ZMIANY_PL.md`](ZMIANY_PL.md) dla pełnego opisu zmian po polsku
+- Zobacz [`ZMIANY_v2.1.1.md`](ZMIANY_v2.1.1.md) dla najnowszych poprawek
+- Zobacz [`PLAN_ROZWOJU.md`](PLAN_ROZWOJU.md) dla planu dalszego rozwoju
 - Sprawdź [`CHANGELOG.md`](CHANGELOG.md) dla szczegółowej historii zmian
 
 ## 🚀 Uruchomienie
@@ -26,11 +30,12 @@ python main.py
 Pierwsze uruchomienie utworzy plik `config.json` na podstawie domyślnej bazy (`app/data/database.json`).
 
 ## 📦 Funkcjonalności
-- **Biblioteka gier** – dodawanie, uruchamianie, kafelkowy podgląd gier
-- **Statystyki** – wykresy czasu gry i podział gatunków (Matplotlib)
+- **📚 Biblioteka gier** – dodawanie, uruchamianie, kafelkowy podgląd gier
+- **📊 Statystyki** – wykresy czasu gry i podział gatunków (Matplotlib)
 - **🏆 Osiągnięcia** – system osiągnięć z automatycznym śledzeniem postępów i paskami postępu
 - **🗺️ Roadmapa** – planowanie gier do ukończenia z priorytetami
 - **🔧 Mody** – zarządzanie modami dla gier
+- **📸 Screenshoty** – galeria zrzutów ekranu z auto-scanem i przypisywaniem do gier
 - **📰 Aktualności** – kanały RSS (Feedparser)
 - **⏰ Przypomnienia** – powtarzalne alerty i zarządzanie zadaniami
 - **🎵 Odtwarzacz muzyki** – obsługa playlist z folderów (pygame) + seek bar do przewijania utworów

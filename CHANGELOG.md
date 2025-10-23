@@ -1,5 +1,51 @@
 # 📝 Changelog - Game Launcher
 
+## [2.1.1] - 2024-01-XX
+
+### ✨ Nowe Funkcje
+
+#### 📸 Manager Zrzutów Ekranu
+- **Galeria screenshotów** - przeglądaj zrzuty ekranu dla każdej gry
+- **Auto-scan** - automatyczne wyszukiwanie screenshotów w folderach
+- **Ręczne dodawanie** - wybierz pliki z dysku
+- **Wzorce plików** - automatyczne rozpoznawanie typowych nazw screenshotów
+- **Ignorowanie folderów** - pomija cache, temp, thumbnails
+- **Podgląd miniatur** - obrazki 300x200px
+- **Przypisywanie do gier** - każda gra ma własną galerię
+
+Funkcje:
+- `ScreenshotService` - skanowanie, dodawanie, usuwanie
+- `ScreenshotsPlugin` - widok galerii z listą gier
+- Konfiguracja folderów do skanowania
+- Automatyczne przypisywanie na podstawie nazwy gry
+
+### 🐛 Naprawione Błędy
+
+#### 🎵 Odtwarzacz Muzyki - Seek i odtwarzanie w tle
+- **Naprawiono seek bar** - suwak nie wraca już na 0:00 po przewinięciu
+  - Dodano `seek_offset` do śledzenia pozycji po seekowaniu
+  - `get_pos()` teraz poprawnie oblicza aktualną pozycję: `seek_offset + pygame_time`
+  - Seek ładuje utwór od nowa z parametrem `start=position`
+- **Muzyka gra w tle!** - dodano mini kontrolkę muzyki w sidebar
+  - Kontrolka zawsze widoczna niezależnie od aktualnego widoku
+  - Pokazuje nazwę utworu, czas (MM:SS / MM:SS) i przyciski ⏮▶/⏸⏭
+  - Timer aktualizacji (500ms) działa globalnie w MainWindow
+  - Automatyczne przejście do następnego utworu po zakończeniu
+
+### 🔧 Ulepszenia
+
+#### MusicService
+- Dodano cache długości utworów (`track_length_cache`) dla lepszej wydajności
+- Poprawiono `get_length()` aby cache'ować wyniki z mutagen
+- Reset `seek_offset` przy odtwarzaniu nowego utworu
+
+#### MainWindow
+- Mini kontrolka muzyki w sidebar (row 11)
+- Metody `_music_play()`, `_music_next()`, `_music_previous()` do globalnej kontroli
+- Metoda `_update_music_status()` aktualizuje stan co 500ms
+
+---
+
 ## [2.1.0] - 2024-01-XX
 
 ### ✨ Nowe Funkcje
