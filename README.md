@@ -13,6 +13,12 @@ Game Launcher to nowoczesna aplikacja desktopowa napisana w Pythonie, która poz
 
 Szczegóły architektury opisane są w pliku [`README_REFACTOR.md`](README_REFACTOR.md).
 
+## 🎉 Co nowego w v2.1?
+- **🏆 Rozbudowany system osiągnięć** z automatycznym śledzeniem postępów i paskami postępu
+- **🎵 Odtwarzacz muzyki z seekiem** - przewijaj utwory jak chcesz!
+- Zobacz [`ZMIANY_PL.md`](ZMIANY_PL.md) dla pełnego opisu zmian po polsku
+- Sprawdź [`CHANGELOG.md`](CHANGELOG.md) dla szczegółowej historii zmian
+
 ## 🚀 Uruchomienie
 ```bash
 python main.py
@@ -22,10 +28,14 @@ Pierwsze uruchomienie utworzy plik `config.json` na podstawie domyślnej bazy (`
 ## 📦 Funkcjonalności
 - **Biblioteka gier** – dodawanie, uruchamianie, kafelkowy podgląd gier
 - **Statystyki** – wykresy czasu gry i podział gatunków (Matplotlib)
-- **Aktualności** – kanały RSS (Feedparser)
-- **Przypomnienia** – powtarzalne alerty i zarządzanie zadaniami
-- **Odtwarzacz muzyki** – obsługa playlist z folderów (pygame)
-- **Ustawienia** – wybór motywu, koloru akcentu, kanałów RSS, powiadomień
+- **🏆 Osiągnięcia** – system osiągnięć z automatycznym śledzeniem postępów i paskami postępu
+- **🗺️ Roadmapa** – planowanie gier do ukończenia z priorytetami
+- **🔧 Mody** – zarządzanie modami dla gier
+- **📰 Aktualności** – kanały RSS (Feedparser)
+- **⏰ Przypomnienia** – powtarzalne alerty i zarządzanie zadaniami
+- **🎵 Odtwarzacz muzyki** – obsługa playlist z folderów (pygame) + seek bar do przewijania utworów
+- **👤 Profil** – avatar użytkownika, statystyki, system kopii zapasowych
+- **⚙️ Ustawienia** – wybór motywu, koloru akcentu, kanałów RSS, powiadomień
 
 ## ⚙️ Konfiguracja
 - **Discord Rich Presence**: wprowadź `discord_client_id` w ustawieniach

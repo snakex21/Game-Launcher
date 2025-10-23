@@ -1,0 +1,231 @@
+{
+  "games": [
+    {
+      "id": "1",
+      "name": "The Witcher 3: Wild Hunt",
+      "exe_path": "C:/Games/Witcher3/witcher3.exe",
+      "arguments": "",
+      "tags": [
+        "RPG",
+        "Singleplayer"
+      ],
+      "groups": [
+        "Backlog"
+      ],
+      "genres": [
+        "RPG",
+        "Fantasy"
+      ],
+      "rating": 9.5,
+      "play_time": 1280,
+      "completion": 75,
+      "last_played": "2024-01-10T18:30:00",
+      "cover_image": "",
+      "notes": "Sprawdź nowy dodatek Blood and Wine.",
+      "checklist": [
+        {
+          "label": "Ukończ główną fabułę",
+          "completed": true
+        },
+        {
+          "label": "Wykonaj zadania poboczne",
+          "completed": false
+        }
+      ],
+      "sessions": [
+        {
+          "started_at": "2024-01-01T19:00:00",
+          "duration": 120
+        },
+        {
+          "started_at": "2024-01-05T20:00:00",
+          "duration": 180
+        }
+      ],
+      "saves_path": "",
+      "screenshots": [],
+      "autoscan_screenshots": [],
+      "launch_profiles": [
+        {
+          "name": "Default",
+          "exe_path": null,
+          "arguments": ""
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Hades",
+      "exe_path": "C:/Games/Hades/hades.exe",
+      "arguments": "",
+      "tags": [
+        "Roguelike"
+      ],
+      "groups": [
+        "Ulubione"
+      ],
+      "genres": [
+        "Action",
+        "Roguelike"
+      ],
+      "rating": 9.0,
+      "play_time": 540,
+      "completion": 60,
+      "last_played": "2024-01-14T22:15:00",
+      "cover_image": "",
+      "notes": "Spróbuj nowego aspektu włóczni.",
+      "checklist": [
+        {
+          "label": "Pokonaj Hadesa 10 razy",
+          "completed": false
+        }
+      ],
+      "sessions": [
+        {
+          "started_at": "2024-01-12T21:00:00",
+          "duration": 60
+        }
+      ],
+      "saves_path": "",
+      "screenshots": [],
+      "autoscan_screenshots": [],
+      "launch_profiles": [
+        {
+          "name": "Default",
+          "exe_path": null,
+          "arguments": ""
+        }
+      ]
+    }
+  ],
+  "reminders": [
+    {
+      "id": "r1",
+      "title": "Weekendowy maraton",
+      "message": "Rozpocznij nową kampanię w Baldur's Gate 3",
+      "remind_at": "2024-01-20T10:00:00",
+      "repeat": "none",
+      "completed": false,
+      "tags": [
+        "RPG"
+      ]
+    }
+  ],
+  "settings": {
+    "theme": "midnight",
+    "accent": "#6366f1",
+    "discord_enabled": false,
+    "discord_client_id": "",
+    "rss_feeds": [
+      "https://www.pcgamer.com/rss/"
+    ],
+    "rss_limit": 6,
+    "music_volume": 0.5,
+    "show_notifications": true,
+    "graph_color": "#ff6b6b"
+  },
+  "achievements_catalog": [
+    {
+      "key": "first_launch",
+      "name": "Pierwsze uruchomienie",
+      "description": "Uruchom aplikację po raz pierwszy.",
+      "points": 10,
+      "icon": "🚀",
+      "condition_type": "manual",
+      "target_value": 1
+    },
+    {
+      "key": "library_10",
+      "name": "Kolekcjoner",
+      "description": "Dodaj 10 gier do biblioteki.",
+      "points": 25,
+      "icon": "📚",
+      "condition_type": "library_size",
+      "target_value": 10
+    },
+    {
+      "key": "mod_master",
+      "name": "Mod Master",
+      "description": "Zainstaluj 5 modów.",
+      "points": 20,
+      "icon": "🔧",
+      "condition_type": "mods_count",
+      "target_value": 5
+    },
+    {
+      "key": "marathon",
+      "name": "Maratończyk",
+      "description": "Zagraj łącznie 100 godzin.",
+      "points": 40,
+      "icon": "⏱️",
+      "condition_type": "play_time_hours",
+      "target_value": 100
+    },
+    {
+      "key": "roadmap_pro",
+      "name": "Planista",
+      "description": "Ukończ 3 pozycje w roadmapie.",
+      "points": 30,
+      "icon": "🗺️",
+      "condition_type": "roadmap_completed",
+      "target_value": 3
+    },
+    {
+      "key": "games_5_launched",
+      "name": "Gracz Debiutant",
+      "description": "Uruchom 5 różnych gier.",
+      "points": 15,
+      "icon": "🎮",
+      "condition_type": "games_launched_count",
+      "target_value": 5
+    },
+    {
+      "key": "library_50",
+      "name": "Mega Kolekcjoner",
+      "description": "Dodaj 50 gier do biblioteki.",
+      "points": 50,
+      "icon": "🏛️",
+      "condition_type": "library_size",
+      "target_value": 50
+    }
+  ],
+  "user": {
+    "achievements": {
+      "library_10": {
+        "unlocked": false,
+        "timestamp": null,
+        "current_progress": 0
+      },
+      "first_launch": {
+        "unlocked": false,
+        "timestamp": null,
+        "current_progress": 0
+      },
+      "roadmap_pro": {
+        "unlocked": false,
+        "timestamp": null,
+        "current_progress": 0
+      },
+      "library_50": {
+        "unlocked": false,
+        "timestamp": null,
+        "current_progress": 0
+      },
+      "marathon": {
+        "unlocked": false,
+        "timestamp": null,
+        "current_progress": 0
+      },
+      "mod_master": {
+        "unlocked": false,
+        "timestamp": null,
+        "current_progress": 0
+      },
+      "games_5_launched": {
+        "unlocked": false,
+        "timestamp": null,
+        "current_progress": 0
+      }
+    }
+  }
+}
