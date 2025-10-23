@@ -100,3 +100,46 @@ class MusicService:
         pygame.mixer.music.set_volume(clamped)
         self.data_manager.set_nested("settings", "music_volume", value=clamped)
         logger.info("Ustawiono głośność: %.2f", clamped)
+    
+    def get_pos(self) -> float:
+        """Zwraca aktualną pozycję w utworze w sekundach."""
+        if self.is_playing:
+            return pygame.mixer.music.get_pos() / 1000.0
+        return 0.0
+    
+    def get_length(self) -> float:
+        """Zwraca długość aktualnego utworu w sekundach (wymaga pygame-ce lub mutagen)."""
+        if not self.current_track:
+            return 0.0
+        
+        try:
+            # Próba użycia mutagen do odczytu długości
+            from mutagen import File
+            audio = File(str(self.current_track))
+            if audio and hasattr(audio.info, 'length'):
+                return audio.info.length
+        except Exception:
+            pass
+        
+        # Fallback - szacowanie na podstawie rozmiaru pliku (bardzo przybliżone)
+        return 180.0  # Domyślnie 3 minuty
+    
+    def seek(self, position: float) -> None:
+        """Przewija utwór do podanej pozycji w sekundach."""
+        if self.is_playing and self.current_track:
+            try:
+                # pygame.mixer.music.set_pos działa tylko dla niektórych formatów (OGG, MP3)
+                pygame.mixer.music.set_pos(position)
+                logger.info("Przewinięto do pozycji: %.2fs", position)
+                self.event_bus.emit("music_seeked", position=position)
+            except Exception as e:
+                # Jeśli set_pos nie działa, próbujemy załadować od nowa i rozpocząć od pozycji
+                logger.warning("set_pos nie działa dla tego formatu, reloading: %s", e)
+                try:
+                    pygame.mixer.music.load(str(self.current_track))
+                    volume = self.data_manager.get_nested("settings", "music_volume", default=0.5)
+                    pygame.mixer.music.set_volume(volume)
+                    pygame.mixer.music.play(start=position)
+                    self.is_paused = False
+                except Exception as e2:
+                    logger.error("Błąd podczas przewijania: %s", e2)

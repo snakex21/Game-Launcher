@@ -83,6 +83,7 @@ class GameService:
         self.data_manager.set("games", games)
         logger.info("Dodano grę %s", game.name)
         self.event_bus.emit("games_changed")
+        self.event_bus.emit("game_added", game_id=game.id)
         return game
 
     def update(self, game_id: str, updates: dict[str, Any]) -> Game | None:
@@ -130,6 +131,7 @@ class GameService:
             else:
                 subprocess.Popen([str(exe), *game.arguments.split()])
             logger.info("Uruchomiono grę %s", game.name)
+            self.event_bus.emit("game_launched", game_id=game.id, game_name=game.name)
         except Exception as exc:  # pragma: no cover - zależne od systemu
             logger.exception("Nie udało się uruchomić gry %s", game.name)
             raise exc

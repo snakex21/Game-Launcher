@@ -23,7 +23,15 @@ class AchievementsPlugin(BasePlugin):
             context.register_service("achievements", AchievementService(context.data_manager, context.event_bus))
         
         context.event_bus.subscribe("achievements_changed", self._on_achievement_unlocked)
+        
+        # Nasłuchuj zdarzeń które mogą wpłynąć na osiągnięcia
+        context.event_bus.subscribe("game_added", lambda **kw: context.service("achievements").check_and_update_progress())
+        context.event_bus.subscribe("game_launched", lambda **kw: context.service("achievements").check_and_update_progress())
+        context.event_bus.subscribe("roadmap_completed", lambda **kw: context.service("achievements").check_and_update_progress())
+        context.event_bus.subscribe("mod_added", lambda **kw: context.service("achievements").check_and_update_progress())
+        
         context.service("achievements").unlock("first_launch")
+        context.service("achievements").check_and_update_progress()
         
         logger.info("Zarejestrowano plugin Achievements")
 
@@ -69,6 +77,10 @@ class AchievementsView(ctk.CTkFrame):
             widget.destroy()
 
         achievements_service = self.context.service("achievements")
+        
+        # Sprawdź i zaktualizuj postęp przed wyświetleniem
+        achievements_service.check_and_update_progress()
+        
         catalog = achievements_service.catalog()
         progress = achievements_service.user_progress()
         completion = achievements_service.completion_rate()
@@ -125,7 +137,7 @@ class AchievementsView(ctk.CTkFrame):
             corner_radius=12,
             fg_color=self.theme.surface_alt if is_unlocked else self.theme.base_color,
             border_width=2 if is_unlocked else 0,
-            border_color=self.theme.accent if is_unlocked else "transparent"
+            border_color=self.theme.accent if is_unlocked else self.theme.base_color
         )
 
         content = ctk.CTkFrame(card, fg_color="transparent")
@@ -134,10 +146,10 @@ class AchievementsView(ctk.CTkFrame):
         header_frame = ctk.CTkFrame(content, fg_color="transparent")
         header_frame.pack(fill="x")
 
-        trophy_emoji = "🏆" if is_unlocked else "🔒"
+        icon = item.get("icon", "🏆" if is_unlocked else "🔒")
         name_label = ctk.CTkLabel(
             header_frame,
-            text=f"{trophy_emoji} {item['name']}",
+            text=f"{icon} {item['name']}",
             font=ctk.CTkFont(size=16, weight="bold"),
             anchor="w"
         )
@@ -163,6 +175,37 @@ class AchievementsView(ctk.CTkFrame):
             anchor="w"
         )
         desc_label.pack(fill="x", pady=(8, 0))
+        
+        # Pasek postępu dla osiągnięć z celami
+        condition_type = item.get("condition_type")
+        target_value = item.get("target_value", 1)
+        current_progress = user_data.get("current_progress", 0)
+        
+        if condition_type and condition_type != "manual" and not is_unlocked:
+            progress_frame = ctk.CTkFrame(content, fg_color="transparent")
+            progress_frame.pack(fill="x", pady=(8, 0))
+            
+            progress_label = ctk.CTkLabel(
+                progress_frame,
+                text=f"Postęp: {current_progress}/{target_value}",
+                font=ctk.CTkFont(size=11),
+                text_color=self.theme.text_muted,
+                anchor="w"
+            )
+            progress_label.pack(anchor="w")
+            
+            progress_bar = ctk.CTkProgressBar(progress_frame, width=320, height=8)
+            progress_value = min(current_progress / target_value, 1.0) if target_value > 0 else 0
+            progress_bar.set(progress_value)
+            progress_bar.pack(anchor="w", pady=(4, 0))
+            
+            percent_label = ctk.CTkLabel(
+                progress_frame,
+                text=f"{progress_value*100:.0f}%",
+                font=ctk.CTkFont(size=10),
+                text_color=self.theme.accent if progress_value > 0.5 else self.theme.text_muted
+            )
+            percent_label.pack(anchor="w")
 
         if is_unlocked and user_data.get("timestamp"):
             timestamp = user_data["timestamp"][:10]
