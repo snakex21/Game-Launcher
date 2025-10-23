@@ -115,10 +115,6 @@ class LibraryView(ctk.CTkFrame):
             fg_color=self.theme.accent,
             hover_color=self._adjust_color(self.theme.accent, -15)
         )
-        self.btn_refresh.configure(
-            fg_color=self.theme.base_color,
-            hover_color=self.theme.surface_alt
-        )
 
         self._create_summary_cards(games)
 
