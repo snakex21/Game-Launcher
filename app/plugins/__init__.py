@@ -10,6 +10,7 @@ from .roadmap import RoadmapPlugin
 from .mods import ModsPlugin
 from .achievements import AchievementsPlugin
 from .profile import ProfilePlugin
+from .screenshots import ScreenshotsPlugin
 
 __all__ = [
     "BasePlugin",
@@ -23,4 +24,5 @@ __all__ = [
     "ModsPlugin",
     "AchievementsPlugin",
     "ProfilePlugin",
+    "ScreenshotsPlugin",
 ]

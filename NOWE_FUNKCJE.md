@@ -75,39 +75,100 @@ Status: W trakcie
 **Odblokuj osiągnięcia za swoje aktywności!**
 
 ### Domyślne Osiągnięcia:
-- 🏆 **Pierwsze uruchomienie** (10 pkt) - Automatycznie odblokowane!
-- 📚 **Kolekcjoner** (25 pkt) - Dodaj 10 gier
+- 🚀 **Pierwsze uruchomienie** (10 pkt) - Automatycznie odblokowane!
+- 📚 **Kolekcjoner** (25 pkt) - Dodaj 10 gier do biblioteki
 - 🔧 **Mod Master** (20 pkt) - Zainstaluj 5 modów
 - ⏱️ **Maratończyk** (40 pkt) - Zagraj łącznie 100 godzin
 - 🗺️ **Planista** (30 pkt) - Ukończ 3 pozycje w roadmapie
+- 🎮 **Gracz Debiutant** (15 pkt) - Uruchom 5 różnych gier
+- 🏛️ **Mega Kolekcjoner** (50 pkt) - Dodaj 50 gier do biblioteki
 
 ### Funkcje:
-- 📊 Pasek postępu ukończenia
+- 📊 **Pasek postępu dla każdego osiągnięcia** - zobacz ile % masz ukończone!
+- 🎯 **Automatyczne sprawdzanie warunków** - osiągnięcia odblokowują się same!
 - ⭐ Licznik punktów
 - 🎉 Data odblokowania
 - 🔓 Możliwość ręcznego odblokowania (dla testów)
 - ↺ Możliwość resetowania osiągnięć
+- 📈 **Licznik postępu** - widzisz np. "3/10 gier" w osiągnięciu
+
+### Mechanika osiągnięć:
+Każde osiągnięcie ma:
+- **Typ warunku** (condition_type): np. library_size, mods_count, games_launched_count
+- **Wartość docelową** (target_value): np. 10 gier
+- **Aktualny postęp** (current_progress): automatycznie liczony
+- **Pasek postępu** pokazujący % ukończenia
 
 ### Jak wygląda:
 ```
 ┌─────────────────────────────────┐
-│ Postęp: 2/5                      │
-│ ▓▓▓▓▓░░░░░░░░░                  │
-│ 40.0%                  ⭐ 35 pkt│
+│ Postęp: 3/7                      │
+│ ▓▓▓▓▓▓░░░░░░░░░░░               │
+│ 42.9%                  ⭐ 45 pkt│
 └─────────────────────────────────┘
 
-🏆 Pierwsze uruchomienie ⭐ 10
+🚀 Pierwsze uruchomienie ⭐ 10
 Uruchom aplikację po raz pierwszy
 🎉 Odblokowano: 2024-01-15
+[↺ Zresetuj]
 
-🔒 Kolekcjoner ⭐ 25
+📚 Kolekcjoner ⭐ 25
 Dodaj 10 gier do biblioteki
+Postęp: 3/10
+▓▓▓▓▓░░░░░░░░░░ 30%
 [🔓 Odblokuj]
 ```
 
 ---
 
-## 👤 4. Profil Użytkownika
+## 🎵 4. Odtwarzacz Muzyki z Seek Barem
+
+**Odtwarzaj muzykę z pełną kontrolą!**
+
+### Nowe Funkcje:
+- 🎚️ **Pasek postępu (seek bar)** - zobacz gdzie jesteś w utworze!
+- ⏱️ **Wyświetlanie czasu** - aktualny czas / całkowity czas (MM:SS)
+- 🔍 **Przewijanie utworu** - kliknij i przeciągnij suwak do wybranego momentu
+- 🎯 **Precyzyjne pozycjonowanie** - przeskocz np. z 0:10 na 1:30
+- 🔄 **Auto-aktualizacja** - pozycja aktualizuje się co 0.5s
+- ▶️ **Auto-next** - automatyczne przejście do następnego utworu
+
+### Jak używać:
+```
+1. Kliknij 🎵 Odtwarzacz w menu
+2. Kliknij 📂 Wczytaj playlistę
+3. Wybierz folder z plikami muzycznymi (MP3, WAV, OGG, FLAC)
+4. Kliknij ▶ Play
+5. Użyj suwaka postępu aby przewinąć utwór:
+   - Kliknij i przytrzymaj
+   - Przeciągnij do wybranej pozycji
+   - Puść - utwór przeskoczy tam!
+```
+
+### Jak wygląda:
+```
+🎵 Odtwarzacz Muzyki
+┌────────────────────────────────────┐
+│ Odtwarzanie: Epic_Soundtrack.mp3   │
+│                                    │
+│ 1:23  ▓▓▓▓▓▓░░░░░░░░░░░░  3:45   │
+│       ↑ Przeciągnij aby przewinąć │
+│                                    │
+│  ⏮   ▶   ⏸   ⏭                   │
+│                                    │
+│  🔊 Głośność: ▓▓▓▓▓▓▓▓░░          │
+└────────────────────────────────────┘
+```
+
+### Obsługiwane formaty:
+- 🎵 MP3
+- 🎵 WAV
+- 🎵 OGG
+- 🎵 FLAC
+
+---
+
+## 👤 5. Profil Użytkownika
 
 **Spersonalizuj swój profil!**
 
@@ -132,7 +193,7 @@ Dodaj 10 gier do biblioteki
 
 ---
 
-## 💾 5. System Kopii Zapasowych
+## 💾 6. System Kopii Zapasowych
 
 **Automatyczne i ręczne backupy!**
 
@@ -182,10 +243,16 @@ Sidebar został rozbudowany o nowe sekcje:
 
 ### Auto-tracking osiągnięć:
 - ✅ **Pierwsze uruchomienie** - odblokowane automatycznie
-- 📚 **Kolekcjoner** - sprawdzane przy dodawaniu gier
-- 🔧 **Mod Master** - sprawdzane przy instalacji modów
+- 📚 **Kolekcjoner** - sprawdzane przy dodawaniu gier (event: game_added)
+- 🔧 **Mod Master** - sprawdzane przy instalacji modów (event: mod_added)
 - ⏱️ **Maratończyk** - obliczane na podstawie czasu gry
-- 🗺️ **Planista** - sprawdzane przy oznaczaniu gier jako ukończone
+- 🗺️ **Planista** - sprawdzane przy oznaczaniu gier jako ukończone (event: roadmap_completed)
+- 🎮 **Gracz Debiutant** - sprawdzane przy uruchamianiu gier (event: game_launched)
+- 📊 **Wszystkie osiągnięcia** - automatycznie odblokowane gdy osiągniesz cel!
+
+### Auto-aktualizacja muzyki:
+- 🎵 Pasek postępu aktualizuje się co 0.5s
+- ⏭️ Automatyczne przejście do następnego utworu po zakończeniu
 
 ### Auto-backup:
 - 💾 Tworzony automatycznie przy błędzie zapisu
@@ -205,7 +272,13 @@ Sidebar został rozbudowany o nowe sekcje:
 
 ### Osiągnięcia:
 - Możesz ręcznie odblokować osiągnięcia do testów
-- System automatycznie śledzi postępy
+- System automatycznie śledzi postępy i odblokowuje osiągnięcia
+- Pasek postępu pokazuje dokładnie ile % masz ukończone
+
+### Muzyka:
+- Używaj folderów z dobrze zorganizowaną muzyką
+- Seek bar działa najlepiej z formatami MP3 i OGG
+- Możesz przewijać podczas odtwarzania bez przerywania utworu
 
 ### Profil:
 - Twórz backupy przed dużymi zmianami
@@ -240,7 +313,7 @@ Planowane funkcje (obecnie w budowie):
 | **System backupów** | ❌ | ✅ **NOWE!** |
 | Newsy | ✅ | ✅ |
 | Przypomnienia | ✅ | ✅ |
-| Odtwarzacz | ✅ | ✅ |
+| Odtwarzacz muzyki | ✅ | ✅ **Z SEEKIEM!** |
 | Ustawienia | ✅ | ✅ Rozbudowane |
 
 ---
@@ -274,12 +347,26 @@ Planowane funkcje (obecnie w budowie):
 }
 ```
 
-### Osiągnięcia (`user.achievements`):
+### Osiągnięcia - Katalog (`achievements_catalog`):
 ```json
 {
-  "first_launch": {
-    "unlocked": true,
-    "timestamp": "2024-01-15T14:30:00"
+  "key": "library_10",
+  "name": "Kolekcjoner",
+  "description": "Dodaj 10 gier do biblioteki.",
+  "points": 25,
+  "icon": "📚",
+  "condition_type": "library_size",
+  "target_value": 10
+}
+```
+
+### Osiągnięcia - Postęp Użytkownika (`user.achievements`):
+```json
+{
+  "library_10": {
+    "unlocked": false,
+    "timestamp": null,
+    "current_progress": 3
   }
 }
 ```
@@ -293,3 +380,4 @@ Sprawdź też:
 - `README_REFACTOR.md` - architektura
 - `QUICK_GUIDE.md` - szybki start
 - `VISUAL_IMPROVEMENTS.md` - ulepszenia wizualne
+- `CHANGELOG.md` - historia zmian i nowych funkcji

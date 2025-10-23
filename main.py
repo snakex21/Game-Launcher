@@ -15,6 +15,7 @@ from app.plugins import (
     ProfilePlugin,
     ReminderPlugin,
     RoadmapPlugin,
+    ScreenshotsPlugin,
     SettingsPlugin,
     StatisticsPlugin,
 )
@@ -67,6 +68,7 @@ def main() -> None:
     context.add_plugin(RoadmapPlugin())
     context.add_plugin(ModsPlugin())
     context.add_plugin(AchievementsPlugin())
+    context.add_plugin(ScreenshotsPlugin())
     context.add_plugin(NewsPlugin())
     context.add_plugin(ReminderPlugin())
     context.add_plugin(MusicPlayerPlugin())
