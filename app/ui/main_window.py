@@ -56,6 +56,7 @@ class MainWindow(ctk.CTk):
             ("Roadmapa", "roadmap"),
             ("Mody", "mods"),
             ("Osiągnięcia", "achievements"),
+            ("Screenshoty", "screenshots"),
             ("Newsy", "news"),
             ("Przypomnienia", "reminders"),
             ("Odtwarzacz", "music"),
@@ -69,6 +70,7 @@ class MainWindow(ctk.CTk):
             "roadmap": "🗺️",
             "mods": "🔧",
             "achievements": "🏆",
+            "screenshots": "📸",
             "news": "📰",
             "reminders": "⏰",
             "music": "🎵",
@@ -93,6 +95,42 @@ class MainWindow(ctk.CTk):
             )
             btn.grid(row=index, column=0, padx=12, pady=3, sticky="ew")
             self.nav_buttons[view_id] = btn
+
+        # Mini kontrolka muzyki na dole
+        self.music_control_frame = ctk.CTkFrame(self.sidebar, fg_color=theme.base_color, corner_radius=8)
+        self.music_control_frame.grid(row=11, column=0, padx=12, pady=12, sticky="ew")
+        
+        self.music_track_label = ctk.CTkLabel(
+            self.music_control_frame,
+            text="🎵 Brak playlisty",
+            font=ctk.CTkFont(size=10),
+            text_color=theme.text_muted
+        )
+        self.music_track_label.pack(pady=(8, 4))
+        
+        music_buttons = ctk.CTkFrame(self.music_control_frame, fg_color="transparent")
+        music_buttons.pack(pady=(0, 8))
+        
+        self.music_btn_prev = ctk.CTkButton(
+            music_buttons, text="⏮", width=35, height=28,
+            command=self._music_previous, fg_color=theme.surface
+        )
+        self.music_btn_prev.pack(side="left", padx=2)
+        
+        self.music_btn_play = ctk.CTkButton(
+            music_buttons, text="▶", width=35, height=28,
+            command=self._music_play, fg_color=theme.accent
+        )
+        self.music_btn_play.pack(side="left", padx=2)
+        
+        self.music_btn_next = ctk.CTkButton(
+            music_buttons, text="⏭", width=35, height=28,
+            command=self._music_next, fg_color=theme.surface
+        )
+        self.music_btn_next.pack(side="left", padx=2)
+        
+        # Timer do aktualizacji statusu muzyki
+        self._update_music_status()
 
         self.main_content = ctk.CTkFrame(self, corner_radius=12, fg_color=theme.surface)
         self.main_content.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
@@ -149,6 +187,9 @@ class MainWindow(ctk.CTk):
         elif view_id == "achievements":
             from app.plugins.achievements import AchievementsView
             self.current_view = AchievementsView(self.main_content, self.context)
+        elif view_id == "screenshots":
+            from app.plugins.screenshots import ScreenshotsView
+            self.current_view = ScreenshotsView(self.main_content, self.context)
         elif view_id == "news":
             from app.plugins.news import NewsView
             self.current_view = NewsView(self.main_content, self.context)
@@ -196,4 +237,67 @@ class MainWindow(ctk.CTk):
                     hover_color=theme.surface_alt,
                     font=self.nav_font
                 )
+
+    def _music_play(self) -> None:
+        """Odtwarzaj/pauza muzyki."""
+        music = self.context.music
+        if music.is_paused:
+            music.resume()
+            self.music_btn_play.configure(text="⏸")
+        elif music.is_playing:
+            music.pause()
+            self.music_btn_play.configure(text="▶")
+        else:
+            if music.playlist:
+                music.play()
+                self.music_btn_play.configure(text="⏸")
+
+    def _music_next(self) -> None:
+        """Następny utwór."""
+        self.context.music.next()
+
+    def _music_previous(self) -> None:
+        """Poprzedni utwór."""
+        self.context.music.previous()
+
+    def _update_music_status(self) -> None:
+        """Aktualizuj status muzyki w mini kontrolce."""
+        music = self.context.music
+        
+        if music.current_track and music.is_playing:
+            track_name = music.current_track.name
+            if len(track_name) > 20:
+                track_name = track_name[:17] + "..."
+            
+            pos = music.get_pos()
+            length = music.get_length()
+            
+            pos_min = int(pos // 60)
+            pos_sec = int(pos % 60)
+            len_min = int(length // 60)
+            len_sec = int(length % 60)
+            
+            status_text = f"🎵 {track_name}\n{pos_min}:{pos_sec:02d} / {len_min}:{len_sec:02d}"
+            self.music_track_label.configure(text=status_text)
+            
+            if music.is_paused:
+                self.music_btn_play.configure(text="▶")
+            else:
+                self.music_btn_play.configure(text="⏸")
+        elif music.playlist:
+            self.music_track_label.configure(text="🎵 Playlista gotowa\nKliknij ▶")
+            self.music_btn_play.configure(text="▶")
+        else:
+            self.music_track_label.configure(text="🎵 Brak playlisty")
+            self.music_btn_play.configure(text="▶")
+        
+        # Sprawdź czy utwór się skończył
+        if music.is_playing and not music.is_paused:
+            pos = music.get_pos()
+            length = music.get_length()
+            if pos >= length - 1 and length > 0:
+                music.next()
+        
+        # Zaplanuj następną aktualizację
+        self.after(500, self._update_music_status)
 

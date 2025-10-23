@@ -232,6 +232,7 @@ class RoadmapView(ctk.CTkFrame):
                 item["completed_date"] = datetime.now().strftime("%Y-%m-%d")
                 break
         self.context.data_manager.set("roadmap", roadmap)
+        self.context.event_bus.emit("roadmap_completed", item_id=item_id)
         self._load_roadmap()
 
     def _mark_uncompleted(self, item_id: str) -> None:

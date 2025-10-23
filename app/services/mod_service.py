@@ -37,6 +37,7 @@ class ModService:
         self.data_manager.set("mods", mods)
         logger.info("Dodano mod %s do gry %s", mod["mod_name"], mod["game_name"])
         self.event_bus.emit("mods_changed", game_name=mod["game_name"])
+        self.event_bus.emit("mod_added", mod_id=mod["id"], game_name=mod["game_name"])
         return mod
 
     def update_mod(self, mod_id: str, updates: dict[str, Any]) -> dict[str, Any] | None:

@@ -20,6 +20,8 @@ class MusicService:
         self.current_index: int = 0
         self.is_playing: bool = False
         self.is_paused: bool = False
+        self.seek_offset: float = 0.0  # Offset od seekowania w sekundach
+        self.track_length_cache: dict[str, float] = {}  # Cache długości utworów
         
         try:
             pygame.mixer.init()
@@ -57,6 +59,7 @@ class MusicService:
             self.current_track = track
             self.is_playing = True
             self.is_paused = False
+            self.seek_offset = 0.0  # Reset offsetu przy nowym utworze
             logger.info("Odtwarzanie: %s", track.name)
             self.event_bus.emit("music_started", track=track.name)
         except Exception as e:
@@ -100,3 +103,65 @@ class MusicService:
         pygame.mixer.music.set_volume(clamped)
         self.data_manager.set_nested("settings", "music_volume", value=clamped)
         logger.info("Ustawiono głośność: %.2f", clamped)
+    
+    def get_pos(self) -> float:
+        """Zwraca aktualną pozycję w utworze w sekundach."""
+        if self.is_playing and not self.is_paused:
+            # pygame.mixer.music.get_pos() zwraca czas od rozpoczęcia/wznowienia
+            return self.seek_offset + (pygame.mixer.music.get_pos() / 1000.0)
+        return self.seek_offset
+    
+    def get_length(self) -> float:
+        """Zwraca długość aktualnego utworu w sekundach (wymaga pygame-ce lub mutagen)."""
+        if not self.current_track:
+            return 0.0
+        
+        # Sprawdź cache
+        track_path = str(self.current_track)
+        if track_path in self.track_length_cache:
+            return self.track_length_cache[track_path]
+        
+        length = 0.0
+        try:
+            # Próba użycia mutagen do odczytu długości
+            from mutagen import File
+            audio = File(track_path)
+            if audio and hasattr(audio.info, 'length'):
+                length = audio.info.length
+                self.track_length_cache[track_path] = length
+                return length
+        except Exception:
+            pass
+        
+        # Fallback - szacowanie na podstawie rozmiaru pliku (bardzo przybliżone)
+        length = 180.0  # Domyślnie 3 minuty
+        self.track_length_cache[track_path] = length
+        return length
+    
+    def seek(self, position: float) -> None:
+        """Przewija utwór do podanej pozycji w sekundach."""
+        if not self.current_track:
+            return
+            
+        was_paused = self.is_paused
+        
+        try:
+            # Dla MP3 musimy załadować od nowa, bo set_pos nie działa dobrze
+            pygame.mixer.music.load(str(self.current_track))
+            volume = self.data_manager.get_nested("settings", "music_volume", default=0.5)
+            pygame.mixer.music.set_volume(volume)
+            pygame.mixer.music.play(start=position)
+            
+            self.seek_offset = position
+            self.is_playing = True
+            
+            if was_paused:
+                pygame.mixer.music.pause()
+                self.is_paused = True
+            else:
+                self.is_paused = False
+            
+            logger.info("Przewinięto do pozycji: %.2fs", position)
+            self.event_bus.emit("music_seeked", position=position)
+        except Exception as e:
+            logger.error("Błąd podczas przewijania: %s", e)
