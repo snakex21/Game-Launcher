@@ -17,9 +17,11 @@ Szczegóły architektury opisane są w pliku [`README_REFACTOR.md`](README_REFAC
 - **🏆 Rozbudowany system osiągnięć** z automatycznym śledzeniem postępów i paskami postępu
 - **🎵 Odtwarzacz muzyki z seekiem** - przewijaj utwory jak chcesz!
 - **🎵 Mini kontrolka muzyki** - steruj muzyką z każdego miejsca w aplikacji (w sidebar)!
+- **🎵 Synchronizacja odtwarzacza** - widok pamięta stan (utwór, czas, pozycja)!
 - **📸 Manager zrzutów ekranu** - galeria ze screenshotami, auto-scan i przypisywanie do gier!
 - Zobacz [`ZMIANY_PL.md`](ZMIANY_PL.md) dla pełnego opisu zmian po polsku
-- Zobacz [`ZMIANY_v2.1.1.md`](ZMIANY_v2.1.1.md) dla najnowszych poprawek
+- Zobacz [`ZMIANY_v2.1.2.md`](ZMIANY_v2.1.2.md) dla najnowszych poprawek synchronizacji muzyki
+- Zobacz [`ZMIANY_v2.1.1.md`](ZMIANY_v2.1.1.md) dla poprawek muzyki w tle
 - Zobacz [`PLAN_ROZWOJU.md`](PLAN_ROZWOJU.md) dla planu dalszego rozwoju
 - Sprawdź [`CHANGELOG.md`](CHANGELOG.md) dla szczegółowej historii zmian
 
