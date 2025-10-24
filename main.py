@@ -8,6 +8,7 @@ from pathlib import Path
 from app.core import AppContext
 from app.plugins import (
     AchievementsPlugin,
+    HomePlugin,
     LibraryPlugin,
     ModsPlugin,
     MusicPlayerPlugin,
@@ -52,7 +53,8 @@ def main() -> None:
     context = AppContext("config.json")
 
     context.register_service("games", GameService(context.data_manager, context.event_bus))
-    context.register_service("sessions", SessionTracker(context.service("games"), context.event_bus))
+    sessions = SessionTracker(context.service("games"), context.event_bus)
+    context.register_service("sessions", sessions)
     context.register_service("reminders", ReminderService(context.data_manager, context.event_bus))
     context.register_service("music", MusicService(context.data_manager, context.event_bus))
     context.register_service("theme", ThemeService(context.data_manager, context.event_bus))
@@ -62,7 +64,10 @@ def main() -> None:
     context.register_service("backup", BackupService(context.data_manager, context.event_bus))
     context.register_service("mods", ModService(context.data_manager, context.event_bus))
     context.register_service("achievements", AchievementService(context.data_manager, context.event_bus))
+    
+    sessions.start_monitoring()
 
+    context.add_plugin(HomePlugin())
     context.add_plugin(LibraryPlugin())
     context.add_plugin(StatisticsPlugin())
     context.add_plugin(RoadmapPlugin())
@@ -88,6 +93,7 @@ def main() -> None:
         logger.exception("Błąd krytyczny aplikacji")
     finally:
         logger.info("Zamykanie aplikacji...")
+        sessions.stop_monitoring()
         if hasattr(context, "discord") and context.discord:
             context.discord.disconnect()
 
