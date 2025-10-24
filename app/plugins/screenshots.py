@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 import logging
+import os
+import platform
+import subprocess
+from datetime import datetime
 from tkinter import filedialog
 from typing import TYPE_CHECKING
 
@@ -185,9 +189,14 @@ class ScreenshotsView(ctk.CTkFrame):
         """Tworzy kartę ze screenshotem."""
         card = ctk.CTkFrame(self.screenshots_scrollable, corner_radius=12, fg_color=self.theme.surface_alt)
         
+        # Pobierz metadane
+        screenshot_service = self.context.service("screenshots")
+        metadata = screenshot_service.get_screenshot_metadata(screenshot_path)
+        abs_path = screenshot_service._to_absolute_path(screenshot_path)
+        
         try:
             # Załaduj i przeskaluj obrazek
-            img = Image.open(screenshot_path)
+            img = Image.open(abs_path)
             img.thumbnail((300, 200), Image.Resampling.LANCZOS)
             photo = ImageTk.PhotoImage(img)
             
@@ -195,11 +204,13 @@ class ScreenshotsView(ctk.CTkFrame):
             img_label.image = photo  # type: ignore[attr-defined]  # Zachowaj referencję
             img_label.pack(padx=5, pady=5)
             
-            img_label.bind("<Button-1>", lambda e, p=screenshot_path: self._open_screenshot(p))
+            # Kliknięcie otwiera podgląd w aplikacji
+            img_label.bind("<Button-1>", lambda e, p=abs_path: self._show_preview(p))
+            img_label.bind("<Double-Button-1>", lambda e, p=abs_path: self._open_in_system_browser(p))
             img_label.configure(cursor="hand2")
             
         except Exception as e:
-            logger.error("Błąd ładowania obrazka %s: %s", screenshot_path, e)
+            logger.error("Błąd ładowania obrazka %s: %s", abs_path, e)
             error_label = ctk.CTkLabel(
                 card,
                 text="❌ Błąd\nładowania",
@@ -210,28 +221,84 @@ class ScreenshotsView(ctk.CTkFrame):
             error_label.pack(padx=5, pady=5)
         
         # Nazwa pliku
-        filename = screenshot_path.split("/")[-1].split("\\")[-1]
+        filename = abs_path.split("/")[-1].split("\\")[-1]
         if len(filename) > 30:
             filename = filename[:27] + "..."
         
         name_label = ctk.CTkLabel(
             card,
             text=filename,
-            font=ctk.CTkFont(size=11),
+            font=ctk.CTkFont(size=11, weight="bold"),
             wraplength=280
         )
-        name_label.pack(pady=(0, 5))
+        name_label.pack(pady=(0, 3))
         
-        # Przycisk usuwania
-        btn_delete = ctk.CTkButton(
-            card,
-            text="🗑️ Usuń",
-            command=lambda p=screenshot_path: self._delete_screenshot(p),
-            width=100,
+        # Metadane
+        if metadata["exists"]:
+            # Rozdzielczość
+            resolution_label = ctk.CTkLabel(
+                card,
+                text=f"📐 {metadata['resolution']}",
+                font=ctk.CTkFont(size=10),
+                text_color="gray"
+            )
+            resolution_label.pack(pady=1)
+            
+            # Data utworzenia
+            if metadata["created"]:
+                date_str = metadata["created"].strftime("%d.%m.%Y %H:%M")
+                date_label = ctk.CTkLabel(
+                    card,
+                    text=f"📅 {date_str}",
+                    font=ctk.CTkFont(size=10),
+                    text_color="gray"
+                )
+                date_label.pack(pady=1)
+            
+            # Rozmiar pliku
+            size_mb = metadata["size"] / (1024 * 1024)
+            size_str = f"{size_mb:.2f} MB" if size_mb >= 0.01 else f"{metadata['size'] / 1024:.0f} KB"
+            size_label = ctk.CTkLabel(
+                card,
+                text=f"💾 {size_str}",
+                font=ctk.CTkFont(size=10),
+                text_color="gray"
+            )
+            size_label.pack(pady=(1, 5))
+        
+        # Przyciski
+        buttons_frame = ctk.CTkFrame(card, fg_color="transparent")
+        buttons_frame.pack(pady=(0, 8), padx=5)
+        
+        btn_preview = ctk.CTkButton(
+            buttons_frame,
+            text="🔍 Podgląd",
+            command=lambda p=abs_path: self._show_preview(p),
+            width=90,
+            height=28,
+            fg_color=self.theme.accent
+        )
+        btn_preview.pack(side="left", padx=2)
+        
+        btn_open = ctk.CTkButton(
+            buttons_frame,
+            text="🌐 Otwórz",
+            command=lambda p=abs_path: self._open_in_system_browser(p),
+            width=90,
             height=28,
             fg_color=self.theme.base_color
         )
-        btn_delete.pack(pady=(0, 8))
+        btn_open.pack(side="left", padx=2)
+        
+        btn_delete = ctk.CTkButton(
+            buttons_frame,
+            text="🗑️",
+            command=lambda p=screenshot_path: self._delete_screenshot(p),
+            width=40,
+            height=28,
+            fg_color="#8B0000"
+        )
+        btn_delete.pack(side="left", padx=2)
         
         return card
 
@@ -254,12 +321,77 @@ class ScreenshotsView(ctk.CTkFrame):
             self._load_games()
             self._load_screenshots()
 
-    def _open_screenshot(self, screenshot_path: str) -> None:
+    def _show_preview(self, screenshot_path: str) -> None:
+        """Wyświetla podgląd screenshota w oknie aplikacji."""
+        try:
+            preview_window = ctk.CTkToplevel(self)
+            preview_window.title("Podgląd screenshota")
+            
+            # Pobierz rozdzielczość ekranu
+            screen_width = preview_window.winfo_screenwidth()
+            screen_height = preview_window.winfo_screenheight()
+            
+            # Załaduj obraz
+            img = Image.open(screenshot_path)
+            original_width, original_height = img.size
+            
+            # Oblicz maksymalny rozmiar (80% ekranu)
+            max_width = int(screen_width * 0.8)
+            max_height = int(screen_height * 0.8)
+            
+            # Przeskaluj jeśli potrzeba
+            if original_width > max_width or original_height > max_height:
+                img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+            
+            photo = ImageTk.PhotoImage(img)
+            
+            # Ustaw rozmiar okna
+            window_width = img.width + 40
+            window_height = img.height + 100
+            x = (screen_width - window_width) // 2
+            y = (screen_height - window_height) // 2
+            preview_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+            
+            # Ramka na obraz
+            img_frame = ctk.CTkFrame(preview_window, fg_color="transparent")
+            img_frame.pack(fill="both", expand=True, padx=20, pady=(20, 10))
+            
+            img_label = ctk.CTkLabel(img_frame, image=photo, text="")  # type: ignore[arg-type]
+            img_label.image = photo  # type: ignore[attr-defined]
+            img_label.pack()
+            
+            # Ramka na przyciski
+            btn_frame = ctk.CTkFrame(preview_window, fg_color="transparent")
+            btn_frame.pack(pady=(0, 10))
+            
+            btn_open = ctk.CTkButton(
+                btn_frame,
+                text="🌐 Otwórz w przeglądarce systemowej",
+                command=lambda: self._open_in_system_browser(screenshot_path),
+                fg_color=self.theme.accent
+            )
+            btn_open.pack(side="left", padx=5)
+            
+            btn_close = ctk.CTkButton(
+                btn_frame,
+                text="❌ Zamknij",
+                command=preview_window.destroy,
+                fg_color=self.theme.base_color
+            )
+            btn_close.pack(side="left", padx=5)
+            
+            # ESC zamyka okno
+            preview_window.bind("<Escape>", lambda e: preview_window.destroy())
+            
+            logger.info("Wyświetlono podgląd screenshota: %s", screenshot_path)
+            
+        except Exception as e:
+            logger.error("Błąd wyświetlania podglądu: %s", e)
+            from tkinter import messagebox
+            messagebox.showerror("Błąd", f"Nie udało się wyświetlić podglądu:\n{e}")
+    
+    def _open_in_system_browser(self, screenshot_path: str) -> None:
         """Otwiera screenshot w domyślnej aplikacji systemowej."""
-        import os
-        import platform
-        import subprocess
-        
         try:
             if platform.system() == "Windows":
                 os.startfile(screenshot_path)  # type: ignore[attr-defined]
@@ -267,7 +399,7 @@ class ScreenshotsView(ctk.CTkFrame):
                 subprocess.Popen(["open", screenshot_path])
             else:
                 subprocess.Popen(["xdg-open", screenshot_path])
-            logger.info("Otwarto screenshot: %s", screenshot_path)
+            logger.info("Otwarto screenshot w przeglądarce systemowej: %s", screenshot_path)
         except Exception as e:
             logger.error("Błąd otwierania screenshota: %s", e)
             from tkinter import messagebox
