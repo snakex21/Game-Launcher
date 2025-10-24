@@ -267,6 +267,178 @@ class SettingsView(ctk.CTkFrame):
         # Spacer na dole
         ctk.CTkLabel(theme_card, text="").grid(row=4, column=0, pady=10)
 
+        # Edytor własnych motywów
+        editor_card = ctk.CTkFrame(tab, corner_radius=12, fg_color=self.theme.surface_alt)
+        editor_card.grid(row=2, column=0, sticky="ew", padx=20, pady=10)
+        editor_card.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            editor_card,
+            text="🎨 Edytor Własnych Motywów",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=self.theme.text
+        ).grid(row=0, column=0, columnspan=3, padx=20, pady=(20, 15), sticky="w")
+
+        # Nazwa motywu
+        ctk.CTkLabel(
+            editor_card,
+            text="Nazwa motywu:",
+            font=ctk.CTkFont(size=13),
+            text_color=self.theme.text
+        ).grid(row=1, column=0, padx=20, pady=10, sticky="w")
+
+        self.custom_theme_name_entry = ctk.CTkEntry(
+            editor_card,
+            placeholder_text="moj_motyw",
+            width=200,
+            height=32
+        )
+        self.custom_theme_name_entry.grid(row=1, column=1, padx=20, pady=10, sticky="w")
+
+        # Przyciski ładowania motywu
+        load_buttons = ctk.CTkFrame(editor_card, fg_color="transparent")
+        load_buttons.grid(row=1, column=2, padx=20, pady=10, sticky="w")
+
+        btn_load_current = ctk.CTkButton(
+            load_buttons,
+            text="📋 Załaduj aktualny",
+            command=self._load_current_theme_to_editor,
+            width=130,
+            height=28
+        )
+        btn_load_current.pack(side="left", padx=(0, 5))
+
+        btn_new_theme = ctk.CTkButton(
+            load_buttons,
+            text="✨ Nowy motyw",
+            command=self._new_theme_editor,
+            width=110,
+            height=28
+        )
+        btn_new_theme.pack(side="left")
+
+        # Kolory motywu
+        colors_label = ctk.CTkLabel(
+            editor_card,
+            text="Kolory:",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            text_color=self.theme.text
+        )
+        colors_label.grid(row=2, column=0, columnspan=3, padx=20, pady=(15, 10), sticky="w")
+
+        # Kontener na kolory (przewijany)
+        colors_scroll = ctk.CTkScrollableFrame(
+            editor_card,
+            fg_color=self.theme.surface,
+            height=200
+        )
+        colors_scroll.grid(row=3, column=0, columnspan=3, padx=20, pady=(0, 15), sticky="ew")
+        colors_scroll.grid_columnconfigure(1, weight=1)
+
+        # Pola kolorów
+        self.color_entries = {}
+        color_fields = [
+            ("base_color", "Kolor bazowy"),
+            ("background", "Tło"),
+            ("surface", "Powierzchnia"),
+            ("surface_alt", "Powierzchnia alt."),
+            ("text", "Tekst"),
+            ("text_muted", "Tekst wyciszony"),
+            ("accent", "Akcent"),
+        ]
+
+        for idx, (key, label) in enumerate(color_fields):
+            # Etykieta
+            ctk.CTkLabel(
+                colors_scroll,
+                text=f"{label}:",
+                font=ctk.CTkFont(size=12),
+                text_color=self.theme.text
+            ).grid(row=idx, column=0, padx=10, pady=5, sticky="w")
+
+            # Pole tekstowe
+            entry = ctk.CTkEntry(
+                colors_scroll,
+                placeholder_text="#000000",
+                width=100,
+                height=28
+            )
+            entry.grid(row=idx, column=1, padx=10, pady=5, sticky="w")
+            self.color_entries[key] = entry
+
+            # Podgląd koloru
+            preview = ctk.CTkLabel(
+                colors_scroll,
+                text="     ",
+                width=60,
+                height=28,
+                corner_radius=6,
+                fg_color="#000000"
+            )
+            preview.grid(row=idx, column=2, padx=10, pady=5)
+            self.color_entries[f"{key}_preview"] = preview
+
+            # Przycisk color picker
+            btn_pick = ctk.CTkButton(
+                colors_scroll,
+                text="🎨",
+                command=lambda k=key: self._pick_color_for_theme(k),
+                width=40,
+                height=28
+            )
+            btn_pick.grid(row=idx, column=3, padx=10, pady=5)
+
+        # Aktualizuj podglądy przy zmianie wartości
+        for key in ["base_color", "background", "surface", "surface_alt", "text", "text_muted", "accent"]:
+            entry = self.color_entries[key]
+            entry.bind("<KeyRelease>", lambda e, k=key: self._update_color_preview(k))
+
+        # Przyciski akcji
+        action_buttons = ctk.CTkFrame(editor_card, fg_color="transparent")
+        action_buttons.grid(row=4, column=0, columnspan=3, padx=20, pady=(0, 20), sticky="ew")
+
+        btn_save_custom = ctk.CTkButton(
+            action_buttons,
+            text="💾 Zapisz motyw",
+            command=self._save_custom_theme_from_editor,
+            width=140,
+            height=32,
+            fg_color=self.theme.accent,
+            font=ctk.CTkFont(size=13, weight="bold")
+        )
+        btn_save_custom.pack(side="left", padx=(0, 10))
+
+        btn_preview_custom = ctk.CTkButton(
+            action_buttons,
+            text="👁️ Podgląd",
+            command=self._preview_custom_theme,
+            width=120,
+            height=32
+        )
+        btn_preview_custom.pack(side="left", padx=(0, 10))
+
+        # Lista własnych motywów
+        custom_list_card = ctk.CTkFrame(tab, corner_radius=12, fg_color=self.theme.surface_alt)
+        custom_list_card.grid(row=3, column=0, sticky="nsew", padx=20, pady=10)
+        custom_list_card.grid_columnconfigure(0, weight=1)
+        tab.grid_rowconfigure(3, weight=1)
+
+        ctk.CTkLabel(
+            custom_list_card,
+            text="📚 Twoje Motywy",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=self.theme.text
+        ).grid(row=0, column=0, padx=20, pady=(20, 10), sticky="w")
+
+        self.custom_themes_list = ctk.CTkScrollableFrame(
+            custom_list_card,
+            fg_color=self.theme.surface,
+            height=150
+        )
+        self.custom_themes_list.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="nsew")
+
+        self._load_custom_themes_list()
+
     def _setup_data_tab(self) -> None:
         """Zakładka zarządzania danymi."""
         tab = self.tabview.tab("Dane")
@@ -516,6 +688,12 @@ class SettingsView(ctk.CTkFrame):
 
         self.theme_option.set(self.context.theme.get_active_theme().name)
         self.accent_preview.configure(text_color=self.context.theme.get_active_theme().accent)
+        
+        # Aktualizuj listę dostępnych motywów (systemowe + własne)
+        self.theme_option.configure(values=[theme.name for theme in self.context.theme.available_themes()])
+        
+        # Załaduj listę własnych motywów
+        self._load_custom_themes_list()
 
         # Dane
         backup_dir = self.context.data_manager.get_nested("settings", "backup_location", default="backups")
@@ -796,3 +974,271 @@ class SettingsView(ctk.CTkFrame):
         """Synchronizuj z chmurą."""
         self.context.cloud.sync()
         self.context.notification.show("Chmura", "Synchronizacja zakończona (placeholder)")
+
+    # Metody edytora własnych motywów
+
+    def _load_current_theme_to_editor(self) -> None:
+        """Załaduj aktualny motyw do edytora."""
+        theme = self.context.theme.get_active_theme()
+        
+        self.custom_theme_name_entry.delete(0, "end")
+        self.custom_theme_name_entry.insert(0, theme.name)
+        
+        self.color_entries["base_color"].delete(0, "end")
+        self.color_entries["base_color"].insert(0, theme.base_color)
+        
+        self.color_entries["background"].delete(0, "end")
+        self.color_entries["background"].insert(0, theme.background)
+        
+        self.color_entries["surface"].delete(0, "end")
+        self.color_entries["surface"].insert(0, theme.surface)
+        
+        self.color_entries["surface_alt"].delete(0, "end")
+        self.color_entries["surface_alt"].insert(0, theme.surface_alt)
+        
+        self.color_entries["text"].delete(0, "end")
+        self.color_entries["text"].insert(0, theme.text)
+        
+        self.color_entries["text_muted"].delete(0, "end")
+        self.color_entries["text_muted"].insert(0, theme.text_muted)
+        
+        self.color_entries["accent"].delete(0, "end")
+        self.color_entries["accent"].insert(0, theme.accent)
+        
+        # Aktualizuj podglądy
+        for key in ["base_color", "background", "surface", "surface_alt", "text", "text_muted", "accent"]:
+            self._update_color_preview(key)
+        
+        logger.info("Załadowano motyw %s do edytora", theme.name)
+
+    def _new_theme_editor(self) -> None:
+        """Wyczyść edytor dla nowego motywu."""
+        self.custom_theme_name_entry.delete(0, "end")
+        
+        # Ustaw domyślne kolory
+        defaults = {
+            "base_color": "#0b1120",
+            "background": "#0f172a",
+            "surface": "#1e293b",
+            "surface_alt": "#273449",
+            "text": "#e2e8f0",
+            "text_muted": "#94a3b8",
+            "accent": "#6366f1",
+        }
+        
+        for key, value in defaults.items():
+            self.color_entries[key].delete(0, "end")
+            self.color_entries[key].insert(0, value)
+            self._update_color_preview(key)
+
+    def _pick_color_for_theme(self, color_key: str) -> None:
+        """Otwórz color picker dla wybranego koloru."""
+        current_color = self.color_entries[color_key].get() or "#000000"
+        color = colorchooser.askcolor(title=f"Wybierz kolor - {color_key}", color=current_color)
+        
+        if color and color[1]:
+            hex_color = color[1]
+            self.color_entries[color_key].delete(0, "end")
+            self.color_entries[color_key].insert(0, hex_color)
+            self._update_color_preview(color_key)
+
+    def _update_color_preview(self, color_key: str) -> None:
+        """Aktualizuj podgląd koloru."""
+        hex_color = self.color_entries[color_key].get()
+        preview = self.color_entries.get(f"{color_key}_preview")
+        
+        if preview and hex_color:
+            # Walidacja koloru hex
+            if hex_color.startswith("#") and len(hex_color) in [4, 7]:
+                try:
+                    preview.configure(fg_color=hex_color)
+                except Exception:
+                    pass
+
+    def _save_custom_theme_from_editor(self) -> None:
+        """Zapisz motyw z edytora."""
+        theme_name = self.custom_theme_name_entry.get().strip()
+        
+        if not theme_name:
+            self.context.notification.show("Błąd", "Podaj nazwę motywu")
+            return
+        
+        # Sprawdź czy nazwa nie jest systemowym motywem
+        if self.context.theme.is_system_theme(theme_name):
+            self.context.notification.show(
+                "Błąd",
+                f"Nie można nadpisać motywu systemowego '{theme_name}'"
+            )
+            return
+        
+        # Zbierz dane z edytora
+        theme_data = {
+            "name": theme_name,
+            "base_color": self.color_entries["base_color"].get(),
+            "background": self.color_entries["background"].get(),
+            "surface": self.color_entries["surface"].get(),
+            "surface_alt": self.color_entries["surface_alt"].get(),
+            "text": self.color_entries["text"].get(),
+            "text_muted": self.color_entries["text_muted"].get(),
+            "accent": self.color_entries["accent"].get(),
+        }
+        
+        # Zapisz motyw
+        if self.context.theme.save_custom_theme(theme_name, theme_data):
+            self.context.notification.show("Motyw", f"Zapisano motyw '{theme_name}'")
+            
+            # Odśwież listę motywów
+            self.theme_option.configure(values=[theme.name for theme in self.context.theme.available_themes()])
+            self._load_custom_themes_list()
+            
+            logger.info("Zapisano własny motyw: %s", theme_name)
+        else:
+            self.context.notification.show("Błąd", "Nie udało się zapisać motywu")
+
+    def _preview_custom_theme(self) -> None:
+        """Podgląd motywu bez zapisywania."""
+        theme_name = self.custom_theme_name_entry.get().strip() or "podglad"
+        
+        # Zbierz dane z edytora
+        theme_data = {
+            "name": theme_name,
+            "base_color": self.color_entries["base_color"].get(),
+            "background": self.color_entries["background"].get(),
+            "surface": self.color_entries["surface"].get(),
+            "surface_alt": self.color_entries["surface_alt"].get(),
+            "text": self.color_entries["text"].get(),
+            "text_muted": self.color_entries["text_muted"].get(),
+            "accent": self.color_entries["accent"].get(),
+        }
+        
+        # Tymczasowo zapisz i aktywuj motyw
+        if self.context.theme.save_custom_theme(f"_preview_{theme_name}", theme_data):
+            self.context.theme.set_theme(f"_preview_{theme_name}")
+            self.context.notification.show("Podgląd", "Zastosowano podgląd motywu")
+
+    def _load_custom_themes_list(self) -> None:
+        """Załaduj listę własnych motywów."""
+        for widget in self.custom_themes_list.winfo_children():
+            widget.destroy()
+        
+        custom_themes = self.context.theme.get_custom_themes()
+        
+        if not custom_themes:
+            placeholder = ctk.CTkLabel(
+                self.custom_themes_list,
+                text="Brak własnych motywów\nUtwórz swój pierwszy motyw powyżej!",
+                text_color=self.theme.text_muted,
+                font=ctk.CTkFont(size=12),
+                justify="center"
+            )
+            placeholder.pack(pady=20)
+            return
+        
+        for theme_name, theme_data in custom_themes.items():
+            row = ctk.CTkFrame(self.custom_themes_list, fg_color=self.theme.surface_alt, corner_radius=10)
+            row.pack(fill="x", pady=4)
+            
+            # Miniaturki kolorów
+            colors_preview = ctk.CTkFrame(row, fg_color="transparent")
+            colors_preview.pack(side="left", padx=12, pady=8)
+            
+            for color_key in ["base_color", "surface", "accent"]:
+                color_square = ctk.CTkLabel(
+                    colors_preview,
+                    text="",
+                    width=20,
+                    height=20,
+                    corner_radius=4,
+                    fg_color=theme_data.get(color_key, "#000000")
+                )
+                color_square.pack(side="left", padx=2)
+            
+            # Nazwa motywu
+            name_label = ctk.CTkLabel(
+                row,
+                text=theme_name,
+                font=ctk.CTkFont(size=13, weight="bold"),
+                text_color=self.theme.text,
+                anchor="w"
+            )
+            name_label.pack(side="left", padx=10, fill="x", expand=True)
+            
+            # Przyciski akcji
+            buttons_frame = ctk.CTkFrame(row, fg_color="transparent")
+            buttons_frame.pack(side="right", padx=12)
+            
+            btn_apply = ctk.CTkButton(
+                buttons_frame,
+                text="✓ Użyj",
+                command=lambda tn=theme_name: self._apply_custom_theme(tn),
+                width=70,
+                height=28,
+                fg_color=self.theme.accent
+            )
+            btn_apply.pack(side="left", padx=2)
+            
+            btn_edit = ctk.CTkButton(
+                buttons_frame,
+                text="✏️ Edytuj",
+                command=lambda tn=theme_name: self._edit_custom_theme(tn),
+                width=80,
+                height=28
+            )
+            btn_edit.pack(side="left", padx=2)
+            
+            btn_delete = ctk.CTkButton(
+                buttons_frame,
+                text="🗑️",
+                command=lambda tn=theme_name: self._delete_custom_theme(tn),
+                width=40,
+                height=28,
+                fg_color="#dc2626",
+                hover_color="#991b1b"
+            )
+            btn_delete.pack(side="left", padx=2)
+
+    def _apply_custom_theme(self, theme_name: str) -> None:
+        """Zastosuj własny motyw."""
+        self.context.theme.set_theme(theme_name)
+        self.theme_option.set(theme_name)
+        self.context.notification.show("Motyw", f"Zastosowano motyw '{theme_name}'")
+
+    def _edit_custom_theme(self, theme_name: str) -> None:
+        """Załaduj motyw do edytora."""
+        custom_themes = self.context.theme.get_custom_themes()
+        theme_data = custom_themes.get(theme_name)
+        
+        if not theme_data:
+            self.context.notification.show("Błąd", "Nie znaleziono motywu")
+            return
+        
+        # Załaduj dane do edytora
+        self.custom_theme_name_entry.delete(0, "end")
+        self.custom_theme_name_entry.insert(0, theme_name)
+        
+        for key in ["base_color", "background", "surface", "surface_alt", "text", "text_muted", "accent"]:
+            self.color_entries[key].delete(0, "end")
+            self.color_entries[key].insert(0, theme_data.get(key, "#000000"))
+            self._update_color_preview(key)
+        
+        # Przewiń do edytora
+        self.tabview.set("Personalizacja")
+        self.context.notification.show("Edytor", f"Załadowano motyw '{theme_name}' do edycji")
+
+    def _delete_custom_theme(self, theme_name: str) -> None:
+        """Usuń własny motyw."""
+        # Potwierdzenie
+        from tkinter import messagebox
+        
+        if messagebox.askyesno(
+            "Usuwanie motywu",
+            f"Czy na pewno chcesz usunąć motyw '{theme_name}'?\nTej operacji nie można cofnąć."
+        ):
+            if self.context.theme.delete_custom_theme(theme_name):
+                self.context.notification.show("Motyw", f"Usunięto motyw '{theme_name}'")
+                
+                # Odśwież listy
+                self.theme_option.configure(values=[theme.name for theme in self.context.theme.available_themes()])
+                self._load_custom_themes_list()
+            else:
+                self.context.notification.show("Błąd", "Nie można usunąć motywu systemowego")

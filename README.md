@@ -16,11 +16,14 @@ Szczegóły architektury opisane są w pliku [`README_REFACTOR.md`](README_REFAC
 ## 🎉 Co nowego w v2.2?
 - **⚙️ Nowe ustawienia wielosekcyjne** - zakładki: Ogólne, Personalizacja, Dane, Chmura
 - **👤 Profil zintegrowany z ustawieniami** - avatar, nazwa użytkownika i bio w zakładce Personalizacja
-- **🎨 Export/import motywów** - twórz i udostępniaj własne motywy kolorystyczne
+- **🎨 Edytor własnych motywów** - twórz i edytuj motywy bezpośrednio w aplikacji z color pickerami
+- **🎨 Export/import motywów** - udostępniaj własne motywy kolorystyczne jako pliki JSON
+- **🛡️ Zabezpieczenia motywów** - ochrona przed usunięciem motywów systemowych (midnight, emerald, sunset)
 - **💾 Zaawansowane zarządzanie backupami** - wybór lokalizacji, export i import kopii zapasowych
 - **☁️ Przygotowanie pod synchronizację** - sekcja chmury z placeholderami dla Google Drive i GitHub
 - **🔄 System migracji danych** - automatyczna aktualizacja struktury danych przy upgrade
 - Zobacz [`CHANGES_USTAWIENIA.md`](CHANGES_USTAWIENIA.md) dla szczegółowego opisu modernizacji ustawień
+- Zobacz [`EDYTOR_MOTYWOW.md`](EDYTOR_MOTYWOW.md) dla pełnej dokumentacji edytora motywów
 
 ## 🎉 Co było nowego w v2.1?
 - **🏆 Rozbudowany system osiągnięć** z automatycznym śledzeniem postępów i paskami postępu
