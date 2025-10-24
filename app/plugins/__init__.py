@@ -1,5 +1,6 @@
 """Plugin registry."""
 from .base import BasePlugin
+from .home import HomePlugin
 from .library import LibraryPlugin
 from .statistics import StatisticsPlugin
 from .news import NewsPlugin
@@ -14,6 +15,7 @@ from .screenshots import ScreenshotsPlugin
 
 __all__ = [
     "BasePlugin",
+    "HomePlugin",
     "LibraryPlugin",
     "StatisticsPlugin",
     "NewsPlugin",

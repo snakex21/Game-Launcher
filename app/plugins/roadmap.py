@@ -258,8 +258,8 @@ class AddRoadmapDialog(ctk.CTkToplevel):
         self.theme = context.theme.get_active_theme()
         
         self.title("Dodaj do Roadmapy")
-        self.geometry("600x550")
-        self.resizable(False, False)
+        self.geometry("600x650")
+        self.resizable(True, True)
         self.configure(fg_color=self.theme.background)
 
         self._setup_ui()

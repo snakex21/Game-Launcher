@@ -127,7 +127,8 @@ class AddReminderDialog(ctk.CTkToplevel):
         super().__init__(parent)
         self.context = context
         self.title("Nowe przypomnienie")
-        self.geometry("500x420")
+        self.geometry("500x520")
+        self.resizable(True, True)
 
         self._setup_ui()
 
