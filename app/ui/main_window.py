@@ -138,7 +138,7 @@ class MainWindow(ctk.CTk):
         self.music_track_label.pack(pady=(8, 4))
         
         music_buttons = ctk.CTkFrame(self.music_control_frame, fg_color="transparent")
-        music_buttons.pack(pady=(0, 8))
+        music_buttons.pack(pady=(0, 4))
         
         self.music_btn_prev = ctk.CTkButton(
             music_buttons, text="⏮", width=35, height=28,
@@ -157,6 +157,22 @@ class MainWindow(ctk.CTk):
             command=self._music_next, fg_color=theme.surface
         )
         self.music_btn_next.pack(side="left", padx=2)
+        
+        # Kontrolki shuffle/loop
+        music_modes = ctk.CTkFrame(self.music_control_frame, fg_color="transparent")
+        music_modes.pack(pady=(0, 8))
+        
+        self.music_shuffle_indicator = ctk.CTkLabel(
+            music_modes, text="🔀", font=ctk.CTkFont(size=12),
+            text_color=theme.text_muted
+        )
+        self.music_shuffle_indicator.pack(side="left", padx=3)
+        
+        self.music_loop_indicator = ctk.CTkLabel(
+            music_modes, text="🔁", font=ctk.CTkFont(size=12),
+            text_color=theme.text_muted
+        )
+        self.music_loop_indicator.pack(side="left", padx=3)
         
         # Timer do aktualizacji statusu muzyki
         self._update_music_status()
@@ -296,8 +312,10 @@ class MainWindow(ctk.CTk):
     def _update_music_status(self) -> None:
         """Aktualizuj status muzyki w mini kontrolce."""
         music = self.context.music
+        theme = self.theme
         
-        should_show = music.current_track and music.is_playing or music.playlist
+        # Pokaż mini-player tylko gdy coś faktycznie gra
+        should_show = music.current_track and music.is_playing
         
         if should_show and not self.music_control_visible:
             self.music_control_frame.grid(row=11, column=0, padx=12, pady=12, sticky="ew")
@@ -326,19 +344,24 @@ class MainWindow(ctk.CTk):
                 self.music_btn_play.configure(text="▶")
             else:
                 self.music_btn_play.configure(text="⏸")
-        elif music.playlist:
-            self.music_track_label.configure(text="🎵 Playlista gotowa\nKliknij ▶")
-            self.music_btn_play.configure(text="▶")
-        else:
-            self.music_track_label.configure(text="🎵 Brak playlisty")
-            self.music_btn_play.configure(text="▶")
+            
+            # Zaktualizuj wskaźniki shuffle i loop
+            if music.shuffle_mode:
+                self.music_shuffle_indicator.configure(text_color=theme.accent)
+            else:
+                self.music_shuffle_indicator.configure(text_color=theme.text_muted)
+            
+            from app.services.music_service import LoopMode
+            if music.loop_mode == LoopMode.NO_LOOP:
+                self.music_loop_indicator.configure(text="🔁", text_color=theme.text_muted)
+            elif music.loop_mode == LoopMode.LOOP_TRACK:
+                self.music_loop_indicator.configure(text="🔂", text_color=theme.accent)
+            else:  # LOOP_PLAYLIST
+                self.music_loop_indicator.configure(text="🔁", text_color=theme.accent)
         
         # Sprawdź czy utwór się skończył
         if music.is_playing and not music.is_paused:
-            pos = music.get_pos()
-            length = music.get_length()
-            if pos >= length - 1 and length > 0:
-                music.next()
+            music.check_track_ended()
         
         # Zaplanuj następną aktualizację
         self.after(500, self._update_music_status)
