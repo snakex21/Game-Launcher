@@ -196,8 +196,8 @@ class AchievementsView(ctk.CTkFrame):
             self.scrollable,
             corner_radius=15,
             fg_color=self.theme.accent if unlocked else self.theme.surface_alt,
-            border_width=2,
-            border_color=self.theme.accent if unlocked else "transparent"
+            border_width=2 if unlocked else 0,
+            border_color=self.theme.accent if unlocked else self.theme.surface_alt
         )
 
         content = ctk.CTkFrame(card, fg_color="transparent")
