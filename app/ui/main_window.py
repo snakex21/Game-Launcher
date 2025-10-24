@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import customtkinter as ctk
+from PIL import Image
 
 if TYPE_CHECKING:
     from app.core.app_context import AppContext
@@ -36,7 +38,7 @@ class MainWindow(ctk.CTk):
 
         self.sidebar = ctk.CTkFrame(self, width=240, corner_radius=0, fg_color=theme.surface)
         self.sidebar.grid(row=0, column=0, sticky="nsew")
-        self.sidebar.grid_rowconfigure(8, weight=1)
+        self.sidebar.grid_rowconfigure(9, weight=1)
 
         self.logo_label = ctk.CTkLabel(
             self.sidebar,
@@ -45,6 +47,30 @@ class MainWindow(ctk.CTk):
             text_color=theme.text
         )
         self.logo_label.grid(row=0, column=0, padx=24, pady=(32, 18))
+        
+        # Avatar użytkownika
+        avatar_container = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        avatar_container.grid(row=1, column=0, padx=24, pady=(0, 18))
+        
+        self.avatar_image = None
+        self.avatar_label = ctk.CTkLabel(
+            avatar_container,
+            text="",
+            width=80,
+            height=80,
+            corner_radius=40
+        )
+        self.avatar_label.pack()
+        
+        self.username_label = ctk.CTkLabel(
+            avatar_container,
+            text="",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            text_color=theme.text
+        )
+        self.username_label.pack(pady=(8, 0))
+        
+        self._load_user_avatar()
 
         self.nav_font = ctk.CTkFont(size=14)
         self.nav_font_active = ctk.CTkFont(size=14, weight="bold")
@@ -80,7 +106,7 @@ class MainWindow(ctk.CTk):
             "settings": "⚙️"
         }
 
-        for index, (label, view_id) in enumerate(nav_items, start=1):
+        for index, (label, view_id) in enumerate(nav_items, start=2):
             icon = icons.get(view_id, "•")
             btn = ctk.CTkButton(
                 self.sidebar,
@@ -145,6 +171,7 @@ class MainWindow(ctk.CTk):
 
     def _connect_events(self) -> None:
         self.context.event_bus.subscribe("theme_changed", self._on_theme_changed)
+        self.context.event_bus.subscribe("profile_updated", self._on_profile_updated)
 
     def _on_theme_changed(self, **_kwargs) -> None:  # type: ignore[no-untyped-def]
         logger.info("Zmieniono motyw, aktualizacja UI")
@@ -314,4 +341,46 @@ class MainWindow(ctk.CTk):
         
         # Zaplanuj następną aktualizację
         self.after(500, self._update_music_status)
+    
+    def _load_user_avatar(self) -> None:
+        """Wczytaj avatar i nazwę użytkownika."""
+        user = self.context.data_manager.get("user", {})
+        username = user.get("username", "Gracz")
+        avatar_path = user.get("avatar", "")
+        
+        self.username_label.configure(text=username)
+        
+        try:
+            if avatar_path and Path(avatar_path).exists():
+                image = Image.open(avatar_path).resize((80, 80))
+            else:
+                # Twórz placeholder z inicjałem
+                from PIL import ImageDraw, ImageFont
+                image = Image.new("RGB", (80, 80), color=self.theme.accent)
+                draw = ImageDraw.Draw(image)
+                initial = username[0].upper() if username else "G"
+                try:
+                    font = ImageFont.truetype("arial.ttf", 40)
+                except Exception:
+                    font = ImageFont.load_default()
+                
+                bbox = draw.textbbox((0, 0), initial, font=font)
+                text_w = bbox[2] - bbox[0]
+                text_h = bbox[3] - bbox[1]
+                draw.text(
+                    ((80 - text_w) // 2, (80 - text_h) // 2 - 5),
+                    initial,
+                    fill="white",
+                    font=font
+                )
+            
+            self.avatar_image = ctk.CTkImage(image, size=(80, 80))
+            self.avatar_label.configure(image=self.avatar_image)
+        except Exception as e:
+            logger.error("Błąd ładowania avatara w sidebar: %s", e)
+    
+    def _on_profile_updated(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        """Obsłuż aktualizację profilu."""
+        logger.info("Profil został zaktualizowany, odświeżam avatar")
+        self._load_user_avatar()
 
