@@ -13,7 +13,6 @@ from app.plugins import (
     ModsPlugin,
     MusicPlayerPlugin,
     NewsPlugin,
-    ProfilePlugin,
     ReminderPlugin,
     RoadmapPlugin,
     ScreenshotsPlugin,
@@ -77,7 +76,6 @@ def main() -> None:
     context.add_plugin(NewsPlugin())
     context.add_plugin(ReminderPlugin())
     context.add_plugin(MusicPlayerPlugin())
-    context.add_plugin(ProfilePlugin())
     context.add_plugin(SettingsPlugin())
 
     context.bootstrap()

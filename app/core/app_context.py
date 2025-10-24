@@ -81,6 +81,10 @@ class AppContext:
         return self.services["notifications"]  # type: ignore[return-value]
 
     @property
+    def notification(self) -> "NotificationService":
+        return self.services["notifications"]  # type: ignore[return-value]
+
+    @property
     def backup(self):  # type: ignore[no-untyped-def]
         return self.services.get("backup")
 
