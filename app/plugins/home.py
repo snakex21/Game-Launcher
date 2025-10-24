@@ -47,7 +47,7 @@ class HomeView(ctk.CTkFrame):
 
         # Nagłówek z powitaniem
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 10))
+        header.grid(row=0, column=0, sticky="ew", padx=20, pady=(10, 10))
         header.grid_columnconfigure(0, weight=1)
 
         username = self.context.data_manager.get("user", {}).get("username", "Graczu")
