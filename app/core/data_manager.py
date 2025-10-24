@@ -39,6 +39,7 @@ class DataManager:
             self.data = self._get_defaults()
         
         self._ensure_structure()
+        self._run_migrations()
         self.save()
 
     def _create_backup(self) -> None:
@@ -173,3 +174,33 @@ class DataManager:
             current = current[key]
         current[keys[-1]] = value
         self.save()
+
+    def _run_migrations(self) -> None:
+        """Uruchom migracje danych dla zachowania kompatybilności wstecznej."""
+        current_version = self.data.get("_version", 0)
+        
+        # Migracja 1: Przeniesienie danych profilu do user (jeśli istnieją stare dane)
+        if current_version < 1:
+            logger.info("Uruchamianie migracji v1: zachowanie danych profilu")
+            # Dane profilu są już w 'user', więc upewniamy się, że struktura jest poprawna
+            if "user" in self.data:
+                user = self.data["user"]
+                # Upewnij się, że wszystkie pola profilu są zachowane
+                user.setdefault("username", "Gracz")
+                user.setdefault("avatar", "")
+                user.setdefault("bio", "")
+                user.setdefault("achievements", {})
+            self.data["_version"] = 1
+            logger.info("Migracja v1 zakończona")
+        
+        # Migracja 2: Dodanie nowych ustawień dla backup location i cloud
+        if current_version < 2:
+            logger.info("Uruchamianie migracji v2: nowe ustawienia")
+            if "settings" not in self.data:
+                self.data["settings"] = {}
+            settings = self.data["settings"]
+            settings.setdefault("backup_location", "backups")
+            settings.setdefault("gdrive_enabled", False)
+            settings.setdefault("github_enabled", False)
+            self.data["_version"] = 2
+            logger.info("Migracja v2 zakończona")
