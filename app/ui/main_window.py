@@ -21,6 +21,7 @@ class MainWindow(ctk.CTk):
 
         self.title("Game Launcher 2.0")
         self.geometry("1400x800")
+        self.minsize(1000, 600)  # Minimalne wymiary okna aby elementy były widoczne
         
         self.theme = self.context.theme.get_active_theme()
         ctk.set_appearance_mode("dark")

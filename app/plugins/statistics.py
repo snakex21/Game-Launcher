@@ -45,7 +45,7 @@ class StatisticsView(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 10))
+        header.grid(row=0, column=0, sticky="ew", padx=20, pady=(10, 10))
         
         title = ctk.CTkLabel(
             header,

@@ -33,7 +33,7 @@ class NewsView(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 10))
+        header.grid(row=0, column=0, sticky="ew", padx=20, pady=(10, 10))
         
         title = ctk.CTkLabel(
             header,
@@ -64,7 +64,7 @@ class NewsView(ctk.CTkFrame):
         self.filters_container.pack(side="left", fill="x", expand=True, padx=(0, 15), pady=10)
 
         self.scrollable = ctk.CTkScrollableFrame(self)
-        self.scrollable.grid(row=2, column=0, sticky="nsew", padx=20, pady=(0, 20))
+        self.scrollable.grid(row=2, column=0, sticky="nsew", padx=20, pady=(0, 10))
 
         self._setup_filters()
         self._load_news()
