@@ -13,7 +13,9 @@ class BackupService:
     def __init__(self, data_manager, event_bus) -> None:  # type: ignore[no-untyped-def]
         self.data_manager = data_manager
         self.event_bus = event_bus
-        self.backup_dir = Path("backups")
+        # Pobierz lokalizację z ustawień lub użyj domyślnej
+        backup_location = data_manager.get_nested("settings", "backup_location", default="backups")
+        self.backup_dir = Path(backup_location)
         self.backup_dir.mkdir(exist_ok=True)
 
     def create_backup(self, reason: str = "manual") -> Path | None:

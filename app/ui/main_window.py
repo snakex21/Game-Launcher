@@ -88,7 +88,6 @@ class MainWindow(ctk.CTk):
             ("Newsy", "news"),
             ("Przypomnienia", "reminders"),
             ("Odtwarzacz", "music"),
-            ("Profil", "profile"),
             ("Ustawienia", "settings"),
         ]
 
@@ -103,7 +102,6 @@ class MainWindow(ctk.CTk):
             "news": "📰",
             "reminders": "⏰",
             "music": "🎵",
-            "profile": "👤",
             "settings": "⚙️"
         }
 
@@ -248,9 +246,6 @@ class MainWindow(ctk.CTk):
         elif view_id == "music":
             from app.plugins.music_player import MusicPlayerView
             self.current_view = MusicPlayerView(self.main_content, self.context)
-        elif view_id == "profile":
-            from app.plugins.profile import ProfileView
-            self.current_view = ProfileView(self.main_content, self.context)
         elif view_id == "settings":
             from app.plugins.settings import SettingsView
             self.current_view = SettingsView(self.main_content, self.context)

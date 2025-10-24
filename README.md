@@ -13,15 +13,25 @@ Game Launcher to nowoczesna aplikacja desktopowa napisana w Pythonie, która poz
 
 Szczegóły architektury opisane są w pliku [`README_REFACTOR.md`](README_REFACTOR.md).
 
-## 🎉 Co nowego w v2.1?
+## 🎉 Co nowego w v2.2?
+- **⚙️ Nowe ustawienia wielosekcyjne** - zakładki: Ogólne, Personalizacja, Dane, Chmura
+- **👤 Profil zintegrowany z ustawieniami** - avatar, nazwa użytkownika i bio w zakładce Personalizacja
+- **🎨 Edytor własnych motywów** - twórz i edytuj motywy bezpośrednio w aplikacji z color pickerami
+- **🎨 Export/import motywów** - udostępniaj własne motywy kolorystyczne jako pliki JSON
+- **🛡️ Zabezpieczenia motywów** - ochrona przed usunięciem motywów systemowych (midnight, emerald, sunset)
+- **💾 Zaawansowane zarządzanie backupami** - wybór lokalizacji, export i import kopii zapasowych
+- **☁️ Przygotowanie pod synchronizację** - sekcja chmury z placeholderami dla Google Drive i GitHub
+- **🔄 System migracji danych** - automatyczna aktualizacja struktury danych przy upgrade
+- Zobacz [`CHANGES_USTAWIENIA.md`](CHANGES_USTAWIENIA.md) dla szczegółowego opisu modernizacji ustawień
+- Zobacz [`EDYTOR_MOTYWOW.md`](EDYTOR_MOTYWOW.md) dla pełnej dokumentacji edytora motywów
+
+## 🎉 Co było nowego w v2.1?
 - **🏆 Rozbudowany system osiągnięć** z automatycznym śledzeniem postępów i paskami postępu
 - **🎵 Odtwarzacz muzyki z seekiem** - przewijaj utwory jak chcesz!
 - **🎵 Mini kontrolka muzyki** - steruj muzyką z każdego miejsca w aplikacji (w sidebar)!
 - **🎵 Synchronizacja odtwarzacza** - widok pamięta stan (utwór, czas, pozycja)!
 - **📸 Manager zrzutów ekranu** - galeria ze screenshotami, auto-scan i przypisywanie do gier!
 - Zobacz [`ZMIANY_PL.md`](ZMIANY_PL.md) dla pełnego opisu zmian po polsku
-- Zobacz [`ZMIANY_v2.1.2.md`](ZMIANY_v2.1.2.md) dla najnowszych poprawek synchronizacji muzyki
-- Zobacz [`ZMIANY_v2.1.1.md`](ZMIANY_v2.1.1.md) dla poprawek muzyki w tle
 - Zobacz [`PLAN_ROZWOJU.md`](PLAN_ROZWOJU.md) dla planu dalszego rozwoju
 - Sprawdź [`CHANGELOG.md`](CHANGELOG.md) dla szczegółowej historii zmian
 
@@ -41,8 +51,11 @@ Pierwsze uruchomienie utworzy plik `config.json` na podstawie domyślnej bazy (`
 - **📰 Aktualności** – kanały RSS (Feedparser)
 - **⏰ Przypomnienia** – powtarzalne alerty i zarządzanie zadaniami
 - **🎵 Odtwarzacz muzyki** – obsługa playlist z folderów (pygame) + seek bar do przewijania utworów
-- **👤 Profil** – avatar użytkownika, statystyki, system kopii zapasowych
-- **⚙️ Ustawienia** – wybór motywu, koloru akcentu, kanałów RSS, powiadomień
+- **⚙️ Ustawienia** – wielosekcyjny panel ustawień z zakładkami:
+  - **Ogólne**: powiadomienia systemowe, kanały RSS
+  - **Personalizacja**: profil użytkownika (avatar, nazwa, bio), motywy, export/import motywów
+  - **Dane**: zarządzanie kopiami zapasowymi, wybór lokalizacji, export/import backupów
+  - **Chmura**: konfiguracja synchronizacji (Google Drive, GitHub) - w przygotowaniu
 
 ## ⚙️ Konfiguracja
 - **Discord Rich Presence**: wprowadź `discord_client_id` w ustawieniach
@@ -67,4 +80,4 @@ Pull requesty są mile widziane! Przed dodaniem nowych funkcji zapoznaj się z [
 
 ---
 **Autorzy**: Game Launcher Team  
-**Wersja**: 2.0.0
+**Wersja**: 2.2.0
