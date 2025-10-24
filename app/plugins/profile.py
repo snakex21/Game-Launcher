@@ -1,4 +1,9 @@
-"""Plugin profilu użytkownika i kopii zapasowych."""
+"""Plugin profilu użytkownika i kopii zapasowych.
+
+UWAGA: Ten plugin jest przestarzały od wersji 2.2.0
+Funkcjonalność profilu została przeniesiona do SettingsView > zakładka Personalizacja.
+Ten plik jest zachowany tylko dla kompatybilności wstecznej.
+"""
 from __future__ import annotations
 
 import logging
