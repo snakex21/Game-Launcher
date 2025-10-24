@@ -25,10 +25,20 @@ class AchievementsPlugin(BasePlugin):
         
         context.event_bus.subscribe("achievements_changed", self._on_achievement_unlocked)
         
-        context.event_bus.subscribe("game_added", lambda **kw: context.service("achievements").check_and_update_progress())
-        context.event_bus.subscribe("game_launched", lambda **kw: context.service("achievements").check_and_update_progress())
-        context.event_bus.subscribe("roadmap_completed", lambda **kw: context.service("achievements").check_and_update_progress())
-        context.event_bus.subscribe("mod_added", lambda **kw: context.service("achievements").check_and_update_progress())
+        def on_game_progress(**kw):  # type: ignore[no-untyped-def]
+            context.service("achievements").check_and_update_progress()
+        
+        def on_game_launched(**kw):  # type: ignore[no-untyped-def]
+            ach_service = context.service("achievements")
+            ach_service.check_time_based_achievements()
+            ach_service.check_and_update_progress()
+        
+        context.event_bus.subscribe("game_added", on_game_progress)
+        context.event_bus.subscribe("game_launched", on_game_launched)
+        context.event_bus.subscribe("roadmap_completed", on_game_progress)
+        context.event_bus.subscribe("mod_added", on_game_progress)
+        context.event_bus.subscribe("game_session_end", on_game_progress)
+        context.event_bus.subscribe("screenshot_added", on_game_progress)
         
         context.service("achievements").unlock("first_launch")
         context.service("achievements").check_and_update_progress()
@@ -47,12 +57,16 @@ class AchievementsView(ctk.CTkFrame):
         self.theme = self.context.theme.get_active_theme()
         
         self.context.event_bus.subscribe("achievements_changed", self._on_achievements_changed)
+        self.context.event_bus.subscribe("achievement_unlocked", self._on_achievement_unlocked)
         
         self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
+        
+        self._loading = False
+        self._load_job = None
 
         self._setup_ui()
-        self._load_achievements()
+        self._load_achievements_async()
 
     def _setup_ui(self) -> None:
         header = ctk.CTkFrame(self, fg_color="transparent")
@@ -65,17 +79,44 @@ class AchievementsView(ctk.CTkFrame):
         )
         title.pack(side="left", padx=10)
         
+        buttons_container = ctk.CTkFrame(header, fg_color="transparent")
+        buttons_container.pack(side="right", padx=10)
+        
+        btn_import = ctk.CTkButton(
+            buttons_container,
+            text="📥 Import",
+            command=self._import_achievements,
+            width=100,
+            height=36,
+            corner_radius=10,
+            fg_color=self.theme.base_color,
+            font=ctk.CTkFont(size=13)
+        )
+        btn_import.pack(side="left", padx=5)
+        
+        btn_export = ctk.CTkButton(
+            buttons_container,
+            text="📤 Export",
+            command=self._export_achievements,
+            width=100,
+            height=36,
+            corner_radius=10,
+            fg_color=self.theme.base_color,
+            font=ctk.CTkFont(size=13)
+        )
+        btn_export.pack(side="left", padx=5)
+        
         btn_add = ctk.CTkButton(
-            header,
-            text="➕ Dodaj Osiągnięcie",
+            buttons_container,
+            text="➕ Dodaj",
             command=self._add_achievement,
-            width=160,
+            width=120,
             height=36,
             corner_radius=10,
             fg_color=self.theme.accent,
             font=ctk.CTkFont(size=14, weight="bold")
         )
-        btn_add.pack(side="right", padx=10)
+        btn_add.pack(side="left", padx=5)
 
         self.stats_frame = ctk.CTkFrame(self, fg_color=self.theme.surface_alt, corner_radius=12)
         self.stats_frame.grid(row=1, column=0, sticky="ew", padx=16, pady=(0, 10))
@@ -85,7 +126,33 @@ class AchievementsView(ctk.CTkFrame):
         self.scrollable.grid_columnconfigure((0, 1), weight=1)
 
     def _on_achievements_changed(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        self._load_achievements()
+        self._load_achievements_async()
+    
+    def _on_achievement_unlocked(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        achievement = kwargs.get("achievement")
+        if achievement:
+            self._show_unlock_notification(achievement)
+    
+    def _load_achievements_async(self) -> None:
+        """Asynchronicznie ładuje osiągnięcia aby nie blokować UI."""
+        if self._loading:
+            return
+        
+        self._loading = True
+        
+        # Pokaż prosty wskaźnik ładowania
+        for widget in self.scrollable.winfo_children():
+            widget.destroy()
+        
+        loading_label = ctk.CTkLabel(
+            self.scrollable,
+            text="⏳ Ładowanie osiągnięć...",
+            font=ctk.CTkFont(size=16)
+        )
+        loading_label.grid(row=0, column=0, columnspan=2, pady=50)
+        
+        # Załaduj dane w następnym cyklu event loop
+        self.after(10, self._load_achievements)
 
     def _load_achievements(self) -> None:
         for widget in self.stats_frame.winfo_children():
@@ -94,14 +161,26 @@ class AchievementsView(ctk.CTkFrame):
             widget.destroy()
 
         achievements_service = self.context.service("achievements")
-        achievements_service.check_and_update_progress()
+        # Używamy cache - check_and_update_progress zostanie wywołane tylko jeśli minęło wystarczająco czasu
+        achievements_service.check_and_update_progress(force=False)
         
         catalog = achievements_service.catalog()
         progress = achievements_service.user_progress()
         completion = achievements_service.completion_rate()
 
-        unlocked_count = sum(1 for data in progress.values() if data.get("unlocked"))
-        total_points = sum(item["points"] for item in catalog if progress.get(item["key"], {}).get("unlocked"))
+        # Optymalizacja: pre-oblicz unlocked_count i total_points w jednym przebiegu
+        unlocked_count = 0
+        total_points = 0
+        unlocked_keys = set()
+        
+        for key, data in progress.items():
+            if data.get("unlocked"):
+                unlocked_count += 1
+                unlocked_keys.add(key)
+        
+        for item in catalog:
+            if item["key"] in unlocked_keys:
+                total_points += item["points"]
 
         stats_container = ctk.CTkFrame(self.stats_frame, fg_color="transparent")
         stats_container.pack(fill="both", padx=20, pady=15)
@@ -136,7 +215,22 @@ class AchievementsView(ctk.CTkFrame):
             text_color=self.theme.text_muted
         ).pack()
 
-        for idx, achievement in enumerate(catalog):
+        # Ładuj karty partiami aby nie blokować UI
+        self._load_achievement_cards_batch(catalog, progress, 0)
+    
+    def _load_achievement_cards_batch(self, catalog: list, progress: dict, start_idx: int) -> None:  # type: ignore[type-arg]
+        """Ładuje karty osiągnięć partiami aby nie blokować UI.
+        
+        Args:
+            catalog: Lista wszystkich osiągnięć
+            progress: Postęp użytkownika
+            start_idx: Indeks od którego zaczynamy ładowanie
+        """
+        batch_size = 8  # Ładuj 8 kart na raz (4 wiersze)
+        end_idx = min(start_idx + batch_size, len(catalog))
+        
+        for idx in range(start_idx, end_idx):
+            achievement = catalog[idx]
             row = idx // 2
             col = idx % 2
             
@@ -147,14 +241,22 @@ class AchievementsView(ctk.CTkFrame):
             
             card = self._create_achievement_card(achievement, unlocked, current_progress)
             card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+        
+        # Jeśli są jeszcze karty do załadowania, zaplanuj kolejną partię
+        if end_idx < len(catalog):
+            # Użyj bardzo małego delay aby ładowanie wyglądało płynnie
+            self.after(5, lambda: self._load_achievement_cards_batch(catalog, progress, end_idx))
+        else:
+            # Zakończono ładowanie
+            self._loading = False
 
     def _create_achievement_card(self, achievement: dict, unlocked: bool, current_progress: float) -> ctk.CTkFrame:  # type: ignore[type-arg]
         card = ctk.CTkFrame(
             self.scrollable,
             corner_radius=15,
             fg_color=self.theme.accent if unlocked else self.theme.surface_alt,
-            border_width=2,
-            border_color=self.theme.accent if unlocked else "transparent"
+            border_width=2 if unlocked else 0,
+            border_color=self.theme.accent if unlocked else self.theme.surface_alt
         )
 
         content = ctk.CTkFrame(card, fg_color="transparent")
@@ -173,9 +275,15 @@ class AchievementsView(ctk.CTkFrame):
         title_frame = ctk.CTkFrame(header, fg_color="transparent")
         title_frame.pack(side="left", fill="both", expand=True)
 
+        name_text = achievement["name"]
+        if achievement.get("custom", False):
+            name_text += " 🔧"
+        elif achievement.get("builtin", False):
+            name_text += " ⭐"
+        
         name_label = ctk.CTkLabel(
             title_frame,
-            text=achievement["name"],
+            text=name_text,
             font=ctk.CTkFont(size=16, weight="bold"),
             anchor="w"
         )
@@ -219,7 +327,7 @@ class AchievementsView(ctk.CTkFrame):
         buttons_frame = ctk.CTkFrame(content, fg_color="transparent")
         buttons_frame.pack(fill="x", pady=(10, 0))
 
-        if achievement.get("custom", False):
+        if achievement.get("custom", False) and not achievement.get("builtin", False):
             btn_edit = ctk.CTkButton(
                 buttons_frame,
                 text="✏️ Edytuj",
@@ -270,8 +378,53 @@ class AchievementsView(ctk.CTkFrame):
             
             self.context.event_bus.emit("achievements_changed")
 
+    def _show_unlock_notification(self, achievement: dict) -> None:  # type: ignore[type-arg]
+        """Wyświetla powiadomienie o odblokowaniu osiągnięcia."""
+        notification = AchievementUnlockNotification(
+            self.winfo_toplevel(),
+            achievement,
+            self.context
+        )
+        notification.show()
+    
+    def _export_achievements(self) -> None:
+        """Eksportuje niestandardowe osiągnięcia do pliku."""
+        from tkinter import filedialog, messagebox
+        
+        filepath = filedialog.asksaveasfilename(
+            title="Eksportuj osiągnięcia",
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        
+        if filepath:
+            achievements_service = self.context.service("achievements")
+            if achievements_service.export_custom_achievements(filepath):
+                messagebox.showinfo("Sukces", "Pomyślnie wyeksportowano niestandardowe osiągnięcia!")
+            else:
+                messagebox.showerror("Błąd", "Nie udało się wyeksportować osiągnięć.")
+    
+    def _import_achievements(self) -> None:
+        """Importuje niestandardowe osiągnięcia z pliku."""
+        from tkinter import filedialog, messagebox
+        
+        filepath = filedialog.askopenfilename(
+            title="Importuj osiągnięcia",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        
+        if filepath:
+            achievements_service = self.context.service("achievements")
+            count = achievements_service.import_custom_achievements(filepath)
+            if count > 0:
+                messagebox.showinfo("Sukces", f"Pomyślnie zaimportowano {count} osiągnięć!")
+                self._load_achievements()
+            else:
+                messagebox.showwarning("Informacja", "Nie zaimportowano żadnych nowych osiągnięć.")
+    
     def destroy(self) -> None:
         self.context.event_bus.unsubscribe("achievements_changed", self._on_achievements_changed)
+        self.context.event_bus.unsubscribe("achievement_unlocked", self._on_achievement_unlocked)
         super().destroy()
 
 
@@ -325,11 +478,20 @@ class AddAchievementDialog(ctk.CTkToplevel):
         conditions = [
             "Ręczne odblokowywanie",
             "Osiągnąć liczbę gier w bibliotece",
-            "Uruchomić X razy grę/gry",
-            "Zagrać o określonej godzinie",
+            "Uruchomić X różnych gier",
+            "Uruchomić jedną grę X razy",
+            "Zagraj nocą (23:00-5:00)",
+            "Zagraj rano (5:00-8:00)",
             "Osiągnąć X% ukończenia gry",
             "Zagrać X godzin łącznie",
             "Ukończyć X gier",
+            "Zainstalować X modów",
+            "Ukończyć X pozycji roadmapy",
+            "Oceń X gier",
+            "Zrób X zrzutów ekranu",
+            "Utwórz X grup gier",
+            "Graj X dni z rzędu",
+            "Zakończ X sesji gier",
         ]
         
         self.condition_var = ctk.StringVar(value=conditions[0])
@@ -370,20 +532,48 @@ class AddAchievementDialog(ctk.CTkToplevel):
         btn_cancel.pack(side="left", padx=10)
 
     def _save(self) -> None:
+        from tkinter import messagebox
+        
         name = self.entry_name.get().strip()
         if not name:
-            from tkinter import messagebox
             messagebox.showwarning("Błąd", "Nazwa osiągnięcia nie może być pusta!")
+            return
+        
+        try:
+            points = int(self.entry_points.get().strip() or "10")
+            if points < 0:
+                messagebox.showwarning("Błąd", "Punkty muszą być liczbą dodatnią!")
+                return
+        except ValueError:
+            messagebox.showwarning("Błąd", "Punkty muszą być liczbą całkowitą!")
+            return
+        
+        try:
+            target_value = float(self.entry_target.get().strip() or "1")
+            if target_value <= 0:
+                messagebox.showwarning("Błąd", "Wartość docelowa musi być dodatnia!")
+                return
+        except ValueError:
+            messagebox.showwarning("Błąd", "Wartość docelowa musi być liczbą!")
             return
 
         condition_map = {
             "Ręczne odblokowywanie": "manual",
             "Osiągnąć liczbę gier w bibliotece": "library_size",
-            "Uruchomić X razy grę/gry": "games_launched_count",
-            "Zagrać o określonej godzinie": "play_at_hour",
+            "Uruchomić X różnych gier": "games_launched_count",
+            "Uruchomić jedną grę X razy": "single_game_launches",
+            "Zagraj nocą (23:00-5:00)": "play_at_night",
+            "Zagraj rano (5:00-8:00)": "play_at_morning",
             "Osiągnąć X% ukończenia gry": "completion_percent",
             "Zagrać X godzin łącznie": "play_time_hours",
             "Ukończyć X gier": "games_completed",
+            "Zainstalować X modów": "mods_count",
+            "Ukończyć X pozycji roadmapy": "roadmap_completed",
+            "Oceń X gier": "games_rated",
+            "Zrób X zrzutów ekranu": "screenshots_count",
+            "Utwórz X grup gier": "groups_count",
+            "Graj X dni z rzędu": "consecutive_days",
+            "Zakończ X sesji gier": "session_count",
         }
 
         achievement = {
@@ -391,9 +581,9 @@ class AddAchievementDialog(ctk.CTkToplevel):
             "name": name,
             "description": self.entry_desc.get("1.0", "end").strip() or "Własne osiągnięcie",
             "icon": self.entry_icon.get().strip() or "🏆",
-            "points": int(self.entry_points.get().strip() or "10"),
+            "points": points,
             "condition_type": condition_map.get(self.condition_var.get(), "manual"),
-            "target_value": float(self.entry_target.get().strip() or "1"),
+            "target_value": target_value,
             "custom": True,
         }
 
@@ -436,20 +626,48 @@ class EditAchievementDialog(AddAchievementDialog):
         self.entry_target.insert(0, str(self.achievement.get("target_value", 1)))
 
     def _save(self) -> None:
+        from tkinter import messagebox
+        
         name = self.entry_name.get().strip()
         if not name:
-            from tkinter import messagebox
             messagebox.showwarning("Błąd", "Nazwa osiągnięcia nie może być pusta!")
+            return
+        
+        try:
+            points = int(self.entry_points.get().strip() or "10")
+            if points < 0:
+                messagebox.showwarning("Błąd", "Punkty muszą być liczbą dodatnią!")
+                return
+        except ValueError:
+            messagebox.showwarning("Błąd", "Punkty muszą być liczbą całkowitą!")
+            return
+        
+        try:
+            target_value = float(self.entry_target.get().strip() or "1")
+            if target_value <= 0:
+                messagebox.showwarning("Błąd", "Wartość docelowa musi być dodatnia!")
+                return
+        except ValueError:
+            messagebox.showwarning("Błąd", "Wartość docelowa musi być liczbą!")
             return
 
         condition_map = {
             "Ręczne odblokowywanie": "manual",
             "Osiągnąć liczbę gier w bibliotece": "library_size",
-            "Uruchomić X razy grę/gry": "games_launched_count",
-            "Zagrać o określonej godzinie": "play_at_hour",
+            "Uruchomić X różnych gier": "games_launched_count",
+            "Uruchomić jedną grę X razy": "single_game_launches",
+            "Zagraj nocą (23:00-5:00)": "play_at_night",
+            "Zagraj rano (5:00-8:00)": "play_at_morning",
             "Osiągnąć X% ukończenia gry": "completion_percent",
             "Zagrać X godzin łącznie": "play_time_hours",
             "Ukończyć X gier": "games_completed",
+            "Zainstalować X modów": "mods_count",
+            "Ukończyć X pozycji roadmapy": "roadmap_completed",
+            "Oceń X gier": "games_rated",
+            "Zrób X zrzutów ekranu": "screenshots_count",
+            "Utwórz X grup gier": "groups_count",
+            "Graj X dni z rzędu": "consecutive_days",
+            "Zakończ X sesji gier": "session_count",
         }
 
         catalog = self.context.data_manager.get("achievements_catalog", [])
@@ -459,9 +677,9 @@ class EditAchievementDialog(AddAchievementDialog):
                     "name": name,
                     "description": self.entry_desc.get("1.0", "end").strip() or "Własne osiągnięcie",
                     "icon": self.entry_icon.get().strip() or "🏆",
-                    "points": int(self.entry_points.get().strip() or "10"),
+                    "points": points,
                     "condition_type": condition_map.get(self.condition_var.get(), "manual"),
-                    "target_value": float(self.entry_target.get().strip() or "1"),
+                    "target_value": target_value,
                 })
                 break
 
@@ -469,3 +687,111 @@ class EditAchievementDialog(AddAchievementDialog):
         self.context.event_bus.emit("achievements_changed")
         logger.info("Zaktualizowano osiągnięcie: %s", name)
         self.destroy()
+
+
+class AchievementUnlockNotification(ctk.CTkToplevel):
+    """Animowane powiadomienie o odblokowaniu osiągnięcia."""
+    
+    def __init__(self, parent, achievement: dict, context: AppContext) -> None:  # type: ignore[type-arg]
+        super().__init__(parent)
+        self.achievement = achievement
+        self.context = context
+        self.theme = context.theme.get_active_theme()
+        
+        self.overrideredirect(True)
+        self.attributes("-topmost", True)
+        
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        
+        width = 400
+        height = 180
+        x = screen_width - width - 20
+        y = screen_height - height - 60
+        
+        self.geometry(f"{width}x{height}+{x}+{y}")
+        self.configure(fg_color=self.theme.surface)
+        
+        self._setup_ui()
+    
+    def _setup_ui(self) -> None:
+        container = ctk.CTkFrame(
+            self,
+            fg_color=self.theme.accent,
+            corner_radius=15,
+            border_width=3,
+            border_color="#FFD700"
+        )
+        container.pack(fill="both", expand=True, padx=3, pady=3)
+        
+        content = ctk.CTkFrame(container, fg_color="transparent")
+        content.pack(fill="both", expand=True, padx=15, pady=15)
+        
+        header = ctk.CTkLabel(
+            content,
+            text="🎉 Osiągnięcie Odblokowane! 🎉",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color="white"
+        )
+        header.pack(pady=(0, 10))
+        
+        icon_name_frame = ctk.CTkFrame(content, fg_color="transparent")
+        icon_name_frame.pack(fill="x", pady=5)
+        
+        icon = ctk.CTkLabel(
+            icon_name_frame,
+            text=self.achievement.get("icon", "🏆"),
+            font=ctk.CTkFont(size=48)
+        )
+        icon.pack(side="left", padx=(10, 15))
+        
+        info_frame = ctk.CTkFrame(icon_name_frame, fg_color="transparent")
+        info_frame.pack(side="left", fill="both", expand=True)
+        
+        name = ctk.CTkLabel(
+            info_frame,
+            text=self.achievement["name"],
+            font=ctk.CTkFont(size=18, weight="bold"),
+            text_color="white",
+            anchor="w"
+        )
+        name.pack(fill="x")
+        
+        points = ctk.CTkLabel(
+            info_frame,
+            text=f"🌟 +{self.achievement['points']} punktów",
+            font=ctk.CTkFont(size=14),
+            text_color="#FFD700",
+            anchor="w"
+        )
+        points.pack(fill="x")
+        
+        desc = ctk.CTkLabel(
+            content,
+            text=self.achievement.get("description", ""),
+            font=ctk.CTkFont(size=12),
+            text_color="white",
+            wraplength=350,
+            justify="left"
+        )
+        desc.pack(fill="x", pady=(5, 0))
+    
+    def show(self) -> None:
+        self.alpha = 0.0
+        self.attributes("-alpha", self.alpha)
+        self._fade_in()
+        self.after(4000, self._fade_out)
+    
+    def _fade_in(self) -> None:
+        if self.alpha < 1.0:
+            self.alpha += 0.1
+            self.attributes("-alpha", self.alpha)
+            self.after(30, self._fade_in)
+    
+    def _fade_out(self) -> None:
+        if self.alpha > 0.0:
+            self.alpha -= 0.1
+            self.attributes("-alpha", self.alpha)
+            self.after(30, self._fade_out)
+        else:
+            self.destroy()
