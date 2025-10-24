@@ -285,6 +285,8 @@ class AchievementService:
     def __init__(self, data_manager, event_bus) -> None:  # type: ignore[no-untyped-def]
         self.data_manager = data_manager
         self.event_bus = event_bus
+        self._last_check_time = 0
+        self._check_cache_duration = 2.0  # Cache results for 2 seconds
         self._ensure_catalog()
         self._separate_builtin_from_custom()
 
@@ -377,8 +379,22 @@ class AchievementService:
         unlocked = sum(1 for data in progress.values() if data.get("unlocked"))
         return unlocked / len(progress)
     
-    def check_and_update_progress(self) -> None:
-        """Sprawdza i aktualizuje postęp osiągnięć na podstawie aktualnych statystyk."""
+    def check_and_update_progress(self, force: bool = False) -> None:
+        """Sprawdza i aktualizuje postęp osiągnięć na podstawie aktualnych statystyk.
+        
+        Args:
+            force: Jeśli True, wymusza sprawdzenie nawet jeśli cache jest aktywny.
+        """
+        import time
+        
+        # Użyj cache jeśli niedawno sprawdzaliśmy (chyba że force=True)
+        current_time = time.time()
+        if not force and (current_time - self._last_check_time) < self._check_cache_duration:
+            logger.debug("Używam cache dla check_and_update_progress")
+            return
+        
+        self._last_check_time = current_time
+        
         games = self.data_manager.get("games", [])
         library_size = len(games)
         
@@ -427,6 +443,9 @@ class AchievementService:
         catalog = self.catalog()
         achievements = self.user_progress()
         
+        # Flaga informująca czy nastąpiły jakiekolwiek zmiany
+        has_changes = False
+        
         for ach_def in catalog:
             key = ach_def["key"]
             condition_type = ach_def.get("condition_type")
@@ -469,16 +488,20 @@ class AchievementService:
             # Aktualizuj postęp
             if key in achievements:
                 old_progress = achievements[key].get("current_progress", 0)
-                achievements[key]["current_progress"] = current_value
+                
+                if current_value != old_progress:
+                    achievements[key]["current_progress"] = current_value
+                    has_changes = True
+                    logger.debug(f"Zaktualizowano postęp osiągnięcia {key}: {current_value}/{target_value}")
                 
                 # Automatycznie odblokuj jeśli cel osiągnięty
                 if current_value >= target_value and not achievements[key].get("unlocked"):
                     self.unlock(key)
                     logger.info(f"Auto-odblokowano osiągnięcie: {key} ({current_value}/{target_value})")
-                elif old_progress != current_value:
-                    # Zapisz zmianę postępu
-                    self.data_manager.set_nested("user", "achievements", value=achievements)
-                    logger.debug(f"Zaktualizowano postęp osiągnięcia {key}: {current_value}/{target_value}")
+        
+        # Zapisz zmiany tylko raz na końcu, jeśli coś się zmieniło
+        if has_changes:
+            self.data_manager.set_nested("user", "achievements", value=achievements)
     
     def _calculate_consecutive_days(self, games: list[dict[str, Any]]) -> int:
         """Oblicza liczbę kolejnych dni z graniem."""

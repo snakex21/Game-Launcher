@@ -61,9 +61,12 @@ class AchievementsView(ctk.CTkFrame):
         
         self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
+        
+        self._loading = False
+        self._load_job = None
 
         self._setup_ui()
-        self._load_achievements()
+        self._load_achievements_async()
 
     def _setup_ui(self) -> None:
         header = ctk.CTkFrame(self, fg_color="transparent")
@@ -123,12 +126,33 @@ class AchievementsView(ctk.CTkFrame):
         self.scrollable.grid_columnconfigure((0, 1), weight=1)
 
     def _on_achievements_changed(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        self._load_achievements()
+        self._load_achievements_async()
     
     def _on_achievement_unlocked(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         achievement = kwargs.get("achievement")
         if achievement:
             self._show_unlock_notification(achievement)
+    
+    def _load_achievements_async(self) -> None:
+        """Asynchronicznie ładuje osiągnięcia aby nie blokować UI."""
+        if self._loading:
+            return
+        
+        self._loading = True
+        
+        # Pokaż prosty wskaźnik ładowania
+        for widget in self.scrollable.winfo_children():
+            widget.destroy()
+        
+        loading_label = ctk.CTkLabel(
+            self.scrollable,
+            text="⏳ Ładowanie osiągnięć...",
+            font=ctk.CTkFont(size=16)
+        )
+        loading_label.grid(row=0, column=0, columnspan=2, pady=50)
+        
+        # Załaduj dane w następnym cyklu event loop
+        self.after(10, self._load_achievements)
 
     def _load_achievements(self) -> None:
         for widget in self.stats_frame.winfo_children():
@@ -137,14 +161,26 @@ class AchievementsView(ctk.CTkFrame):
             widget.destroy()
 
         achievements_service = self.context.service("achievements")
-        achievements_service.check_and_update_progress()
+        # Używamy cache - check_and_update_progress zostanie wywołane tylko jeśli minęło wystarczająco czasu
+        achievements_service.check_and_update_progress(force=False)
         
         catalog = achievements_service.catalog()
         progress = achievements_service.user_progress()
         completion = achievements_service.completion_rate()
 
-        unlocked_count = sum(1 for data in progress.values() if data.get("unlocked"))
-        total_points = sum(item["points"] for item in catalog if progress.get(item["key"], {}).get("unlocked"))
+        # Optymalizacja: pre-oblicz unlocked_count i total_points w jednym przebiegu
+        unlocked_count = 0
+        total_points = 0
+        unlocked_keys = set()
+        
+        for key, data in progress.items():
+            if data.get("unlocked"):
+                unlocked_count += 1
+                unlocked_keys.add(key)
+        
+        for item in catalog:
+            if item["key"] in unlocked_keys:
+                total_points += item["points"]
 
         stats_container = ctk.CTkFrame(self.stats_frame, fg_color="transparent")
         stats_container.pack(fill="both", padx=20, pady=15)
@@ -179,7 +215,22 @@ class AchievementsView(ctk.CTkFrame):
             text_color=self.theme.text_muted
         ).pack()
 
-        for idx, achievement in enumerate(catalog):
+        # Ładuj karty partiami aby nie blokować UI
+        self._load_achievement_cards_batch(catalog, progress, 0)
+    
+    def _load_achievement_cards_batch(self, catalog: list, progress: dict, start_idx: int) -> None:  # type: ignore[type-arg]
+        """Ładuje karty osiągnięć partiami aby nie blokować UI.
+        
+        Args:
+            catalog: Lista wszystkich osiągnięć
+            progress: Postęp użytkownika
+            start_idx: Indeks od którego zaczynamy ładowanie
+        """
+        batch_size = 8  # Ładuj 8 kart na raz (4 wiersze)
+        end_idx = min(start_idx + batch_size, len(catalog))
+        
+        for idx in range(start_idx, end_idx):
+            achievement = catalog[idx]
             row = idx // 2
             col = idx % 2
             
@@ -190,6 +241,14 @@ class AchievementsView(ctk.CTkFrame):
             
             card = self._create_achievement_card(achievement, unlocked, current_progress)
             card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+        
+        # Jeśli są jeszcze karty do załadowania, zaplanuj kolejną partię
+        if end_idx < len(catalog):
+            # Użyj bardzo małego delay aby ładowanie wyglądało płynnie
+            self.after(5, lambda: self._load_achievement_cards_batch(catalog, progress, end_idx))
+        else:
+            # Zakończono ładowanie
+            self._loading = False
 
     def _create_achievement_card(self, achievement: dict, unlocked: bool, current_progress: float) -> ctk.CTkFrame:  # type: ignore[type-arg]
         card = ctk.CTkFrame(
