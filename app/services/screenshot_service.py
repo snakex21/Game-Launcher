@@ -8,6 +8,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from PIL import Image
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +28,68 @@ class ScreenshotService:
         
         # Foldery do ignorowania
         self.ignore_folders = ["thumb_cache", "cache", "temp", "thumbnails", "__pycache__"]
+        
+        # Katalog bazowy projektu
+        self.project_dir = Path.cwd()
+    
+    def _to_relative_path(self, absolute_path: str) -> str:
+        """Konwertuje ścieżkę bezwzględną na względną (jeśli w katalogu projektu)."""
+        try:
+            abs_path = Path(absolute_path).resolve()
+            if abs_path.is_relative_to(self.project_dir):
+                return str(abs_path.relative_to(self.project_dir))
+        except (ValueError, Exception) as e:
+            logger.debug("Nie można przekonwertować na ścieżkę względną: %s (%s)", absolute_path, e)
+        return absolute_path
+    
+    def _to_absolute_path(self, path: str) -> str:
+        """Konwertuje ścieżkę względną na bezwzględną."""
+        path_obj = Path(path)
+        if path_obj.is_absolute():
+            return path
+        return str((self.project_dir / path).resolve())
+    
+    def get_screenshot_metadata(self, screenshot_path: str) -> dict[str, Any]:
+        """Pobiera metadane screenshota (data utworzenia, rozdzielczość, rozmiar)."""
+        metadata: dict[str, Any] = {
+            "path": screenshot_path,
+            "exists": False,
+            "created": None,
+            "modified": None,
+            "size": 0,
+            "width": 0,
+            "height": 0,
+            "resolution": "Nieznana",
+        }
+        
+        try:
+            abs_path = self._to_absolute_path(screenshot_path)
+            file_path = Path(abs_path)
+            
+            if not file_path.exists():
+                return metadata
+            
+            metadata["exists"] = True
+            
+            # Informacje o pliku
+            stat = file_path.stat()
+            metadata["size"] = stat.st_size
+            metadata["created"] = datetime.fromtimestamp(stat.st_ctime)
+            metadata["modified"] = datetime.fromtimestamp(stat.st_mtime)
+            
+            # Rozdzielczość obrazu
+            try:
+                with Image.open(abs_path) as img:
+                    metadata["width"] = img.width
+                    metadata["height"] = img.height
+                    metadata["resolution"] = f"{img.width}×{img.height}"
+            except Exception as e:
+                logger.debug("Nie można odczytać rozdzielczości obrazu %s: %s", screenshot_path, e)
+            
+        except Exception as e:
+            logger.error("Błąd pobierania metadanych screenshota %s: %s", screenshot_path, e)
+        
+        return metadata
     
     def get_scan_folders(self) -> list[str]:
         """Zwraca listę folderów do skanowania."""
@@ -90,15 +154,23 @@ class ScreenshotService:
     
     def add_manual_screenshot(self, game_id: str, screenshot_path: str) -> None:
         """Dodaje ręcznie wybrany screenshot do gry."""
+        # Konwertuj na ścieżkę względną, jeśli to możliwe
+        relative_path = self._to_relative_path(screenshot_path)
+        
         games = self.data_manager.get("games", [])
         for game in games:
             if game.get("id") == game_id:
                 screenshots = game.setdefault("screenshots", [])
-                if screenshot_path not in screenshots:
-                    screenshots.append(screenshot_path)
+                # Sprawdź czy już istnieje (w dowolnej formie)
+                abs_path = self._to_absolute_path(relative_path)
+                already_exists = any(
+                    self._to_absolute_path(s) == abs_path for s in screenshots
+                )
+                if not already_exists:
+                    screenshots.append(relative_path)
                     self.data_manager.set("games", games)
-                    logger.info("Dodano screenshot do gry %s: %s", game.get("name"), screenshot_path)
-                    self.event_bus.emit("screenshot_added", game_id=game_id, path=screenshot_path)
+                    logger.info("Dodano screenshot do gry %s: %s", game.get("name"), relative_path)
+                    self.event_bus.emit("screenshot_added", game_id=game_id, path=relative_path)
                 break
     
     def remove_screenshot(self, game_id: str, screenshot_path: str) -> None:
