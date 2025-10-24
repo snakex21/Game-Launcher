@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+import os
 import random
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import customtkinter as ctk
 
@@ -382,26 +384,30 @@ class HomeView(ctk.CTkFrame):
         for widget in self.screenshots_frame.winfo_children()[1:]:
             widget.destroy()
 
-        if "screenshots" not in self.context.services:
-            placeholder = ctk.CTkLabel(
-                self.screenshots_frame,
-                text="Serwis screenshotów niedostępny",
-                text_color=self.theme.text_muted,
-                font=ctk.CTkFont(size=12)
-            )
-            placeholder.pack(padx=15, pady=30)
-            return
-
-        screenshots_service = self.context.service("screenshots")
-        all_screenshots = screenshots_service.list()
+        # Zbierz screenshoty ze wszystkich gier
+        all_screenshots = []
+        games = self.context.games.games
+        
+        for game in games:
+            for screenshot_path in game.screenshots:
+                try:
+                    path = Path(screenshot_path)
+                    if path.exists():
+                        mtime = os.path.getmtime(screenshot_path)
+                        all_screenshots.append({
+                            "game_name": game.name,
+                            "path": screenshot_path,
+                            "mtime": mtime
+                        })
+                except Exception:
+                    continue
         
         if all_screenshots:
-            # Sortuj po dacie
-            sorted_screenshots = sorted(all_screenshots, key=lambda x: x.get("date", ""), reverse=True)
+            # Sortuj po czasie modyfikacji
+            sorted_screenshots = sorted(all_screenshots, key=lambda x: x.get("mtime", 0), reverse=True)
             
             for screenshot in sorted_screenshots[:4]:  # Pokaż 4 ostatnie
                 game_name = screenshot.get("game_name", "Nieznana gra")
-                date = screenshot.get("date", "")
                 
                 card = ctk.CTkFrame(self.screenshots_frame, fg_color=self.theme.base_color, corner_radius=8)
                 card.pack(fill="x", padx=15, pady=4)
@@ -414,15 +420,6 @@ class HomeView(ctk.CTkFrame):
                     anchor="w"
                 )
                 label.pack(side="left", padx=10, pady=8, fill="x", expand=True)
-                
-                if date:
-                    date_label = ctk.CTkLabel(
-                        card,
-                        text=date[:10],  # Tylko data, bez czasu
-                        font=ctk.CTkFont(size=10),
-                        text_color=self.theme.text_muted
-                    )
-                    date_label.pack(side="right", padx=10, pady=8)
         else:
             placeholder = ctk.CTkLabel(
                 self.screenshots_frame,
