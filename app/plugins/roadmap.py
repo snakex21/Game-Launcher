@@ -243,11 +243,13 @@ class RoadmapView(ctk.CTkFrame):
                 item.pop("completed_date", None)
                 break
         self.context.data_manager.set("roadmap", roadmap)
+        self.context.event_bus.emit("roadmap_updated")
         self._load_roadmap()
 
     def _delete_item(self, item_id: str) -> None:
         roadmap = [item for item in self.context.data_manager.get("roadmap", []) if item.get("id") != item_id]
         self.context.data_manager.set("roadmap", roadmap)
+        self.context.event_bus.emit("roadmap_updated")
         self._load_roadmap()
 
 
@@ -354,6 +356,7 @@ class AddRoadmapDialog(ctk.CTkToplevel):
         roadmap = self.context.data_manager.get("roadmap", [])
         roadmap.append(roadmap_item)
         self.context.data_manager.set("roadmap", roadmap)
+        self.context.event_bus.emit("roadmap_updated")
 
         logger.info("Dodano do roadmapy: %s", game_name)
         self.destroy()

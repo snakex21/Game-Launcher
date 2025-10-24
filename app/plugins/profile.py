@@ -244,6 +244,7 @@ class ProfileView(ctk.CTkFrame):
             user = self.context.data_manager.get("user", {})
             user["avatar"] = path
             self.context.data_manager.set("user", user)
+            self.context.event_bus.emit("profile_updated", avatar_path=path)
             logger.info("Zmieniono avatar na %s", path)
 
     def _save_profile(self) -> None:
@@ -251,6 +252,7 @@ class ProfileView(ctk.CTkFrame):
         user["username"] = self.entry_username.get().strip() or "Gracz"
         user["bio"] = self.bio_text.get("1.0", "end").strip()
         self.context.data_manager.set("user", user)
+        self.context.event_bus.emit("profile_updated", username=user["username"])
         logger.info("Zapisano profil użytkownika")
 
     def _create_backup(self) -> None:
