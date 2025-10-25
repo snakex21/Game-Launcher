@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import logging
+import platform
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -22,6 +24,8 @@ class MainWindow(ctk.CTk):
         self.title("Game Launcher 2.0")
         self.geometry("1400x800")
         self.minsize(1000, 600)  # Minimalne wymiary okna aby elementy były widoczne
+        
+        self._set_window_icon()
         
         self.theme = self.context.theme.get_active_theme()
         ctk.set_appearance_mode("dark")
@@ -187,6 +191,41 @@ class MainWindow(ctk.CTk):
     def _connect_events(self) -> None:
         self.context.event_bus.subscribe("theme_changed", self._on_theme_changed)
         self.context.event_bus.subscribe("profile_updated", self._on_profile_updated)
+
+    def _set_window_icon(self) -> None:
+        """Ustaw ikonę okna (szczególnie dla Windows, aby uniknąć migotania na pasku zadań)."""
+        try:
+            if platform.system() == "Windows":
+                if getattr(sys, 'frozen', False):
+                    base_path = Path(sys._MEIPASS)
+                else:
+                    base_path = Path(__file__).resolve().parent.parent
+                
+                icon_path = base_path / "assets" / "game_launcher.ico"
+                
+                if icon_path.exists():
+                    self.wm_iconbitmap(str(icon_path))
+                    logger.info("Ustawiono ikonę okna: %s", icon_path)
+                else:
+                    logger.warning("Nie znaleziono pliku ikony: %s", icon_path)
+            else:
+                if getattr(sys, 'frozen', False):
+                    base_path = Path(sys._MEIPASS)
+                else:
+                    base_path = Path(__file__).resolve().parent.parent
+                
+                icon_path = base_path / "assets" / "game_launcher.ico"
+                
+                if icon_path.exists():
+                    try:
+                        icon_img = Image.open(icon_path)
+                        icon_photo = ctk.CTkImage(icon_img, size=(32, 32))
+                        self.iconphoto(True, icon_photo._light_image)
+                        logger.info("Ustawiono ikonę okna (non-Windows): %s", icon_path)
+                    except Exception as e:
+                        logger.warning("Nie można ustawić ikony na tej platformie: %s", e)
+        except Exception as e:
+            logger.error("Błąd podczas ustawiania ikony okna: %s", e)
 
     def _on_theme_changed(self, **_kwargs) -> None:  # type: ignore[no-untyped-def]
         logger.info("Zmieniono motyw, aktualizacja UI")
