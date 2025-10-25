@@ -103,7 +103,7 @@ class RoadmapView(ctk.CTkFrame):
         self._load_current_view()
 
     def _setup_event_listeners(self) -> None:
-        self.context.event_bus.on("game_session_ended", self._on_game_session_ended)
+        self.context.event_bus.subscribe("game_session_ended", self._on_game_session_ended)
 
     def _on_game_session_ended(self, **kwargs) -> None:
         game_name = kwargs.get("game_name")
@@ -809,6 +809,11 @@ class RoadmapView(ctk.CTkFrame):
         self.context.data_manager.set("roadmap", roadmap)
         self.context.event_bus.emit("roadmap_updated")
         self._load_current_view()
+
+    def destroy(self) -> None:
+        """Czyszczenie subskrypcji eventów."""
+        self.context.event_bus.unsubscribe("game_session_ended", self._on_game_session_ended)
+        super().destroy()
 
 
 class AddRoadmapDialog(ctk.CTkToplevel):
