@@ -1,5 +1,113 @@
 # 📝 Changelog - Game Launcher
 
+## [3.0.0] - 2024-10-25 🚀
+
+### ✨ ROADMAPA - Kompletna Przebudowa z Kalendarzem i Archiwum
+
+#### 📅 Trzy Nowe Widoki Roadmapy
+- **📋 Lista** - Klasyczny widok kart z aktywnymi grami
+  - Emoji priorytetów: 🔴 Wysoki, 🟡 Średni, ⚪ Niski
+  - Licznik dni pozostałych do celu
+  - Kolorowe ostrzeżenia: 🔥 Dziś, ⏰ <7 dni, ⚠️ Przeterminowane
+  - Przyciski: ✏️ Edytuj, ✅ Ukończ, 🗑️ Usuń
+
+- **📅 Kalendarz** - Miesięczny widok z polskimi nazwami
+  - Pełna nawigacja między miesiącami (◀ / ▶)
+  - Wyświetlanie do 3 gier na dzień + licznik (+2, +3...)
+  - Kolorowe oznaczenia według priorytetu
+  - Legenda priorytetów pod kalendarzem
+
+- **📦 Archiwum** - Historia ukończonych gier
+  - Kolorystyka według miesiąca ukończenia (12 unikalnych kolorów)
+  - Filtry: Wszystkie / Ukończone / W archiwum
+  - Pełna legenda kolorów miesięcy (Sty-Gru)
+  - Możliwość przywrócenia gier: ↺ Przywróć
+
+#### 🎨 System Kolorów
+**Priorytety:**
+- Wysoki: #e74c3c (czerwony)
+- Średni: #f39c12 (pomarańczowy) 
+- Niski: #95a5a6 (szary)
+
+**Kolory Miesięcy (Archiwum):**
+- Styczeń (#FFB3BA), Luty (#FFDFBA), Marzec (#FFFFBA)
+- Kwiecień (#BAFFC9), Maj (#BAE1FF), Czerwiec (#FFB3E6)
+- Lipiec (#C9C9FF), Sierpień (#FFD1DC), Wrzesień (#E0BBE4)
+- Październik (#FFDAB9), Listopad (#B5EAD7), Grudzień (#C7CEEA)
+
+#### 📝 Rozbudowany Model Danych
+```json
+{
+  "id": "uuid",
+  "game_name": "Nazwa gry",
+  "game_id": "id_z_biblioteki",
+  "priority": "high|medium|low",
+  "color": "#e74c3c",
+  "start_date": "YYYY-MM-DD",
+  "target_date": "YYYY-MM-DD", 
+  "notes": "Notatki",
+  "completed": false,
+  "completed_date": "YYYY-MM-DD",
+  "status": "Planowana|Ukończona",
+  "added_date": "YYYY-MM-DD HH:MM:SS"
+}
+```
+
+#### ✏️ Edycja Wpisów
+- Pełna edycja aktywnych wpisów roadmapy
+- Formularz wypełniany aktualnymi danymi
+- Walidacja formatu daty
+- Aktualizacja priorytetu i notatek
+
+#### 🔔 Inteligentne Powiadomienia
+- **Po ukończeniu**: "🎉 Gratulacje! Ukończyłeś '{gra}' z roadmapy!"
+- **Cel osiągnięty**: "🎯 Cel roadmapy osiągnięty! '{gra}' - Czy czas oznaczyć jako ukończone?"
+- Powiadomienia po zakończeniu sesji gry jeśli osiągnięto datę docelową
+
+#### 🏆 Integracja z Osiągnięciami
+- **🗺️ Planista** (30 pkt) - Ukończ 3 pozycje w roadmapie
+- **🗓️ Mistrz Planowania** (60 pkt) - Ukończ 10 pozycji w roadmapie
+- Automatyczne odblokowywanie przy ukończeniu gier
+- Emisja zdarzeń: `roadmap_completed`, `roadmap_updated`
+
+#### 🔄 Automatyczna Migracja
+- Bezpieczna migracja starych danych
+- Dodawanie pól: `color`, `game_id`, `status`
+- Zachowanie pełnej kompatybilności wstecznej
+- Brak utraty danych podczas upgrade
+
+#### 🎯 Nowe Funkcje UX
+- Szybkie przypisywanie gier z biblioteki
+- Responsywny design dostosowany do motywu
+- Płynne przełączanie między widokami
+- Wszystkie etykiety w języku polskim
+
+### 🔧 Ulepszenia
+
+#### Performance
+- Cache nawigacji kalendarza
+- Leniwe ładowanie widoków
+- Optymalizacja renderowania kart
+
+#### UI/UX
+- Spójny design z motywem aplikacji
+- Zaokrąglone rogi i cienie
+- Płynne animacje przejść
+- Intuicyjne ikony i emoji
+
+### 📚 Dokumentacja
+- Nowy plik `ROADMAP_CALENDAR_ARCHIVE.md` z pełną dokumentacją
+- Scenariusze testowe dla wszystkich funkcji
+- Diagramy przepływu danych
+- Przewodnik migracji
+
+### 🗑️ Porządki w Dokumentacji
+Usunięto zduplikowane i nieaktualne pliki .md:
+- BUGFIX_*, CHANGES_*, SUMMARY_*, TICKET_*, USER_GUIDE_*
+- Zachowano: README.md, CHANGELOG.md, MIGRATION_GUIDE.md, PLAN_ROZWOJU.md
+
+---
+
 ## [2.1.2] - 2024-01-XX
 
 ### 🐛 Naprawione Błędy
@@ -122,21 +230,6 @@ Dodano nowe eventy do integracji z osiągnięciami:
 - **CustomTkinter border_color**: Naprawiono błąd `ValueError: transparency is not allowed` w osiągnięciach
   - Zmieniono `border_color="transparent"` na `border_color=self.theme.base_color`
   - Dla nieaktywnych ramek używamy `border_width=0` zamiast przezroczystego koloru
-
-### 📚 Dokumentacja
-
-- Zaktualizowano `NOWE_FUNKCJE.md` z opisem nowych mechanik osiągnięć
-- Dodano sekcję o odtwarzaczu muzyki z seekiem
-- Zaktualizowano tabele porównań funkcji
-- Dodano porady dotyczące używania nowych funkcji
-
-### 🔄 Zmiany Wewnętrzne
-
-- Osiągnięcia mają teraz 7 domyślnych pozycji (było 5)
-- `DEFAULT_ACHIEVEMENTS` zawiera pełną strukturę z ikonami i warunkami
-- Achievement Plugin subskrybuje eventy: `game_added`, `game_launched`, `roadmap_completed`, `mod_added`
-- Music Player używa timerów do aktualizacji UI co 500ms
-- Dodano obsługę `is_seeking` aby uniknąć konfliktów podczas ręcznego przewijania
 
 ---
 
