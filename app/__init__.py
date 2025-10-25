@@ -2,4 +2,4 @@
 Game Launcher - Zrefaktoryzowana aplikacja do zarządzania biblioteką gier
 """
 
-__version__ = "2.0.0"
+__version__ = "3.0.0"
