@@ -96,7 +96,7 @@
 - Intuicyjne ikony i emoji
 
 ### 📚 Dokumentacja
-- Nowy plik `ROADMAP_CALENDAR_ARCHIVE.md` z pełną dokumentacją
+- Pełna dokumentacja techniczna w README.md
 - Scenariusze testowe dla wszystkich funkcji
 - Diagramy przepływu danych
 - Przewodnik migracji
@@ -110,12 +110,12 @@
   - Zmieniono `event_bus.on()` na `event_bus.subscribe()`
   - Dodano metodę `destroy()` do czyszczenia subskrypcji
   - Zapobiega memory leakom przy zamykaniu widoku
-- Zobacz [`BUGFIX_roadmap_eventbus.md`](BUGFIX_roadmap_eventbus.md) dla szczegółów
+- Szczegóły naprawy EventBus API w sekcji bugfixów poniżej
 
 ### 🗑️ Porządki w Dokumentacji
 Usunięto zduplikowane i nieaktualne pliki .md:
 - BUGFIX_*, CHANGES_*, SUMMARY_*, TICKET_*, USER_GUIDE_*
-- Zachowano: README.md, CHANGELOG.md, MIGRATION_GUIDE.md, PLAN_ROZWOJU.md
+- Zachowano kluczowe pliki: README.md, CHANGELOG.md, docs/STATISTICS_API.md
 
 ---
 

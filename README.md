@@ -34,7 +34,7 @@ Zobacz [`CHANGELOG.md`](CHANGELOG.md) dla szczegółowego opisu wszystkich zmian
 - Pluginy odpowiadające za poszczególne sekcje aplikacji
 - Domyślne dane startowe (`app/data/database.json`) oraz automatyczna migracja konfiguracji
 
-Szczegóły architektury opisane są w pliku [`README_REFACTOR.md`](README_REFACTOR.md).
+Szczegóły architektury opisane są w sekcji 🏗️ Architektura powyżej.
 
 ## 🎉 Co było nowego w v2.2?
 - **⚙️ Nowe ustawienia wielosekcyjne** - zakładki: Ogólne, Personalizacja, Dane, Chmura
@@ -58,6 +58,44 @@ Szczegóły architektury opisane są w pliku [`README_REFACTOR.md`](README_REFAC
 python main.py
 ```
 Pierwsze uruchomienie utworzy plik `config.json` na podstawie domyślnej bazy (`app/data/database.json`).
+
+## 📖 Szybki Przewodnik
+
+### 🗺️ Roadmapa 3.0
+**Trzy widoki planowania gier:**
+- **📋 Lista** - Aktywne gry z priorytetami (🔴🟡⚪) i licznikiem dni
+- **📅 Kalendarz** - Miesięczny widok z polskimi nazwami i nawigacją
+- **📦 Archiwum** - Ukończone gry z kolorami miesięcy (12 unikalnych kolorów)
+
+**Podstawowe operacje:**
+1. Dodaj grę: `➕ Dodaj do Roadmapy` → wybierz grę → ustaw priorytet/daty
+2. Edytuj wpis: `✏️ Edytuj` w widoku listy
+3. Ukończ grę: `✅ Ukończ` → przenosi do archiwum z powiadomieniem 🎉
+4. Przywróć z archiwum: `↺ Przywróć` w widoku archiwum
+
+### 📚 Biblioteka Gier
+1. Dodaj grę: `➕ Dodaj Grę` → nazwa, ścieżka .exe, gatunki, ocena
+2. Uruchom grę: `▶️ Uruchom` na karcie gry
+3. Gry z oceną ≥8.0 mają **złotą ramkę** 💎
+
+### 🎵 Odtwarzacz Muzyki
+1. Wybierz playlistę (folder z muzyką)
+2. **Seek bar** - przeciągnij suwak do wybranego momentu
+3. **Mini kontrolka** w sidebar - steruj z każdego widoku!
+
+### 🏆 Osiągnięcia
+Automatycznie odblokowują się przy:
+- Ukończeniu 3 gier z roadmapy → 🗺️ Planista (30 pkt)
+- Ukończeniu 10 gier z roadmapy → 🗓️ Mistrz Planowania (60 pkt)
+
+### 🎨 Kolory i Priorytety
+**Priorytety roadmapy:**
+- 🔴 **Wysoki**: Czerwony (#e74c3c)
+- 🟡 **Średni**: Pomarańczowy (#f39c12)
+- ⚪ **Niski**: Szary (#95a5a6)
+
+**Kolory miesięcy (archiwum):**
+Sty 🩷  Lut 🍑  Mar 💛  Kwi 💚  Maj 💙  Cze 💜  Lip 🟣  Sie 🌸  Wrz 🪻  Paź 🧡  Lis 🩵  Gru ⚪
 
 ## 📦 Funkcjonalności
 - **📚 Biblioteka gier** – dodawanie, uruchamianie, kafelkowy podgląd gier
@@ -98,13 +136,72 @@ Widok pluginu dziedziczy z `customtkinter.CTkFrame`.
 
 ## 📚 Dokumentacja
 - [`CHANGELOG.md`](CHANGELOG.md) - Historia wszystkich zmian
-- [`README_REFACTOR.md`](README_REFACTOR.md) - Architektura i standardy
-- [`MIGRATION_GUIDE.md`](MIGRATION_GUIDE.md) - Przewodnik migracji
-- [`PLAN_ROZWOJU.md`](PLAN_ROZWOJU.md) - Plan dalszego rozwoju
-- [`ROADMAP_CALENDAR_ARCHIVE.md`](ROADMAP_CALENDAR_ARCHIVE.md) - Dokumentacja Roadmapy 3.0
+- [`docs/STATISTICS_API.md`](docs/STATISTICS_API.md) - API modułu statystyk
+
+## 🏗️ Architektura
+
+Game Launcher używa nowoczesnej, modularnej architektury z wzorcami projektowymi:
+
+```
+app/
+├── core/                    # Rdzeń aplikacji
+│   ├── app_context.py      # Kontekst i dependency injection
+│   ├── event_bus.py        # Publish/subscribe dla luźnego powiązania
+│   └── data_manager.py     # Centralne zarządzanie danymi JSON
+├── services/               # Logika biznesowa
+│   ├── game_service.py     # Zarządzanie biblioteką gier
+│   ├── session_tracker.py  # Śledzenie aktywnych sesji
+│   ├── reminder_service.py # Obsługa przypomnień
+│   ├── music_service.py    # Odtwarzacz muzyki (pygame)
+│   ├── theme_service.py    # System motywów
+│   ├── discord_service.py  # Discord Rich Presence
+│   ├── cloud_service.py    # Synchronizacja z chmurą
+│   └── notification_service.py # Powiadomienia systemowe
+├── plugins/                # Widoki i funkcjonalności
+│   ├── base.py            # Interfejs bazowy pluginu
+│   ├── library.py         # Widok biblioteki gier
+│   ├── statistics.py      # Wykresy i statystyki
+│   ├── news.py            # Aktualności (RSS)
+│   ├── reminders.py       # Przypomnienia
+│   ├── music_player.py    # Odtwarzacz muzyki
+│   └── settings.py        # Panel ustawień
+├── ui/                    # Komponenty interfejsu
+│   └── main_window.py     # Główne okno z nawigacją
+├── utils/                 # Narzędzia pomocnicze
+│   └── image_utils.py     # Obróbka obrazów
+└── data/                  # Dane początkowe
+    └── database.json      # Przykładowe dane startowe
+```
+
+### Wzorce Projektowe
+- **Dependency Injection** (AppContext) - Centralne wstrzykiwanie zależności
+- **Event Bus Pattern** - Luźne powiązanie między komponentami poprzez publish/subscribe
+- **Plugin Architecture** - Każda funkcjonalność to osobny plugin
+- **Service Layer** - Oddzielenie logiki biznesowej od UI
+
+## 🔄 Migracja z Wersji 1.0
+
+Stary monolityczny plik `game_launcher.py` (40,000+ linii) został zastąpiony prostym wrapperem. Aplikacja automatycznie:
+1. Odczytuje stary `config.json` jeśli istnieje
+2. Uzupełnia brakujące pola domyślnymi wartościami
+3. Tworzy backup przy błędach
+
+## 🚀 Plan Rozwoju
+
+**Następne funkcje w priorytecie:**
+- 📸 Manager zrzutów ekranu (auto-scan, galeria)
+- 🎮 Obsługa emulatorów (retro gry)
+- 🎮 Obsługa kontrolera (gamepad)
+- 🖥️ Minimalizacja do tray
+- 👁️ Overlay podczas gry
+- ☁️ Synchronizacja z chmurą (Google Drive, GitHub)
+- 💬 Chat (HTTP/Socket.IO)
 
 ## 🤝 Kontrybucje
-Pull requesty są mile widziane! Przed dodaniem nowych funkcji zapoznaj się z [`README_REFACTOR.md`](README_REFACTOR.md), gdzie opisano standardy i wzorce wykorzystane w projekcie.
+Pull requesty są mile widziane! Przed dodaniem nowych funkcji zapoznaj się z architekturą projektu opisaną powyżej oraz z zasadami EventBus API:
+- Używaj `event_bus.subscribe()` do rejestracji listenerów
+- Zawsze czyść subskrypcje w metodzie `destroy()`
+- Emituj zdarzenia przez `event_bus.emit()`
 
 ---
 **Autorzy**: Game Launcher Team  
