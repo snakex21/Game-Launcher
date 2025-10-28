@@ -13,6 +13,14 @@ from matplotlib.figure import Figure
 import matplotlib.dates as mdates
 
 from .base import BasePlugin
+from app.data.genealogy import (
+    get_genealogy_data,
+    calculate_infant_mortality,
+    calculate_life_expectancy,
+    calculate_seasonality,
+    calculate_family_structure,
+)
+
 
 if TYPE_CHECKING:
     from app.core.app_context import AppContext
@@ -75,6 +83,17 @@ class StatisticsView(ctk.CTkFrame):
         self.games_list = ctk.CTkScrollableFrame(left_panel, fg_color="transparent")
         self.games_list.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
+        genealogy_btn = ctk.CTkButton(
+            left_panel,
+            text="📜 Genealogia",
+            command=self._show_genealogy_stats,
+            fg_color=self.theme.accent if self.selected_game_id == "genealogy" else self.theme.base_color,
+            hover_color=self.theme.surface_alt,
+            anchor="w",
+            height=35
+        )
+        genealogy_btn.pack(fill="x", pady=5, padx=10)
+
         right_panel = ctk.CTkScrollableFrame(
             main_container, 
             fg_color=self.theme.surface, 
@@ -84,6 +103,111 @@ class StatisticsView(ctk.CTkFrame):
         self.stats_container = right_panel
 
         self._load_data()
+
+    def _show_genealogy_stats(self):
+        self.selected_game_id = "genealogy"
+        
+        for widget in self.stats_container.winfo_children():
+            widget.destroy()
+            
+        title = ctk.CTkLabel(
+            self.stats_container,
+            text="📜 Statystyki genealogiczne (XIX wiek)",
+            font=ctk.CTkFont(size=20, weight="bold"),
+            text_color=self.theme.text
+        )
+        title.pack(padx=20, pady=(20, 15))
+
+        self.genealogy_data = get_genealogy_data()
+        self._create_infant_mortality_chart()
+        self._create_life_expectancy_chart()
+        self._create_seasonality_chart()
+        self._create_family_structure_chart()
+
+    def _create_chart_canvas(self, parent, title_text):
+        section = ctk.CTkFrame(parent, fg_color=self.theme.base_color, corner_radius=12)
+        section.pack(fill="x", padx=20, pady=(20, 10))
+        
+        ctk.CTkLabel(
+            section,
+            text=title_text,
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=self.theme.text
+        ).pack(padx=15, pady=(15, 10))
+
+        chart_frame = ctk.CTkFrame(section, fg_color="transparent")
+        chart_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
+
+        return chart_frame
+
+    def _create_infant_mortality_chart(self):
+        data = calculate_infant_mortality(self.genealogy_data)
+        parent = self._create_chart_canvas(self.stats_container, "Śmiertelność niemowląt")
+        
+        fig = Figure(figsize=(8, 4), dpi=100)
+        fig.patch.set_facecolor(self.theme.surface)
+        ax = fig.add_subplot(111)
+        
+        ax.bar(data["labels"], data["values"], color=self.theme.accent)
+        ax.set_title(f"Procent śmiertelności: {data['percentage']:.2f}%", color=self.theme.text)
+        ax.set_facecolor(self.theme.surface)
+        ax.tick_params(colors=self.theme.text)
+        
+        canvas = FigureCanvasTkAgg(fig, master=parent)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+
+    def _create_life_expectancy_chart(self):
+        data = calculate_life_expectancy(self.genealogy_data)
+        parent = self._create_chart_canvas(self.stats_container, "Długość życia według pokoleń")
+
+        fig = Figure(figsize=(8, 4), dpi=100)
+        fig.patch.set_facecolor(self.theme.surface)
+        ax = fig.add_subplot(111)
+
+        ax.plot(data["labels"], data["values"], marker='o', color=self.theme.accent)
+        ax.set_ylabel("Średni wiek (lata)", color=self.theme.text)
+        ax.set_facecolor(self.theme.surface)
+        ax.tick_params(colors=self.theme.text, rotation=45)
+        
+        canvas = FigureCanvasTkAgg(fig, master=parent)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+
+    def _create_seasonality_chart(self):
+        data = calculate_seasonality(self.genealogy_data)
+        parent = self._create_chart_canvas(self.stats_container, "Sezonowość urodzeń i zgonów")
+
+        fig = Figure(figsize=(8, 4), dpi=100)
+        fig.patch.set_facecolor(self.theme.surface)
+        ax = fig.add_subplot(111)
+
+        ax.plot(data["labels"], data["births"], label="Urodzenia", color=self.theme.accent)
+        ax.plot(data["labels"], data["deaths"], label="Zgony", color="#E74C3C")
+        ax.legend()
+        ax.set_facecolor(self.theme.surface)
+        ax.tick_params(colors=self.theme.text)
+
+        canvas = FigureCanvasTkAgg(fig, master=parent)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+
+    def _create_family_structure_chart(self):
+        data = calculate_family_structure(self.genealogy_data)
+        parent = self._create_chart_canvas(self.stats_container, "Struktura rodzin")
+
+        fig = Figure(figsize=(8, 4), dpi=100)
+        fig.patch.set_facecolor(self.theme.surface)
+        ax = fig.add_subplot(111)
+        
+        ax.bar(data["labels"], data["values"], color=self.theme.accent)
+        ax.set_title(f"Średnia liczba dzieci na rodzinę: {data['avg_children']:.2f}", color=self.theme.text)
+        ax.set_facecolor(self.theme.surface)
+        ax.tick_params(colors=self.theme.text)
+
+        canvas = FigureCanvasTkAgg(fig, master=parent)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
 
     def _on_data_changed(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         self.cached_charts.clear()
