@@ -1,0 +1,45 @@
+# Game Launcher - Requirements
+
+# Core GUI and Image Processing
+Pillow>=10.0.0
+tkcalendar>=1.6.1
+
+# Multimedia
+pygame>=2.5.0
+mutagen>=1.47.0
+pylast>=5.2.0
+
+# Web Framework and Real-time Communication
+Flask>=3.0.0
+Flask-SocketIO>=5.3.0
+Flask-SQLAlchemy>=3.1.0
+python-socketio>=5.11.0
+Werkzeug>=3.0.0
+
+# System and Process Management
+psutil>=5.9.0
+pystray>=0.19.0
+plyer>=2.1.0
+
+# Input Handling
+inputs>=0.5
+pynput>=1.7.6
+
+# Networking and APIs
+requests>=2.31.0
+pypresence>=4.3.0
+
+# Data Validation
+email-validator>=2.1.0
+packaging>=23.0
+
+# Data Visualization
+matplotlib>=3.8.0
+numpy>=1.26.0
+
+# Optional: Cloud Integration
+# PyGithub>=2.1.0  # Uncomment if using GitHub API
+# google-auth>=2.23.0  # Uncomment if using Google Drive
+# google-auth-oauthlib>=1.1.0
+# google-auth-httplib2>=0.1.1
+# google-api-python-client>=2.108.0

@@ -1,0 +1,26 @@
+{
+    "github_token": "",
+    "last_music_folder": "",
+    "tiles_per_row": 5,
+    "music_volume": 0.7,
+    "music_hotkeys_enabled": true,
+    "music_hotkeys": {
+        "play_pause": "ctrl+alt+p",
+        "next_track": "ctrl+alt+right",
+        "prev_track": "ctrl+alt+left",
+        "stop": "ctrl+alt+s",
+        "volume_up": "ctrl+alt+up",
+        "volume_down": "ctrl+alt+down"
+    },
+    "track_overlay_enabled": false,
+    "chat_servers": [
+        {
+            "name": "Local Server",
+            "host": "localhost",
+            "port": 5000,
+            "is_active": true
+        }
+    ],
+    "chat_credentials": {},
+    "remote_server_port": 5000
+}
