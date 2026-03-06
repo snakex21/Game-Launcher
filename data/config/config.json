@@ -1,0 +1,1897 @@
+{
+    "version": "1.6.0",
+    "games": {
+        "High on Life": {
+            "exe_path": "E:/2022/High on Life/Oregon.exe",
+            "save_path": "C:/Users/ASRock/AppData/Local/Oregon",
+            "cover_image": "images\\High on Life_rawg_cover.jpg",
+            "play_time": 1157.0904660224915,
+            "completion": 50,
+            "last_played": 1745925721.6030233,
+            "play_sessions": [
+                {
+                    "start": 1729981397.2003136,
+                    "end": 1729981405.2443986
+                },
+                {
+                    "start": 1729981414.5806231,
+                    "end": 1729981530.976568
+                },
+                {
+                    "start": 1730032321.082512,
+                    "end": 1730032343.1862946
+                },
+                {
+                    "start": 1730043264.5348573,
+                    "end": 1730043269.5598896
+                },
+                {
+                    "start": 1730043387.6477325,
+                    "end": 1730043412.7799265
+                },
+                {
+                    "start": 1730498226.9141397,
+                    "end": 1730498236.984773
+                },
+                {
+                    "start": 1730638081.1023684,
+                    "end": 1730638196.6982603
+                },
+                {
+                    "start": 1730638767.5383294,
+                    "end": 1730638938.406411
+                },
+                {
+                    "start": 1730666918.6785846,
+                    "end": 1730666943.8499475
+                },
+                {
+                    "start": 1730667033.193201,
+                    "end": 1730667078.4641008
+                },
+                {
+                    "start": 1730667385.520296,
+                    "end": 1730667395.584922
+                },
+                {
+                    "start": 1730667657.1666386,
+                    "end": 1730667662.1902537
+                },
+                {
+                    "start": 1730667721.5640612,
+                    "end": 1730667766.7989905
+                },
+                {
+                    "start": 1730668197.2700539,
+                    "end": 1730668352.9930606
+                },
+                {
+                    "start": 1730674552.222471,
+                    "end": 1730674682.88554
+                },
+                {
+                    "start": 1730674778.3493006,
+                    "end": 1730674793.439114
+                },
+                {
+                    "start": 1730675000.1812544,
+                    "end": 1730675010.227676
+                },
+                {
+                    "start": 1730712806.4463398,
+                    "end": 1730712831.5569801
+                },
+                {
+                    "start": 1730713774.117291,
+                    "end": 1730713789.200756
+                },
+                {
+                    "start": 1739906962.8753495,
+                    "end": 1739907098.9989958
+                },
+                {
+                    "start": 1745171708.5701556,
+                    "end": 1745171728.8595023
+                },
+                {
+                    "start": 1745925721.603023,
+                    "end": 1745925755.8736665
+                }
+            ],
+            "play_count": 11,
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "rawg_id": 801032,
+            "rawg_slug": "high-on-life",
+            "description": "From the mind of Justin Roiland (Rick and Morty, Solar Opposites) comes High On Life. Humanity is being threatened by an alien cartel who wants to use them as drugs. It’s up to you to rescue and partner with charismatic, talking guns, take down Garmantuous and his gang, and save the world!",
+            "release_date": "2022-12-13",
+            "website": "https://squanchgames.com/high-on-life/",
+            "developers": [
+                "Squanch Games"
+            ],
+            "publishers": [
+                "Squanch Games"
+            ],
+            "genres_api": [
+                "Action",
+                "Shooter",
+                "Adventure"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Steam Achievements",
+                "Multiplayer",
+                "Full controller support",
+                "Story Rich",
+                "Open World",
+                "First-Person",
+                "Sci-fi",
+                "FPS",
+                "Gore",
+                "Comedy",
+                "Violent",
+                "Action-Adventure",
+                "Nudity",
+                "Colorful",
+                "combat",
+                "Sexual Content",
+                "Dark Humor",
+                "hentai",
+                "Хентай"
+            ],
+            "platforms": [
+                "PlayStation 5",
+                "PC",
+                "PlayStation 4",
+                "Xbox Series S/X"
+            ],
+            "requirements_pc": {
+                "minimum": "Minimum:\nRequires a 64-bit processor and operating system\nOS: Windows 10 64-bit\nProcessor: Intel(R) Core(TM) i5-4430K CPU @ 3.00GHz (4 CPUs)\nMemory: 8 GB RAM\nGraphics: NVIDIA GeForce GTX 1060 (3GB)/AMD Radeon R9 290x (4GB)\nDirectX: Version 11\nStorage: 50 GB available space",
+                "recommended": "Recommended:\nRequires a 64-bit processor and operating system\nOS: Windows 10 64-bit\nProcessor: Intel(R) Core(TM) i5-6402p CPU @ 2.80GHz (4 CPUs) / AMD Ryzen 5 2600 (3.4 GHz)\nMemory: 8 GB RAM\nGraphics: NVIDIA GeForce RTX 2060 (6GB)/AMD RX 5600 XT (6GB)\nDirectX: Version 12\nStorage: 50 GB available space"
+            },
+            "cover_rawg": "images\\High on Life_rawg_cover.jpg",
+            "screenshots": [],
+            "autoscan_screenshots": [],
+            "checklist": []
+        },
+        "Mafia Definitive Edition": {
+            "exe_path": "E:/2020/Mafia - Definitive Edition/mafiadefinitiveedition.exe",
+            "save_path": "C:/Users/ASRock/Documents/My Games/Mafia Definitive Edition",
+            "cover_image": "images\\Mafia Definitive Edition_rawg_cover.jpg",
+            "last_played": 1745925586.8131032,
+            "play_time": 846.6257441043854,
+            "play_sessions": [
+                {
+                    "start": 1729985572.3282468,
+                    "end": 1729985934.6486456
+                },
+                {
+                    "start": 1730033090.2149384,
+                    "end": 1730033121.3190455
+                },
+                {
+                    "start": 1730638958.4951653,
+                    "end": 1730639154.3525033
+                },
+                {
+                    "start": 1745499671.8974023,
+                    "end": 1745499878.683978
+                },
+                {
+                    "start": 1745925586.8131022,
+                    "end": 1745925637.3704267
+                }
+            ],
+            "completion": 0,
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "rawg_id": 442854,
+            "rawg_slug": "mafia",
+            "description": "Part one of the Mafia crime saga - 1930s, Lost Heaven, IL\nRe-made from the ground up, rise through the ranks of the Mafia during the Prohibition era of organized crime. After a run-in with the mob, cab driver Tommy Angelo is thrust into a deadly underworld. Initially uneasy about falling in with the Salieri crime family, Tommy soon finds that the rewards are too big to ignore.\n\nPlay a Mob Movie:\nLive the life of a Prohibition-era gangster and rise through the ranks of the Mafia.\n\nLost Heaven, IL:\n\nRecreated 1930's cityscape, filled with interwar architecture, cars and culture to see, hear and interact with.\n\nRe-Made Classic:\nFaithfully recreated, with expanded story, gameplay and original score. This is the Mafia you remembered and much more.",
+            "release_date": "2020-09-25",
+            "website": "https://www.mafiagame.com",
+            "developers": [
+                "Hangar 13"
+            ],
+            "publishers": [
+                "2K Games"
+            ],
+            "genres_api": [
+                "Action",
+                "Shooter"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Steam Achievements",
+                "Full controller support",
+                "Atmospheric",
+                "Story Rich",
+                "Open World",
+                "Third Person",
+                "Gore",
+                "Classic",
+                "Violent",
+                "Third-Person Shooter",
+                "Sexual Content",
+                "Crime",
+                "Remake",
+                "Driving",
+                "first person mod",
+                "mafia"
+            ],
+            "platforms": [
+                "PC",
+                "Xbox One",
+                "PlayStation 4"
+            ],
+            "requirements_pc": {
+                "minimum": "Minimum:\nRequires a 64-bit processor and operating system\nAdditional Notes: TBD",
+                "recommended": "Recommended:\nRequires a 64-bit processor and operating system"
+            },
+            "cover_rawg": "images\\Mafia Definitive Edition_rawg_cover.jpg",
+            "play_count": 2,
+            "screenshots": [],
+            "autoscan_screenshots": [],
+            "checklist": []
+        },
+        "Deluxe Ski Jumping 4": {
+            "name": "Deluxe Ski Jumping 4",
+            "game_type": "pc",
+            "exe_path": "C:/Programy/Deluxe Ski Jump 4/DSJ4.exe",
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                },
+                {
+                    "name": "Profil 2",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "emulator_name": null,
+            "rom_path": null,
+            "emulator_args": null,
+            "save_path": "C:/Users/ASRock/Documents/Deluxe Ski Jump 4",
+            "cover_image": "images\\Deluxe Ski Jumping 4_cover.jpg",
+            "genres": [
+                "Sporty"
+            ],
+            "rating": null,
+            "version": "",
+            "tags": [
+                "sporty"
+            ],
+            "notes": "",
+            "play_time": 9398.321036577225,
+            "completion": 0,
+            "last_played": 1748120787.1664612,
+            "play_sessions": [
+                {
+                    "start": 1745440504.6697087,
+                    "end": 1745440791.9798863
+                },
+                {
+                    "start": 1745440904.6163871,
+                    "end": 1745442130.8526173
+                },
+                {
+                    "start": 1745512539.5640357,
+                    "end": 1745512550.873547
+                },
+                {
+                    "start": 1745521990.005095,
+                    "end": 1745523498.6170747
+                },
+                {
+                    "start": 1745526268.3159187,
+                    "end": 1745526335.615114
+                },
+                {
+                    "start": 1745528931.2862227,
+                    "end": 1745528936.901412
+                },
+                {
+                    "start": 1745532425.9740922,
+                    "end": 1745532437.1399226
+                },
+                {
+                    "start": 1745532819.6664588,
+                    "end": 1745532842.0184042
+                },
+                {
+                    "start": 1745575350.956428,
+                    "end": 1745575367.5294514
+                },
+                {
+                    "start": 1745576055.8444297,
+                    "end": 1745576066.9157991
+                },
+                {
+                    "start": 1745576576.721433,
+                    "end": 1745577024.2179797
+                },
+                {
+                    "start": 1745617128.5506523,
+                    "end": 1745617134.195912
+                },
+                {
+                    "start": 1745664412.2160964,
+                    "end": 1745666172.8664978
+                },
+                {
+                    "start": 1745667169.5498755,
+                    "end": 1745667197.3826437
+                },
+                {
+                    "start": 1745668312.7012086,
+                    "end": 1745668340.4327867
+                },
+                {
+                    "start": 1745669296.270489,
+                    "end": 1745669324.1308815
+                },
+                {
+                    "start": 1745790031.9166765,
+                    "end": 1745790171.6515808
+                },
+                {
+                    "start": 1745791151.3891046,
+                    "end": 1745791168.2602708
+                },
+                {
+                    "start": 1745859258.4270406,
+                    "end": 1745859320.058297
+                },
+                {
+                    "start": 1745860148.4444678,
+                    "end": 1745860187.6227553
+                },
+                {
+                    "start": 1746029414.378045,
+                    "end": 1746029442.5804398
+                },
+                {
+                    "start": 1746030372.8958168,
+                    "end": 1746030390.0004694
+                },
+                {
+                    "start": 1746030425.5761058,
+                    "end": 1746030437.1079564
+                },
+                {
+                    "start": 1746030471.0230956,
+                    "end": 1746030533.8151073
+                },
+                {
+                    "start": 1746031359.9293976,
+                    "end": 1746031365.6770468
+                },
+                {
+                    "start": 1746032039.5175416,
+                    "end": 1746032125.0891335
+                },
+                {
+                    "start": 1746033714.0731075,
+                    "end": 1746033731.2005503
+                },
+                {
+                    "start": 1746033786.8559303,
+                    "end": 1746033831.6492305
+                },
+                {
+                    "start": 1746034136.095939,
+                    "end": 1746034153.1499865
+                },
+                {
+                    "start": 1746035106.8403287,
+                    "end": 1746035118.2181334
+                },
+                {
+                    "start": 1746099090.241166,
+                    "end": 1746099107.307139
+                },
+                {
+                    "start": 1746557946.5643501,
+                    "end": 1746558363.211382
+                },
+                {
+                    "start": 1746560119.474886,
+                    "end": 1746560444.5483992
+                },
+                {
+                    "start": 1746967616.9505496,
+                    "end": 1746968025.724912
+                },
+                {
+                    "start": 1746968578.2562482,
+                    "end": 1746968629.300231
+                },
+                {
+                    "start": 1746968640.557732,
+                    "end": 1746968657.3100536
+                },
+                {
+                    "start": 1746968860.2450933,
+                    "end": 1746969104.478755
+                },
+                {
+                    "start": 1746969131.179442,
+                    "end": 1746969148.124481
+                },
+                {
+                    "start": 1747000369.149536,
+                    "end": 1747000374.7661426
+                },
+                {
+                    "start": 1747076720.2120256,
+                    "end": 1747076737.0308135
+                },
+                {
+                    "start": 1747179214.073931,
+                    "end": 1747179225.3410404
+                },
+                {
+                    "start": 1747423352.9609795,
+                    "end": 1747423481.4927802
+                },
+                {
+                    "start": 1747520255.5572956,
+                    "end": 1747521335.8183053
+                },
+                {
+                    "start": 1747769705.1488369,
+                    "end": 1747770104.5224786
+                },
+                {
+                    "start": 1747780209.2955914,
+                    "end": 1747780356.2668834
+                },
+                {
+                    "start": 1748120787.1664608,
+                    "end": 1748120876.6316051
+                }
+            ],
+            "date_added": 1745100112.134653,
+            "play_count": 27,
+            "checklist": [],
+            "screenshots": [],
+            "autoscan_screenshots": []
+        },
+        "Red Dead Redemption 2": {
+            "name": "Red Dead Redemption 2",
+            "exe_path": "D:/2019/Red Dead Redemption 2/RDR2.exe",
+            "save_path": "C:/Users/ASRock/AppData/Roaming/.1911/Red Dead Redemption 2",
+            "cover_image": "images\\Red Dead Redemption 2_rawg_cover.jpg",
+            "cover_custom": "images\\Red Dead Redemption 2_rawg_cover.jpg",
+            "genres": [],
+            "rating": 8.0,
+            "version": "",
+            "tags": [],
+            "notes": "",
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "play_time": 305.0605444908142,
+            "completion": 0,
+            "last_played": 1747319208.878368,
+            "play_sessions": [
+                {
+                    "start": 1747319175.4189684,
+                    "end": 1747319192.101783
+                },
+                {
+                    "start": 1747319208.8783667,
+                    "end": 1747319497.2560966
+                }
+            ],
+            "date_added": 1745177381.1581454,
+            "screenshots": [],
+            "autoscan_screenshots": [
+                "C:\\Users\\ASRock\\Videos\\Radeon ReLive\\Red Dead Redemption 2\\Red Dead Redemption 2_2024.10.14-00.31.png",
+                "C:\\Users\\ASRock\\Videos\\Radeon ReLive\\Red Dead Redemption 2\\thumb_cache\\Red Dead Redemption 2_2024.10.14-00.31.png.jpg"
+            ],
+            "checklist": []
+        },
+        "Doom Ethernal": {
+            "exe_path": "E:/2020/DOOM Eternal/DOOMEternalx64vk.exe",
+            "save_path": "C:/Users/Public/Documents/Steam/RUNE/782330",
+            "cover_image": "images\\Doom Ethernal_cover.jpg",
+            "genres": [
+                "Strzelanki"
+            ],
+            "rating": 10.0,
+            "play_time": 4.017931699752808,
+            "completion": 0,
+            "last_played": 1730497986.150318,
+            "play_sessions": [
+                {
+                    "start": 1730058547.8018794,
+                    "end": 1730058551.819811
+                }
+            ],
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "checklist": [],
+            "screenshots": [],
+            "autoscan_screenshots": []
+        },
+        "PavlovVR": {
+            "exe_path": "G:/gry vr/PavlovVR/Pavlov/Binaries/Win64/Pavlov-Win64-Shipping.exe",
+            "save_path": "C:/Users/ASRock/AppData/Local/Pavlov",
+            "cover_image": "images\\PavlovVR_cover.jpg",
+            "genres": [
+                "VR"
+            ],
+            "rating": 8.0,
+            "last_played": 1730412796.6677797,
+            "play_time": 1182.5229308605194,
+            "play_sessions": [
+                {
+                    "start": 1730412796.6687799,
+                    "end": 1730413979.1917107
+                }
+            ],
+            "completion": 10,
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "rawg_id": 10204,
+            "rawg_slug": "pavlov-vr",
+            "description": "Pavlov is a multiplayer shooter for the HTC Vive.\nFeaturesDedicated Servers\nCompetitive Search And Destroy game mode\nCasual fast-paced game modes\nBots\nMatchmaking\nOffline/Practice mode\nVoice Chat\nTouchpad and OOB locomotion\nOOB LocomotionOOB stands for \"out of body\", a teleport variation without actually teleporting, your \"avatar\" moves into the target location while you snap every half a second to it. This works great for people who are prone to motion sickness without breaking the game for other people, this means you can play with regular players.",
+            "release_date": "2017-02-27",
+            "website": "",
+            "developers": [
+                "davevillz"
+            ],
+            "publishers": [
+                "davevillz"
+            ],
+            "genres_api": [
+                "Action",
+                "Indie"
+            ],
+            "tags_api": [
+                "Multiplayer",
+                "FPS",
+                "Gore",
+                "Violent",
+                "Online multiplayer",
+                "Early Access",
+                "VR"
+            ],
+            "platforms": [
+                "PC",
+                "PlayStation 5"
+            ],
+            "requirements_pc": {
+                "minimum": "Minimum:\nOS: Windows 7 64 bit\nProcessor: Intel Quad Core 3 Ghz +\nMemory: 4 GB RAM\nGraphics: GTX 970\nNetwork: Broadband Internet connection\nStorage: 4 GB available space",
+                "recommended": "Recommended:\nOS: Windows 10 64 bit\nProcessor: Intel Quad Core 3 Ghz +\nMemory: 8 GB RAM\nGraphics: GTX 980 ti or GTX 1070\nNetwork: Broadband Internet connection\nStorage: 4 GB available space"
+            },
+            "screenshots": [],
+            "autoscan_screenshots": [],
+            "checklist": []
+        },
+        "Red Dead Redemption": {
+            "exe_path": "E:/2024/Red Dead Redemption/RDR.exe",
+            "save_path": "C:/Users/ASRock/AppData/Roaming/.1911/Red Dead Redemption",
+            "cover_image": "images\\Red Dead Redemption_cover.jpg",
+            "genres": [
+                "Strzelanki"
+            ],
+            "rating": 10.0,
+            "play_time": 159.6683065891266,
+            "completion": 0,
+            "last_played": 1745925949.2782981,
+            "play_sessions": [
+                {
+                    "start": 1730495268.2920763,
+                    "end": 1730495270.3044326
+                },
+                {
+                    "start": 1730495264.86434,
+                    "end": 1730495270.8924694
+                },
+                {
+                    "start": 1730495266.9174953,
+                    "end": 1730495270.9344687
+                },
+                {
+                    "start": 1730495274.9122636,
+                    "end": 1730495276.9248848
+                },
+                {
+                    "start": 1730495300.4377728,
+                    "end": 1730495302.4503372
+                },
+                {
+                    "start": 1730495350.0688474,
+                    "end": 1730495351.076458
+                },
+                {
+                    "start": 1730495395.340702,
+                    "end": 1730495397.358266
+                },
+                {
+                    "start": 1730497029.0264335,
+                    "end": 1730497159.5411634
+                },
+                {
+                    "start": 1730498257.0903308,
+                    "end": 1730498267.1360881
+                }
+            ],
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "rawg_id": 4544,
+            "rawg_slug": "red-dead-redemption",
+            "description": "Red Dead Redemption is a third-person open-world adventure game which implements the Wild West at its best: it is very much GTA-clone but in bizarre stylistics and the very beginning of the twentieth century. This is the second title of a franchise, being preceded by Red Dead Revolver and followed by Red Dead Redemption 2 coming out in late 2018. \nWe play as John Marston who gradually takes down and take out criminals and those, who crosses his path. Among the combat mechanics, the most interesting one is \"Dead Eye\" — it allows one to point multiple targets out in slow motion and then shoot them simultaneously. \nThe game features 16-players multiplayer and cooperative and also has zombie DLC — Undead Nightmare. Additional content adds two modes to the original game: undead overrun in which you have to survive an infinite amount of zombie waves, and Land Grab in which player has to defend the particular piece of land to gain control of it.",
+            "release_date": "2010-05-18",
+            "website": "http://www.rockstargames.com/reddeadredemption/",
+            "developers": [
+                "Rockstar North",
+                "Rockstar Games",
+                "Double Eleven",
+                "Rockstar San Diego"
+            ],
+            "publishers": [
+                "Rockstar Games"
+            ],
+            "genres_api": [
+                "Action",
+                "Shooter"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Steam Achievements",
+                "Multiplayer",
+                "Full controller support",
+                "Atmospheric",
+                "Great Soundtrack",
+                "Story Rich",
+                "Open World",
+                "Third Person",
+                "Gore",
+                "Classic",
+                "Action-Adventure",
+                "Third-Person Shooter",
+                "Zombies",
+                "Nudity",
+                "3D",
+                "combat",
+                "Sexual Content",
+                "Blood",
+                "Narration",
+                "Family Sharing",
+                "Western",
+                "shoot",
+                "waves",
+                "HDR available",
+                "nightmare",
+                "clone"
+            ],
+            "platforms": [
+                "PC",
+                "Nintendo Switch",
+                "PlayStation 4",
+                "Xbox One",
+                "Xbox 360",
+                "PlayStation 3"
+            ],
+            "requirements_pc": {
+                "minimum": "Minimum:\nRequires a 64-bit processor and operating system\nOS: Windows 10 64-Bit\nProcessor: Intel® Core™ i5-4670 / AMD FX-9590\nMemory: 8 GB RAM\nGraphics: NVIDIA GeForce GTX 960 / AMD Radeon R7 360\nDirectX: Version 12\nStorage: 12 GB available space\nSound Card: Direct X Compatible",
+                "recommended": "Recommended:\nRequires a 64-bit processor and operating system\nOS: Windows 10 64-Bit\nProcessor: Intel® Core™ i5-8500 / AMD Ryzen 5 3500X\nMemory: 8 GB RAM\nGraphics: NVIDIA RTX 2070 / AMD RX 5700 XT\nDirectX: Version 12\nStorage: 12 GB available space\nSound Card: Direct X Compatible\nAdditional Notes: SSD recommended"
+            },
+            "screenshots": [],
+            "autoscan_screenshots": [],
+            "checklist": [],
+            "play_count": 1
+        },
+        "Silent Hill 2 Remake": {
+            "exe_path": "E:/2024/Silent Hill 2/SHProto.exe",
+            "save_path": "C:/Users/ASRock/AppData/Local/SilentHill2",
+            "cover_image": "images\\Silent Hill 2 Remake_cover.jpg",
+            "genres": [
+                "Strzelanki"
+            ],
+            "rating": 7.0,
+            "last_played": 1746097796.0191908,
+            "play_time": 181.3173224925995,
+            "play_sessions": [
+                {
+                    "start": 1730495540.1861074,
+                    "end": 1730495595.4677029
+                },
+                {
+                    "start": 1730497241.4889832,
+                    "end": 1730497255.5605533
+                },
+                {
+                    "start": 1730497244.748891,
+                    "end": 1730497259.8035946
+                },
+                {
+                    "start": 1730498282.2055905,
+                    "end": 1730498302.2952876
+                },
+                {
+                    "start": 1745265147.6289961,
+                    "end": 1745265162.7385058
+                },
+                {
+                    "start": 1745265679.4805493,
+                    "end": 1745265690.3759782
+                },
+                {
+                    "start": 1745576100.2551193,
+                    "end": 1745576122.6550915
+                },
+                {
+                    "start": 1745576139.5825722,
+                    "end": 1745576156.5524507
+                },
+                {
+                    "start": 1746097796.01919,
+                    "end": 1746097807.464157
+                }
+            ],
+            "completion": 0,
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "play_count": 6,
+            "checklist": [],
+            "screenshots": [],
+            "autoscan_screenshots": []
+        },
+        "Alice Madness Returns": {
+            "name": "Alice Madness Returns",
+            "exe_path": "D:\\2011\\Alice Madness Returns\\Alice1\\bin\\alice.exe",
+            "save_path": "",
+            "cover_image": "images\\Alice Madness Returns_rawg_cover.jpg",
+            "genres": [],
+            "rating": null,
+            "version": "",
+            "tags": [],
+            "notes": "",
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "play_time": 0,
+            "completion": 0,
+            "last_played": 1746033660.4953113,
+            "play_sessions": [],
+            "date_added": 1745100470.2027783,
+            "rawg_id": 4520,
+            "rawg_slug": "alice-madness-returns",
+            "description": "This sequel to American McGee's Alice follows the protagonist, Alice Lidell, as she returns to the dark world of her subconsciousness, the nightmarish version of Lewis Carrol’s Wonderland. After she was released from the psychiatric asylum, Alice moved to the orphanage, where she’s being treated with the use of hypnosis. It doesn't stop her from descending again into the grotesque realm of disturbing visuals, creepy music, and absurdist logic. She will again meet the Cheshire Cat, the Mad Hatter, the Caterpillar, the Queen of Hearts, and many other darker versions of Carrol’s whimsy characters. Her journey through the Wonderland serves as a metaphor for Alice fighting her own madness.\nThe game is played in the third-person view. On her way, Alice will jump the platforms, solve puzzles, and fight enemies. The combat system allows for a seamless flow of attacks, dodges, and combos. Besides her trademark Vorpal Blade, Alice will use other, somewhat surreal weapons, such as Teapot Cannon, Clockwork Bomb, or Pepper Grinder. In the sequel, Alice gains a new ability called Hysteria that can be activated when her health is the lowest.",
+            "release_date": "2011-06-14",
+            "website": "http://www.ea.com/alice",
+            "developers": [
+                "Electronic Arts",
+                "Spicy Horse"
+            ],
+            "publishers": [
+                "Electronic Arts"
+            ],
+            "genres_api": [
+                "Action",
+                "Adventure"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Atmospheric",
+                "Story Rich",
+                "Third Person",
+                "Horror",
+                "Fantasy",
+                "Gore",
+                "Female Protagonist",
+                "Action-Adventure",
+                "Dark",
+                "Hack and Slash",
+                "3D Vision",
+                "Steampunk",
+                "Surreal",
+                "Gothic",
+                "Psychological",
+                "Based On A Novel"
+            ],
+            "platforms": [
+                "PC",
+                "PlayStation 3",
+                "Xbox 360",
+                "Xbox One"
+            ],
+            "requirements_pc": {
+                "minimum": "OS: Windows 7 SP1, Windows Vista with SP2, Windows XP with SP3\nProcessor: Intel Core2 Duo (or equivalent) running at 1.60GHz or greater; AMD Athlon X2 (or equivalent) running at 1.60GHz or greater\nMemory: 2048MB or greater\nHard Disk Space: 8.5 GB\nVideo Card: *NVIDIA GeForce 7600 256MB or ATI Radeon X1650 256MB or greater\nSound: DirectX 9.0c compatible\nDirectX®: 9.0c\n*NVIDIA GeForce 8400, 9400, 210; ATI Radeon HD 2400, HD 3200, HD 4300 as well as integrated versions of supported chipsets are below minimum system requirements\n",
+                "recommended": null
+            },
+            "cover_rawg": "images\\Alice Madness Returns_rawg_cover.jpg",
+            "play_count": 5,
+            "checklist": [],
+            "screenshots": [],
+            "autoscan_screenshots": []
+        },
+        "Stray": {
+            "name": "Stray",
+            "exe_path": "E:\\2022\\Stray\\Stray.exe",
+            "folder_path": "E:\\2022\\Stray",
+            "save_path": "",
+            "cover_image": "images\\Stray_rawg_cover.jpg",
+            "genres": [],
+            "rating": null,
+            "version": "",
+            "tags": [],
+            "notes": "",
+            "date_added": 1745173791.1775327,
+            "play_time": 0,
+            "completion": 0,
+            "last_played": null,
+            "play_sessions": [],
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "rawg_id": 452638,
+            "rawg_slug": "stray-2",
+            "description": "Lost, alone and separated from family, a stray cat must untangle an ancient mystery to escape a long-forgotten city.\n\nStray is a third-person cat adventure game set amidst the detailed, neon-lit alleys of a decaying cybercity and the murky environments of its seedy underbelly. Roam surroundings high and low, defend against unforeseen threats and solve the mysteries of this unwelcoming place inhabited by curious droids and dangerous creatures.\n\nSee the world through the eyes of a cat and interact with the environment in playful ways. Be stealthy, nimble, silly, and sometimes as annoying as possible with the strange inhabitants of this mysterious world.\n\nAlong the way, the cat befriends a small flying drone, known only as B-12. With the help of this newfound companion, the duo must find a way out.\n\nStray is developed by BlueTwelve Studio, a small team from the south of France mostly made up of cats and a handful of humans.",
+            "release_date": "2022-07-19",
+            "website": "https://stray.game/",
+            "developers": [
+                "BlueTwelve",
+                "BlueTwelve Studio"
+            ],
+            "publishers": [
+                "Annapurna Interactive"
+            ],
+            "genres_api": [
+                "Action",
+                "Adventure",
+                "Indie",
+                "Puzzle",
+                "Platformer"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Steam Achievements",
+                "Full controller support",
+                "Steam Cloud",
+                "Atmospheric",
+                "Open World",
+                "Third Person",
+                "Sci-fi",
+                "Horror",
+                "Exploration",
+                "Stealth",
+                "exclusive",
+                "Cute",
+                "Mystery",
+                "Colorful",
+                "Cyberpunk",
+                "Dystopian",
+                "Steam Trading Cards",
+                "Robots",
+                "Beautiful",
+                "Remote Play on TV",
+                "cats",
+                "Котики"
+            ],
+            "platforms": [
+                "macOS",
+                "Xbox One",
+                "Nintendo Switch",
+                "PC",
+                "Xbox Series S/X",
+                "PlayStation 5",
+                "PlayStation 4"
+            ],
+            "requirements_pc": {
+                "minimum": "Minimum:\nRequires a 64-bit processor and operating system\nOS: Windows 10\nProcessor: Intel Core i5-2300 | AMD FX-6350\nMemory: 8 GB RAM\nGraphics: NVIDIA GeForce GTX 650 Ti, 2 GB | AMD Radeon R7 360, 2 GB\nDirectX: Version 12\nStorage: 10 GB available space",
+                "recommended": "Recommended:\nRequires a 64-bit processor and operating system\nOS: Windows 10\nProcessor: Intel Core i5-8400 | AMD Ryzen 5 2600\nMemory: 8 GB RAM\nGraphics: NVIDIA GeForce GTX 780, 3 GB | AMD Radeon R9 290X, 4 GB\nDirectX: Version 12\nStorage: 10 GB available space"
+            },
+            "cover_rawg": "images\\Stray_rawg_cover.jpg",
+            "screenshots": [],
+            "autoscan_screenshots": [],
+            "checklist": []
+        },
+        "Ghostwire Tokyo": {
+            "name": "Ghostwire Tokyo",
+            "exe_path": "E:\\2022\\Ghostwire - Tokyo\\GWT.exe",
+            "folder_path": "E:\\2022\\Ghostwire - Tokyo",
+            "save_path": "",
+            "cover_image": "images\\Ghostwire Tokyo_rawg_cover.jpg",
+            "genres": [],
+            "rating": null,
+            "version": "",
+            "tags": [],
+            "notes": "",
+            "date_added": 1745175063.1699157,
+            "play_time": 114.0416738986969,
+            "completion": 0,
+            "last_played": 1745868492.2413917,
+            "play_sessions": [
+                {
+                    "start": 1745499510.946493,
+                    "end": 1745499527.9911625
+                },
+                {
+                    "start": 1745860305.048598,
+                    "end": 1745860310.7788205
+                },
+                {
+                    "start": 1745868492.2413912,
+                    "end": 1745868583.508173
+                }
+            ],
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "rawg_id": 326248,
+            "rawg_slug": "ghostwire-tokio",
+            "description": "After strange disappearances hit Tokyo’s population, it’s up to you to uncover the source and purge the city of a strange, new evil. Armed with your own mysterious spectral abilities, you will face down the occult, unravel conspiracy theories and experience urban legends like never before.\n\nDon’t fear the unknown. Attack it.",
+            "release_date": "2022-03-24",
+            "website": "https://bethesda.net/en/game/ghostwire-tokyo",
+            "developers": [
+                "Tango Gameworks"
+            ],
+            "publishers": [
+                "Bethesda Softworks"
+            ],
+            "genres_api": [
+                "Action"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Steam Achievements",
+                "Full controller support",
+                "Steam Cloud",
+                "Atmospheric",
+                "Story Rich",
+                "Open World",
+                "First-Person",
+                "Horror",
+                "FPS",
+                "Exploration",
+                "Action-Adventure",
+                "exclusive",
+                "Captions available",
+                "Mystery",
+                "Realistic",
+                "combat",
+                "Cyberpunk",
+                "Surreal",
+                "Lore-Rich",
+                "Dating Sim",
+                "Supernatural"
+            ],
+            "platforms": [
+                "PC",
+                "Xbox Series S/X",
+                "PlayStation 5"
+            ],
+            "requirements_pc": {
+                "minimum": "Minimum:\nRequires a 64-bit processor and operating system\nOS: 64-BIT WINDOWS 10 VERSION 1909 OR HIGHER\nProcessor: CORE I7 4770K @ 3.5GHZ OR AMD RYZEN 5 2600\nMemory: 12 GB RAM\nGraphics: NVIDIA GTX 1060 OR AMD RX 5500 XT (VRAM 6 GB OR HIGHER)\nDirectX: Version 12\nStorage: 20 GB available space\nAdditional Notes: SSD Storage Recommended",
+                "recommended": "Recommended:\nRequires a 64-bit processor and operating system\nOS: 64-BIT WINDOWS 10 VERSION 1909 OR HIGHER\nProcessor: CORE I7 6700 @ 3.4GHZ OR AMD RYZEN 5 2600\nMemory: 16 GB RAM\nGraphics: NVIDIA GTX 1080 OR AMD RX 5600 XT (VRAM 6 GB OR HIGHER)\nDirectX: Version 12\nStorage: 20 GB available space\nAdditional Notes: SSD Storage"
+            },
+            "play_count": 3,
+            "screenshots": [],
+            "autoscan_screenshots": [],
+            "checklist": []
+        },
+        "Teardown": {
+            "name": "Teardown",
+            "exe_path": "E:\\2022\\Teardown\\teardown.exe",
+            "folder_path": "E:\\2022\\Teardown",
+            "save_path": "",
+            "cover_image": "images\\Teardown_rawg_cover.jpg",
+            "genres": [],
+            "rating": null,
+            "version": "",
+            "tags": [],
+            "notes": "",
+            "date_added": 1745175671.4673445,
+            "play_time": 39.23443007469177,
+            "completion": 0,
+            "last_played": 1745925693.5861168,
+            "play_sessions": [
+                {
+                    "start": 1745925643.0573306,
+                    "end": 1745925659.9034457
+                },
+                {
+                    "start": 1745925665.5329542,
+                    "end": 1745925671.107836
+                },
+                {
+                    "start": 1745925693.5861163,
+                    "end": 1745925710.3995495
+                }
+            ],
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "rawg_id": 378579,
+            "rawg_slug": "teardown-2",
+            "description": "Plan the perfect heist using creative problem solving, brute force and everything around you. Teardown features a fully destructible and truly interactive environment where player freedom and emergent gameplay are the driving mechanics.\r\n\r\nTear down walls with explosives or vehicles to create shortcuts no one thought were possible. Stack objects, build structures or use floating objects to your advantage. Take your time to create the most efficient path through the level and get ready to run.\r\n\r\nThe moment you pick up your first target an alarm goes off and the heat is on. Run, jump, drive, slingshot, do whatever you need to collect all of the targets and escape before security arrives.",
+            "release_date": "2022-04-21",
+            "website": "http://teardowngame.com",
+            "developers": [
+                "Tuxedo Labs"
+            ],
+            "publishers": [
+                "Tuxedo Labs"
+            ],
+            "genres_api": [
+                "Action",
+                "Strategy",
+                "Simulation",
+                "Indie"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "First-Person",
+                "Sandbox",
+                "Physics",
+                "Destruction",
+                "Heist",
+                "Voxel"
+            ],
+            "platforms": [
+                "PC",
+                "PlayStation 5"
+            ],
+            "requirements_pc": {
+                "minimum": "Minimum:\nRequires a 64-bit processor and operating system\nOS: Windows 7\nProcessor: Quad Core CPU\nMemory: 4 GB RAM\nGraphics: NVIDIA GeForce GTX 1060 or better\nStorage: 500 MB available space",
+                "recommended": "Recommended:\nRequires a 64-bit processor and operating system\nOS: Windows 10\nProcessor: Intel Core i7 or better\nMemory: 4 GB RAM\nGraphics: NVIDIA GeForce GTX 1080 or better\nStorage: 500 MB available space"
+            },
+            "screenshots": [],
+            "autoscan_screenshots": [],
+            "checklist": [],
+            "play_count": 2
+        },
+        "Resident Evil 4 (Europe)": {
+            "name": "Resident Evil 4 (Europe)",
+            "game_type": "emulator",
+            "emulator_name": "PCSX2",
+            "rom_path": "H:/Emulatory/PS 2 - PCSX2/ROM PS2/Resident Evil 4 (Europe) (En,Fr,De,Es,It).iso",
+            "emulator_args": "",
+            "exe_path": null,
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "save_path": "H:/Emulatory/PS 2 - PCSX2/memcards",
+            "cover_image": "images\\Resident Evil 4 (Europe)_rawg_cover.jpg",
+            "genres": [],
+            "rating": null,
+            "version": "",
+            "tags": [],
+            "notes": "",
+            "play_time": 487.1924030780792,
+            "completion": 0,
+            "last_played": 1746032114.022755,
+            "play_sessions": [
+                {
+                    "start": 1745265876.8404472,
+                    "end": 1745266003.6635935
+                },
+                {
+                    "start": 1745266226.4813719,
+                    "end": 1745266265.790867
+                },
+                {
+                    "start": 1745266276.886257,
+                    "end": 1745266467.5180511
+                },
+                {
+                    "start": 1745499564.4869504,
+                    "end": 1745499666.5230136
+                },
+                {
+                    "start": 1745771549.942846,
+                    "end": 1745771566.9094443
+                },
+                {
+                    "start": 1746032114.0227537,
+                    "end": 1746032125.4480596
+                }
+            ],
+            "date_added": 1745264776.386216,
+            "play_count": 9,
+            "rawg_id": 795632,
+            "rawg_slug": "resident-evil-4-2023",
+            "description": "Survival is just the beginning\n\nResident Evil 4 is a remake of the 2005 original Resident Evil 4.\n\nReimagined for 2023 to bring state-of-the-art survival horror.\n\nResident Evil 4 preserves the essence of the original game, while introducing modernized gameplay, a reimagined storyline,\nand vividly detailed graphics to make this the latest survival horror game where life and death, terror and catharsis intersect.",
+            "release_date": "2023-03-24",
+            "website": "https://www.residentevil.com/re4/",
+            "developers": [
+                "Capcom"
+            ],
+            "publishers": [
+                "Capcom"
+            ],
+            "genres_api": [
+                "Action",
+                "Adventure"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Steam Cloud",
+                "Story Rich",
+                "Third Person",
+                "Horror",
+                "Gore",
+                "Survival",
+                "Violent",
+                "Action-Adventure",
+                "Third-Person Shooter",
+                "Dark",
+                "Zombies",
+                "Survival Horror",
+                "3D",
+                "Crafting",
+                "Realistic",
+                "Cinematic",
+                "Resource Management",
+                "Un jugador",
+                "Logros de Steam",
+                "Compat. total con control"
+            ],
+            "platforms": [
+                "PlayStation 4",
+                "PC",
+                "iOS",
+                "PlayStation 5",
+                "Xbox Series S/X"
+            ],
+            "requirements_pc": {
+                "minimum": "Mínimo:\nRequiere un procesador y un sistema operativo de 64 bits\nSO: Windows 10 (64 bit)\nProcesador: AMD Ryzen 3 1200 / Intel Core i5-7500\nMemoria: 8 GB de RAM\nGráficos: AMD Radeon RX 560 with 4GB VRAM / NVIDIA GeForce GTX 1050 Ti with 4GB VRAM\nDirectX: Versión 12\nRed: Conexión de banda ancha a Internet\nNotas adicionales: Estimated performance (when set to Prioritize Performance): 1080p/45fps. ・Framerate might drop in graphics-intensive scenes. ・AMD Radeon RX 6700 XT or NVIDIA GeForce RTX 2060 required to support ray tracing.",
+                "recommended": "Recomendado:\nRequiere un procesador y un sistema operativo de 64 bits\nSO: Windows 10 (64 bit)/Windows 11 (64 bit)\nProcesador: AMD Ryzen 5 3600 / Intel Core i7 8700\nMemoria: 16 GB de RAM\nGráficos: AMD Radeon RX 5700 / NVIDIA GeForce GTX 1070\nDirectX: Versión 12\nRed: Conexión de banda ancha a Internet\nNotas adicionales: Rendimiento estimado: 1080p/60 fps ・La tasa de imágenes será menor en escenas de gráficos intensos. ・AMD Radeon RX 6700 XT o NVIDIA GeForce RTX 2070 son necesarias para activar el trazado de rayos."
+            },
+            "screenshots": [],
+            "autoscan_screenshots": [],
+            "checklist": []
+        },
+        "Grand Theft Auto - San Andreas": {
+            "name": "Grand Theft Auto - San Andreas",
+            "game_type": "emulator",
+            "emulator_name": "PCSX2",
+            "rom_path": "H:/Emulatory/PS 2 - PCSX2/ROM PS2/Grand Theft Auto - San Andreas (Europe, Australia) (En,Fr,De,Es,It) (v1.03).iso",
+            "emulator_args": "",
+            "exe_path": null,
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "save_path": "H:/Emulatory/PS 2 - PCSX2/memcards",
+            "cover_image": "images\\Grand Theft Auto - San Andreas_rawg_cover.jpg",
+            "genres": [],
+            "rating": null,
+            "version": "",
+            "tags": [],
+            "notes": "",
+            "date_added": 1745266056.9531503,
+            "play_time": 715.7165129184723,
+            "completion": 1,
+            "last_played": 1746304115.432903,
+            "play_sessions": [
+                {
+                    "start": 1745266079.2672668,
+                    "end": 1745266215.5415144
+                },
+                {
+                    "start": 1745499478.0627265,
+                    "end": 1745499505.8476036
+                },
+                {
+                    "start": 1745499897.1925635,
+                    "end": 1745499913.9209273
+                },
+                {
+                    "start": 1745514503.2954855,
+                    "end": 1745514715.5957932
+                },
+                {
+                    "start": 1745515217.5088425,
+                    "end": 1745515256.5464664
+                },
+                {
+                    "start": 1745669335.9621832,
+                    "end": 1745669358.363771
+                },
+                {
+                    "start": 1745759992.307036,
+                    "end": 1745759997.859647
+                },
+                {
+                    "start": 1745860188.3087537,
+                    "end": 1745860216.331358
+                },
+                {
+                    "start": 1745860277.4973993,
+                    "end": 1745860294.3032403
+                },
+                {
+                    "start": 1745868589.7824247,
+                    "end": 1745868595.3721883
+                },
+                {
+                    "start": 1745871584.776327,
+                    "end": 1745871606.6535287
+                },
+                {
+                    "start": 1746033166.0256195,
+                    "end": 1746033183.218354
+                },
+                {
+                    "start": 1746303716.7768085,
+                    "end": 1746303761.2716851
+                },
+                {
+                    "start": 1746304115.4329026,
+                    "end": 1746304237.0867748
+                }
+            ],
+            "rawg_id": 416,
+            "rawg_slug": "grand-theft-auto-san-andreas",
+            "cover_rawg": "images\\Grand Theft Auto - San Andreas_rawg_cover.jpg",
+            "description": "Grand Theft Auto - San Andreas is the seventh entry in the series in the GTA franchise, but only second big title after GTA - Vice City. Setting up in fictional state San Andreas, you follow the story of CJ, a member of one of the multiple gangs in the city. CJ's family is being attacked in drive shooting which resulted in the death of CJ's mother, so he returns to home from Liberty City. Meeting the rest of the family at his mom's funeral, he decides to rebuild the gang and gain control of the state.\r\n\r\nThe game makes a brilliant connection with missions and open world actions that you are able to do around the cities. You can steal cars, buy guns, hunt for collectables and do some side quests, while different characters give you specific missions in order to push the plot forward. Streets are filled with people as well as plenty of vehicles to steal. Fictional brands of cars, tanks, bikes are available to be stolen from any place around the city. Armoury contains pistols, rifles, hand-machine guns or a rocket launcher as well as melee weapons giving player freedom in anything he's doing in GTA.",
+            "release_date": "2004-10-26",
+            "website": "http://www.rockstargames.com/sanandreas/pc",
+            "developers": [
+                "Rockstar North",
+                "War Drum Studios"
+            ],
+            "publishers": [
+                "Capcom",
+                "Rockstar Games",
+                "1C-SoftClub"
+            ],
+            "genres_api": [
+                "Action"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Multiplayer",
+                "Atmospheric",
+                "Great Soundtrack",
+                "Story Rich",
+                "Open World",
+                "Third Person",
+                "Partial Controller Support",
+                "Funny",
+                "Classic",
+                "Sandbox",
+                "Comedy",
+                "Moddable",
+                "Mature",
+                "Crime",
+                "Driving",
+                "first person mod",
+                "Remote Play on Tablet",
+                "Remote Play on Phone",
+                "controversial",
+                "karaihb"
+            ],
+            "platforms": [
+                "macOS",
+                "PC",
+                "iOS",
+                "Xbox",
+                "Android",
+                "PlayStation 4",
+                "PlayStation 3",
+                "PlayStation 2",
+                "Xbox 360",
+                "Xbox One"
+            ],
+            "requirements_pc": {
+                "minimum": "Minimum:\nOS: Microsoft® Windows® 2000/XP\nProcessor: 1Ghz Pentium III or AMD Athlon Processor\nMemory: 256MB of RAM\nGraphics: 64MB Video Card (Geforce 3 or better)\nHard Drive: 3.6GB of free hard disk space (minimal install)\nOther Requirements: Software installations required including DirectX and Sony DADC SecuROM\nPartner Requirements: Please check the terms of service of this site before purchasing this software.",
+                "recommended": "Recommended:\nProcessor: Intel Pentium 4 or AMD Athlon XP Processor\nMemory: 384MB of RAM (the more the better!)\nGraphics: 128MB (or greater) Video Card (Geforce 6 Series Recommended)\nHard Drive: 4.7GB of free hard disk space (full install)\nSound Card: DirectX 9 compatible Sound Card (Sound Blaster Auidgy 2 Recommended)"
+            },
+            "play_count": 14,
+            "screenshots": [],
+            "autoscan_screenshots": [],
+            "checklist": []
+        },
+        "Mafia 3": {
+            "name": "Mafia 3",
+            "exe_path": "D:\\2016\\Mafia 3 - Definitive Edition\\Mafia3DefinitiveEdition.exe",
+            "folder_path": "D:\\2016\\Mafia 3 - Definitive Edition",
+            "save_path": "",
+            "cover_image": "images\\Mafia 3_rawg_cover.jpg",
+            "genres": [],
+            "rating": null,
+            "version": "",
+            "tags": [],
+            "notes": "",
+            "date_added": 1745440737.283409,
+            "play_time": 22.510866403579712,
+            "completion": 0,
+            "last_played": 1745512420.3449569,
+            "play_sessions": [
+                {
+                    "start": 1745512420.3449562,
+                    "end": 1745512442.8558226
+                }
+            ],
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "rawg_id": 1169,
+            "rawg_slug": "mafia-iii",
+            "cover_rawg": "images\\Mafia 3_rawg_cover.jpg",
+            "description": "Mafia III is an action-adventure game that follows the story of Lincoln Clay, a veteran who is seeking revenge for his killed relatives in the city of New Bordeaux. He creates a criminal syndicate to defeat the Italian mob responsible for the death of Clay’s family. While the game is the third part of the Mafia series, it represents a completely new story and characters, not connected to the previous titles.\nThe core gameplay of Mafia III is gunplay with a cover system. The game provides a wide variety of weaponry to choose from; you can also call allies to help you. However, if you’re not fond of shooter mechanics, you’re allowed to use melee combat or stealth tactics to complete missions. Another feature is interrogating NPCs to get more information.\nThe game is set in an open world where you can move on foot or use vehicles. A great part of the game includes driving with realistic mechanics and sounds. There’s also a system of the governmental response to the crimes you commit that affects the playthrough.",
+            "release_date": "2016-10-06",
+            "website": "https://2k.com/en-US/game/mafia-iii-standard-edition/",
+            "developers": [
+                "Aspyr Media",
+                "Hangar 13",
+                "2K Czech"
+            ],
+            "publishers": [
+                "2K Games"
+            ],
+            "genres_api": [
+                "Action",
+                "Adventure"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Steam Achievements",
+                "Multiplayer",
+                "Full controller support",
+                "Steam Cloud",
+                "Atmospheric",
+                "steam-trading-cards",
+                "Great Soundtrack",
+                "Story Rich",
+                "Open World",
+                "Third Person",
+                "FPS",
+                "Gore",
+                "Classic",
+                "Sandbox",
+                "Violent",
+                "Stealth",
+                "Third-Person Shooter",
+                "Nudity",
+                "Mature",
+                "Crime"
+            ],
+            "platforms": [
+                "macOS",
+                "PC",
+                "Xbox One",
+                "PlayStation 4"
+            ],
+            "requirements_pc": {
+                "minimum": "7 (64-bit) or laterProcessor: Intel I7-3770, AMD FX 8350 4.0 GhzMemory: 8 GB RAMGraphics: 4GB of Video Memory &amp; NVIDIA Geforce GTX 780 or GeForce GTX 1060, AMD Radeon R9 290XStorage: 50 GB available spaceSound Card: DirectX Compliant Sound card",
+                "recommended": null
+            },
+            "play_count": 1,
+            "screenshots": [],
+            "autoscan_screenshots": [],
+            "checklist": []
+        },
+        "The Elder Scrolls IV Oblivion Remastered": {
+            "name": "The Elder Scrolls IV Oblivion Remastered",
+            "exe_path": "E:\\2025\\The Elder Scrolls IV - Oblivion Remastered\\OblivionRemastered.exe",
+            "folder_path": "E:\\2025\\The Elder Scrolls IV - Oblivion Remastered",
+            "save_path": "",
+            "cover_image": "images\\The Elder Scrolls IV Oblivion Remastered_rawg_cover.jpg",
+            "genres": [],
+            "rating": null,
+            "version": "",
+            "tags": [],
+            "notes": "",
+            "date_added": 1745861728.2746274,
+            "play_time": 0,
+            "completion": 0,
+            "last_played": null,
+            "play_sessions": [],
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "checklist": [],
+            "rawg_id": 1001843,
+            "rawg_slug": "the-elder-scrolls-iv-oblivion-remastered",
+            "cover_rawg": "images\\The Elder Scrolls IV Oblivion Remastered_rawg_cover.jpg",
+            "description": "The Elder Scrolls IV: Oblivion™ Remastered modernizes the 2006 Game of the Year with all new stunning visuals and refined gameplay. Explore the vast landscape of Cyrodiil like never before and stop the forces of Oblivion from overtaking the land in one of the greatest RPGs ever from the award-winning Bethesda Game Studios.\n\nRediscover Cyrodiil\n\nJourney through the rich world of Tamriel and battle across the planes of Oblivion where handcrafted details have been meticulously recreated to ensure each moment of exploration is awe-inspiring.\n\nNavigate Your Own Story\n\nFrom the noble warrior to the sinister assassin, wizened sorcerer, or scrappy blacksmith, forge your path and play the way you want.\n\nExperience an Epic Adventure\n\nStep inside a universe bursting with captivating stories and encounter an unforgettable cast of characters. Master swordcraft and wield powerful magic as you fight to save Tamriel from the Daedric invasion.\n\nThe Complete Story\n\nExperience everything Oblivion has to offer with previously released story expansions Shivering Isles, Knights of the Nine, and additional downloadable content included in The Elder Scrolls IV: Oblivion Remastered.",
+            "release_date": "2025-04-22",
+            "website": "http://www.elderscrolls.com",
+            "developers": [
+                "Bethesda Game Studios",
+                "Virtuos"
+            ],
+            "publishers": [
+                "Bethesda Softworks"
+            ],
+            "genres_api": [
+                "Action",
+                "Adventure",
+                "RPG"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Steam Achievements",
+                "Steam Cloud",
+                "Atmospheric",
+                "Great Soundtrack",
+                "RPG",
+                "Story Rich",
+                "Open World",
+                "First-Person",
+                "Third Person",
+                "Partial Controller Support",
+                "Fantasy",
+                "Gore",
+                "Exploration",
+                "Violent",
+                "Action-Adventure",
+                "Action RPG",
+                "Character Customization",
+                "Sexual Content",
+                "Steam Trading Cards",
+                "Family Sharing",
+                "LGBTQ+",
+                "Political",
+                "Politics"
+            ],
+            "platforms": [
+                "PC",
+                "PlayStation 5",
+                "Xbox Series S/X"
+            ],
+            "requirements_pc": {
+                "minimum": "Minimum:\nRequires a 64-bit processor and operating system\nOS: Windows 10 version 21H1 (10.0.19043)\nProcessor: AMD Ryzen 5 2600X, Intel Core i7-6800K\nMemory: 16 GB RAM\nGraphics: AMD Radeon RX 5700, NVIDIA GeForce 1070 Ti\nDirectX: Version 12\nStorage: 125 GB available space\nAdditional Notes: SSD Required",
+                "recommended": "Recommended:\nRequires a 64-bit processor and operating system\nOS: Windows 10/11 (with updates)\nProcessor: AMD Ryzen 5 3600X, Intel Core i5-10600K\nMemory: 32 GB RAM\nGraphics: AMD Radeon RX 6800XT or NVIDIA RTX 2080\nDirectX: Version 12\nStorage: 125 GB available space\nAdditional Notes: SSD Required; Performance scales with better hardware"
+            },
+            "screenshots": [],
+            "autoscan_screenshots": []
+        },
+        "Kingdom Come - Deliverance II": {
+            "name": "Kingdom Come - Deliverance II",
+            "game_type": "pc",
+            "exe_path": "E:\\2025\\Kingdom Come - Deliverance II\\Bin\\Win64MasterMasterSteamPGO\\KingdomCome.exe",
+            "launch_profiles": [
+                {
+                    "name": "Default",
+                    "exe_path": null,
+                    "arguments": ""
+                }
+            ],
+            "emulator_name": null,
+            "rom_path": null,
+            "emulator_args": null,
+            "save_path": "",
+            "install_dir": "E:\\2025\\Kingdom Come - Deliverance II\\",
+            "cover_image": "images\\Kingdom Come - Deliverance II_rawg_cover.jpg",
+            "genres": [],
+            "rating": null,
+            "version": "",
+            "tags": [],
+            "notes": "",
+            "play_time": 3473.6387133598328,
+            "completion": 0,
+            "last_played": 1747320124.8940187,
+            "play_sessions": [
+                {
+                    "start": 1747320124.8940177,
+                    "end": 1747323598.532731
+                }
+            ],
+            "date_added": 1745866160.8188736,
+            "checklist": [],
+            "screenshots": [],
+            "autoscan_screenshots": [
+                "C:\\Users\\ASRock\\Videos\\Radeon ReLive\\Kingdom Come - Deliverance II\\Kingdom Come - Deliverance II_2025.03.10-22.51.png",
+                "C:\\Users\\ASRock\\Videos\\Radeon ReLive\\Kingdom Come - Deliverance II\\Kingdom Come - Deliverance II_2025.03.19-21.25.png",
+                "C:\\Users\\ASRock\\Videos\\Radeon ReLive\\Kingdom Come - Deliverance II\\Kingdom Come - Deliverance II_2025.03.19-23.04.png",
+                "C:\\Users\\ASRock\\Videos\\Radeon ReLive\\Kingdom Come - Deliverance II\\Kingdom Come - Deliverance II_2025.03.28-21.22.png",
+                "C:\\Users\\ASRock\\Videos\\Radeon ReLive\\Kingdom Come - Deliverance II\\Kingdom Come - Deliverance II_2025.03.29-22.27.png",
+                "C:\\Users\\ASRock\\Videos\\Radeon ReLive\\Kingdom Come - Deliverance II\\Kingdom Come - Deliverance II_2025.04.21-23.28.png"
+            ],
+            "rawg_id": 980502,
+            "rawg_slug": "kingdom-come-deliverance-ii",
+            "cover_rawg": "images\\Kingdom Come - Deliverance II_rawg_cover.jpg",
+            "description": "Kingdom of Bohemia, Early 15th Century: chaos has befallen the kingdom.  As invaders pillage this ungoverned land, sowing fear and terror, Henry of Skalitz seeks revenge for his murdered family.\n\nNow a trusted member of the rightful king’s allies, Henry is sent to escort Sir Hans Capon on a diplomatic mission. After they are ambushed and nearly killed, the two young men embark on a series of perilous adventures, putting their skills, character and friendship to the ultimate test.",
+            "release_date": "2025-02-03",
+            "website": "https://www.kingdomcomerpg.com/",
+            "developers": [
+                "Warhorse Studios"
+            ],
+            "publishers": [
+                "Deep Silver"
+            ],
+            "genres_api": [
+                "Action",
+                "Adventure",
+                "RPG"
+            ],
+            "tags_api": [
+                "Singleplayer",
+                "Steam Achievements",
+                "Full controller support",
+                "Steam Cloud",
+                "Atmospheric",
+                "RPG",
+                "Story Rich",
+                "Open World",
+                "First-Person",
+                "Action-Adventure",
+                "Choices Matter",
+                "3D",
+                "Realistic",
+                "Historical",
+                "combat",
+                "Medieval",
+                "Steam Trading Cards",
+                "Alternate History",
+                "Family Sharing",
+                "LGBTQ+",
+                "Political",
+                "Swordplay",
+                "immersive"
+            ],
+            "platforms": [
+                "PC",
+                "PlayStation 5",
+                "Xbox Series S/X"
+            ],
+            "requirements_pc": {
+                "minimum": "Minimum:\nRequires a 64-bit processor and operating system\nOS: Windows 10 64-bit (or newer)\nProcessor: Intel Core i5-8400, AMD Ryzen 5 2600\nMemory: 16 GB RAM\nGraphics: NVIDIA GeForce GTX 1060 (6GB), AMD Radeon RX 580\nStorage: 100 GB available space",
+                "recommended": "Recommended:\nRequires a 64-bit processor and operating system\nOS: Windows 10 64-bit (or newer)\nProcessor: Intel Core i7-13700K, AMD Ryzen 7 7800X3D\nMemory: 32 GB RAM\nGraphics: NVIDIA GeForce RTX 4070, AMD Radeon RX 7800 XT\nStorage: 100 GB available space"
+            }
+        }
+    },
+    "settings": {
+        "cloud_service_google_drive": false,
+        "cloud_service_github": true,
+        "theme": "Dark",
+        "background_image": "C:/Users/ASRock/Downloads/fin_Hautamaeki.jpg",
+        "custom_genres": [
+            "Sporty",
+            "RPG",
+            "Strzelanki",
+            "VR",
+            "Horror"
+        ],
+        "rss_feeds": [
+            {
+                "url": "https://feeds.ign.com/ign/games-all",
+                "active": true,
+                "name": "https://feeds.ign.com/ign/games-all"
+            },
+            {
+                "url": "https://steamcommunity.com/groups/lowcygier/rss/\n",
+                "active": false,
+                "name": "https://steamcommunity.com/groups/lowcygier/rss/\n"
+            }
+        ],
+        "news_post_limit": 20,
+        "enable_fps_monitoring": true,
+        "jezyk": "pl",
+        "autostart": true,
+        "language": "pl",
+        "scan_folders": [
+            "E:/2025"
+        ],
+        "window_state": "normal",
+        "window_geometry": "1024x768+0+0",
+        "library_view_mode": "tiles",
+        "scan_ignore_folders": [
+            "_CommonRedist",
+            "DirectX",
+            "DotNet",
+            "Redist",
+            "Tools",
+            "Benchmark",
+            "support",
+            "data",
+            "__overlay"
+        ],
+        "scan_recursively": true,
+        "auto_backup_on_exit": false,
+        "autoscan_screenshot_folders": [
+            "C:/Users/ASRock/Videos/Radeon ReLive"
+        ],
+        "autoscan_on_startup": false,
+        "screenshot_filename_patterns": [
+            "{game_name}*.png",
+            "{game_name}*.jpg",
+            "{game_name}*.jpeg"
+        ],
+        "screenshot_scan_ignore_folders": [
+            "thumb_cache",
+            "cache",
+            "temp",
+            "thumbnails"
+        ],
+        "promotion_websites": [
+            {
+                "name": "Steam Specials",
+                "url": "https://store.steampowered.com",
+                "active": true
+            },
+            {
+                "name": "GOG.com on Sale",
+                "url": "https://www.gog.com/en/on_sale",
+                "active": true
+            }
+        ],
+        "custom_themes": {
+            "Mój Motyw": {
+                "background": "#b6abd0",
+                "foreground": "#2f1ebb",
+                "button_background": "#b1d30f",
+                "button_foreground": "#28006b",
+                "entry_background": "#c43826",
+                "tree_background": "#cb2c68",
+                "tree_heading": "#3b0133",
+                "scrollbar_trough": "#f7391d",
+                "scrollbar_slider": "#a559fb",
+                "link_foreground": "#69c1e6",
+                "chart_bar_color": "#1d76df",
+                "chart_axis_color": "#a72793"
+            }
+        }
+    },
+    "groups": {
+        "ulubione": [
+            "Deluxe Ski Jumping 4"
+        ]
+    },
+    "user": {
+        "username": "Maks",
+        "avatar": "images\\avatar.png",
+        "achievements": {
+            "first_launch": {
+                "unlocked": true,
+                "timestamp": 1745523498.6316571
+            },
+            "collector_beginner": {
+                "unlocked": true,
+                "timestamp": 1745523498.6317666
+            },
+            "time_flyer": {
+                "unlocked": true,
+                "timestamp": 1745523498.6320453
+            },
+            "2": {
+                "unlocked": true,
+                "timestamp": 1745526335.627083,
+                "current_progress": 0.1
+            },
+            "1": {
+                "unlocked": true,
+                "timestamp": 1745528936.908379,
+                "current_progress": 1
+            },
+            "test": {
+                "unlocked": true,
+                "timestamp": 1745532437.1524458,
+                "current_progress": 1
+            },
+            "dedicated_player_20h": {
+                "unlocked": false,
+                "timestamp": null,
+                "current_progress": 2.61
+            },
+            "rpg_fan_5": {
+                "unlocked": false,
+                "timestamp": null,
+                "current_progress": 0
+            },
+            "roadmap_champ_3": {
+                "unlocked": false,
+                "timestamp": null,
+                "current_progress": 2
+            },
+            "critic_10": {
+                "unlocked": false,
+                "timestamp": null,
+                "current_progress": 5
+            },
+            "organizer_3": {
+                "unlocked": false,
+                "timestamp": null,
+                "current_progress": 1
+            },
+            "tagger_20": {
+                "unlocked": false,
+                "timestamp": null,
+                "current_progress": 1
+            },
+            "theme_changer_5": {
+                "unlocked": true,
+                "timestamp": 1745579018.9098387,
+                "current_progress": 5
+            },
+            "night_owl": {
+                "unlocked": false,
+                "timestamp": null,
+                "current_progress": 0
+            },
+            "12": {
+                "unlocked": true,
+                "timestamp": 1745617136.4214067,
+                "current_progress": 1
+            },
+            "90": {
+                "unlocked": true,
+                "timestamp": 1745759999.2566285,
+                "current_progress": 1
+            }
+        },
+        "theme_change_count": 94
+    },
+    "reminders": [],
+    "roadmap": [
+        {
+            "game_name": "High on Life",
+            "start_date": "2024-11-03",
+            "end_date": "2024-11-10",
+            "time_spent": 141.35240387916565,
+            "status": "Ukończona"
+        }
+    ],
+    "performance_settings": {
+        "cpu_name": true,
+        "ram_info": true,
+        "gpu_info": true,
+        "fps": true,
+        "fps_measurement": true
+    },
+    "archive": [
+        {
+            "game_name": "High on Life",
+            "start_date": "2024-11-03",
+            "end_date": "2024-11-10",
+            "time_spent": 0,
+            "status": "Ukończona",
+            "completion_date": "2024-11-03"
+        },
+        {
+            "game_name": "Mafia Definitive Edition",
+            "start_date": "2024-11-04",
+            "end_date": "2024-11-17",
+            "time_spent": 0,
+            "status": "Ukończona",
+            "completion_date": "2024-11-04"
+        }
+    ],
+    "mods_data": {
+        "Alice Madness Returns": {
+            "profiles": {
+                "default": {
+                    "mods": {},
+                    "load_order": []
+                }
+            }
+        },
+        "Deluxe Ski Jumping 4": {
+            "profiles": {
+                "default": {
+                    "mods": {},
+                    "load_order": []
+                }
+            }
+        },
+        "Mafia 3": {
+            "profiles": {
+                "default": {
+                    "mods": {},
+                    "load_order": []
+                }
+            }
+        },
+        "Kingdom Come Deliverance II": {
+            "profiles": {
+                "default": {
+                    "mods": {},
+                    "load_order": []
+                }
+            }
+        },
+        "Kingdom Come - Deliverance II": {
+            "profiles": {
+                "default": {
+                    "mods": {
+                        "whirlwind": {
+                            "active": false,
+                            "priority": 0
+                        }
+                    },
+                    "load_order": [
+                        "whirlwind"
+                    ]
+                }
+            }
+        }
+    },
+    "last_mod_locations": {},
+    "emulators": {
+        "PCSX2": {
+            "path": "H:/Emulatory/PS 2 - PCSX2/pcsx2-qt.exe"
+        }
+    },
+    "saved_filters": {
+        "Nowy Filtr": {
+            "name": "Nowy Filtr",
+            "rules": [
+                {
+                    "field": "tags",
+                    "operator": "zawiera",
+                    "value": "sporty"
+                }
+            ]
+        }
+    },
+    "edited_message_ids": [
+        1,
+        2
+    ]
+}
