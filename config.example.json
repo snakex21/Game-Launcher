@@ -1,0 +1,34 @@
+{
+    "games": {},
+    "settings": {
+        "theme": "dark",
+        "language": "pl",
+        "font": "Segoe UI",
+        "autostart": false,
+        "background_image": "",
+        "scan_folders": [],
+        "scan_recursive": true,
+        "ignored_folders": ["$RECYCLE.BIN", "System Volume Information"],
+        "cloud_service_google_drive": false,
+        "cloud_service_github": false,
+        "discord_rpc_enabled": false,
+        "rawg_api_key": "",
+        "rawg_auto_fetch": false,
+        "custom_genres": [],
+        "screenshot_folders": [],
+        "screenshot_scan_recursive": true,
+        "screenshot_scan_on_startup": false,
+        "emulators": []
+    },
+    "groups": {},
+    "user": {
+        "username": "Player",
+        "avatar": "",
+        "achievements": {},
+        "total_launcher_time": 0,
+        "consecutive_days": 0,
+        "last_login_date": "",
+        "theme_changes": 0
+    },
+    "roadmap": []
+}

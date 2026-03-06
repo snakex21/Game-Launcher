@@ -1,0 +1,101 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# User Data & Config
+data/
+config.json
+local_settings.json
+achievements_def.json
+games_saves/
+chat.db
+chat_uploads/
+uploads/
+
+# Custom Content
+custom_themes/
+internal_music/
+Screenshots/
+
+# Cloud & Auth
+token_google_drive.pickle
+credentials.json
+*.pickle
+
+# External Tools
+external/
+
+# Logs
+*.log
+logs/
+
+# Temporary Files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Backups
+*.bak
+backup/
+backups/
+
+# Sensitive
+github_token.txt
+*.key
+*.pem
+.env
+
+# Cache
+.cache/
+*.cache
+
+# Images (user-generated)
+images/
+covers/
+thumbnails/
+
+# Music (user library)
+music/
+playlists/
