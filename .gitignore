@@ -47,9 +47,11 @@ chat.db
 chat_uploads/
 uploads/
 
-# Custom Content
-custom_themes/
-internal_music/
+# Custom Content (user-generated)
+custom_themes/*
+!custom_themes/.gitkeep
+internal_music/*
+!internal_music/.gitkeep
 Screenshots/
 
 # Cloud & Auth
@@ -92,7 +94,10 @@ github_token.txt
 *.cache
 
 # Images (user-generated)
-images/
+images/*
+!images/.gitkeep
+!images/default_avatar.png
+!images/default_cover.png
 covers/
 thumbnails/
 
