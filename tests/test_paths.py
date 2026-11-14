@@ -83,6 +83,12 @@ def test_resolve_relative_against_app_dir():
     assert resolve_path(r"Gry\DSJ4\DSJ4.exe", APP_F) == APP_F + r"\Gry\DSJ4\DSJ4.exe"
 
 
+def test_env_and_home_paths_are_not_touched():
+    assert resolve_path(r"%APPDATA%\Gra\save", APP_F) == r"%APPDATA%\Gra\save"
+    assert resolve_path(r"~\Saved Games", APP_F) == r"~\Saved Games"
+    assert to_portable(r"%APPDATA%\Gra\save", APP_E) == r"%APPDATA%\Gra\save"
+
+
 def test_remap_drive():
     assert remap_drive(r"E:\Gry\x.exe", "E:", "F:") == r"F:\Gry\x.exe"
     assert remap_drive(r"D:\Gry\x.exe", "E:", "F:") == r"D:\Gry\x.exe"

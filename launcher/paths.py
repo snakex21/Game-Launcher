@@ -118,6 +118,8 @@ def resolve_path(path, app_dir: str = None):
         return ntpath.normpath(app_drive + path) if app_drive else ntpath.normpath(path)
     if drive_of(path) or path.startswith(("\\\\", "//")):
         return ntpath.normpath(path)
+    if path.startswith(("%", "~")):
+        return path  # zmienne środowiskowe / katalog domowy - bez zmian
     # Względna (np. images/okladka.jpg) - względem folderu aplikacji.
     return ntpath.normpath(ntpath.join(app_dir, path))
 
