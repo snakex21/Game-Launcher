@@ -241,6 +241,9 @@ def create_game_tile(self, parent, game_name, game_data, tile_width=200, tile_he
 
 
 def update_game_grid(self):
+    if not hasattr(self, "list_view_frame") or not hasattr(self, "canvas"):
+        logging.debug("update_game_grid: widok biblioteki jeszcze nie utworzony - pomijam.")
+        return
     if hasattr(self, "_search_timer_id") and self._search_timer_id:
         try:
             self.root.after_cancel(self._search_timer_id)

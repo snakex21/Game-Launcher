@@ -72,7 +72,7 @@ def prompt_initial_setup_choice(self):
         self.load_local_backup()
 
         if self.user.get("username"):
-            self.root.after(250, self._post_init_heavy_jobs)
+            # _post_init_heavy_jobs planuje konstruktor po powrocie z tego okna.
             logging.info("Backup wczytany. Kontynuacja normalnego startu.")
         else:
             logging.warning(
@@ -88,8 +88,9 @@ def prompt_initial_setup_choice(self):
             self.root.lift()
             self.root.focus_force()
             self.refresh_ui()
-            self.root.after(200, self.update_game_grid)
-            self.root.after(250, self._post_init_heavy_jobs)
+            # Siatkę biblioteki i _post_init_heavy_jobs uruchamia konstruktor po powrocie
+            # z tego okna (wcześniej zadania startowały 2x, a update_game_grid przed
+            # utworzeniem widoku biblioteki rzucał AttributeError).
             logging.info("Nowy użytkownik stworzony. Kontynuacja normalnego startu.")
         else:
             logging.info(
