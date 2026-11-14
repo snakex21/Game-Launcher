@@ -50,7 +50,22 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["pytest", "tests"],
+    excludes=[
+        "pytest",
+        "tests",
+        # Google Drive w aplikacji to niedzialajacy stub (importy leniwe w
+        # game_launcher.py) - nie pakujemy googleapiclient (~89 MB), jesli
+        # akurat jest zainstalowany w srodowisku budowania.
+        "googleapiclient",
+        "google",
+        "google_auth_oauthlib",
+        "google_auth_httplib2",
+        "httplib2",
+        # Narzedzia deweloperskie, ktore potrafia wpasc z globalnego Pythona.
+        "IPython",
+        "jedi",
+        "parso",
+    ],
     noarchive=False,
     optimize=0,
 )
