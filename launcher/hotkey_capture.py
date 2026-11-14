@@ -79,7 +79,7 @@ def _set_music_hotkey_dialog(
     ).pack(pady=(10, 5), fill="x", expand=True)
     self.capturing_hotkey_label = ttk.Label(
         self.capturing_hotkey_toplevel,
-        text="...",
+        text="(oczekiwanie na klawisze…)",
         font=("Segoe UI", 10, "bold"),
         anchor="center",
     )

@@ -977,7 +977,13 @@ class AchievementForm(tk.Toplevel):
             )
             return
         if not re.match(r"^[a-zA-Z0-9_]+$", ach_id):
-            messagebox.showerror("Błąd", "...", parent=self)
+            messagebox.showerror(
+                "Błąd",
+                f"Nieprawidłowe ID osiągnięcia: „{ach_id}”.\n\n"
+                "Dozwolone są tylko litery bez polskich znaków, cyfry i podkreślnik (_), "
+                "np. graj_10_godzin.",
+                parent=self,
+            )
             return
 
         # Walidacja wartości docelowej
@@ -998,7 +1004,12 @@ class AchievementForm(tk.Toplevel):
 
         # Walidacja ikony
         if icon_path and not os.path.exists(icon_path):
-            messagebox.showwarning("Ostrzeżenie", "...", parent=self)
+            messagebox.showwarning(
+                "Ostrzeżenie",
+                f"Nie znaleziono pliku ikony:\n{icon_path}\n\n"
+                "Osiągnięcie zostanie zapisane z ikoną domyślną.",
+                parent=self,
+            )
             icon_path = ""
 
         # Przygotuj słownik wynikowy

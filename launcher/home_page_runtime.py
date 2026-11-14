@@ -34,7 +34,7 @@ def create_home_page(self):
                 avatar_label.config(image=avatar_photo)
                 avatar_label.image = avatar_photo
         except Exception as e:
-            logging.error(f"... {e}")
+            logging.error(f"Nie udało się wczytać awatara '{avatar_path}': {e}")
             avatar_label.config(text="Błąd", font=("Segoe UI", 7))
     else:
         try:

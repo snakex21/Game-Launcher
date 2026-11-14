@@ -1,7 +1,6 @@
 import datetime
 import logging
 import os
-import shlex
 import subprocess
 import time
 import tkinter as tk
@@ -9,6 +8,7 @@ from tkinter import messagebox
 
 import psutil
 
+from launcher.launch_command import LaunchError, build_launch_command
 from launcher.utils import save_config
 from ui.components import ToolTip
 
@@ -17,84 +17,23 @@ def launch_game(self, game_name, profile=None):
     """Uruchamia wybraną grę (PC lub emulowaną)."""
     game = self.games.get(game_name)
     if not game:
-        messagebox.showerror("Błąd", "Nie znaleziono gry.")
+        messagebox.showerror("Błąd", f"Nie znaleziono gry „{game_name}” w bibliotece.")
         return
 
-    game_type = game.get("game_type", "pc")
+    try:
+        spec = build_launch_command(
+            game_name, game, self.config.get("emulators", {}), profile=profile
+        )
+    except LaunchError as error:
+        logging.warning(f"Nie uruchomiono '{game_name}': {error.message}")
+        messagebox.showerror(error.title, error.message, parent=self.root)
+        return
 
-    command = []
-    args_to_add = []
-    profile_name_for_log = "Default"
-    log_msg = ""
+    command = spec.command
+    profile_name_for_log = spec.profile_name
+    log_msg = f"Uruchamianie: {spec.description}, polecenie: {command}, katalog: {spec.cwd}"
 
     try:
-        if game_type == "pc":
-            exe_to_run = game.get("exe_path")
-            profile_name_for_log = "Default (PC)"
-
-            if profile and isinstance(profile, dict):
-                profile_name_for_log = profile.get("name", "Unknown Profile")
-                profile_exe = profile.get("exe_path")
-                profile_args_str = profile.get("arguments", "")
-                if profile_exe:
-                    exe_to_run = profile_exe
-                    profile_name_for_log += " (profile exe)"
-                elif not exe_to_run:
-                    messagebox.showerror("Błąd", "...")
-                    return
-                if profile_args_str:
-                    try:
-                        args_to_add = shlex.split(profile_args_str)
-                    except ValueError:
-                        messagebox.showerror("Błąd Argumentów", "...")
-                        return
-            elif not exe_to_run:
-                messagebox.showerror("Błąd", "...")
-                return
-
-            if not exe_to_run or not os.path.exists(exe_to_run):
-                messagebox.showerror("Błąd", "...")
-                return
-
-            command = [exe_to_run] + args_to_add
-            log_msg = f"Uruchamianie gry PC: {game_name} (Profil: {profile_name_for_log}) z poleceniem: {command}"
-
-        elif game_type == "emulator":
-            emulator_name = game.get("emulator_name")
-            rom_path = game.get("rom_path")
-            emulator_args_str = game.get("emulator_args", "")
-            profile_name_for_log = f"Emulator: {emulator_name}"
-
-            if not emulator_name or not rom_path:
-                messagebox.showerror("Błąd Konfiguracji", "...")
-                return
-            emulator_config = self.config.get("emulators", {}).get(emulator_name)
-            if not emulator_config or not emulator_config.get("path"):
-                messagebox.showerror("Błąd Emulatora", "...")
-                return
-            emulator_exe_path = emulator_config["path"]
-            if not os.path.exists(emulator_exe_path):
-                messagebox.showerror("Błąd Ścieżki", "...")
-                return
-            if not os.path.exists(rom_path):
-                messagebox.showerror("Błąd Ścieżki", "...")
-                return
-            if emulator_args_str:
-                try:
-                    args_to_add = shlex.split(emulator_args_str)
-                except ValueError:
-                    messagebox.showerror("Błąd Argumentów", "...")
-                    return
-
-            command = [emulator_exe_path] + args_to_add + [rom_path]
-            log_msg = f"Uruchamianie gry emulowanej: {game_name} (Emulator: {emulator_name}) z poleceniem: {command}"
-
-        else:
-            messagebox.showerror(
-                "Błąd", f"Nieznany typ gry '{game_type}' dla '{game_name}'."
-            )
-            return
-
         now_hour = datetime.datetime.now().hour
         ach_id_night = "night_owl"
         user_achievements = self.user.setdefault("achievements", {})
@@ -113,10 +52,11 @@ def launch_game(self, game_name, profile=None):
 
         logging.info(log_msg)
         try:
-            process = subprocess.Popen(command)
+            # cwd = folder gry/emulatora: wiele starszych gier szuka plików względnie.
+            process = subprocess.Popen(command, cwd=spec.cwd)
             self.processes[game_name] = process
         except OSError as e:
-            if e.winerror == 740:
+            if getattr(e, "winerror", None) == 740:
                 logging.error(
                     f"Błąd uruchamiania '{game_name}': Wymagane uprawnienia administratora (WinError 740)."
                 )

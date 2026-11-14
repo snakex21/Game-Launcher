@@ -293,7 +293,7 @@ def _start_flask_server(self):
     @self._flask_app.route("/cover/<encoded_game_name>")
     def serve_cover(encoded_game_name):
         if not self._server_running:
-            return "...", 503
+            return "Serwer zdalnego sterowania jest zatrzymany.", 503
         try:
             game_name = urllib.parse.unquote(encoded_game_name)
             game_data = self.games.get(game_name)
@@ -316,24 +316,24 @@ def _start_flask_server(self):
     @self._flask_app.route("/launch/<game_name>")
     def launch(game_name):
         if not self._server_running:
-            return "...", 503
+            return "Serwer zdalnego sterowania jest zatrzymany.", 503
         decoded_game_name = urllib.parse.unquote(game_name)
         if decoded_game_name in self.games:
             self.root.after(0, lambda gn=decoded_game_name: self.launch_game(gn))
             return redirect(url_for("index"))
         else:
-            return "...", 404
+            return f"Nie znaleziono gry „{decoded_game_name}” w bibliotece.", 404
 
     @self._flask_app.route("/close/<game_name>")
     def close(game_name):
         if not self._server_running:
-            return "...", 503
+            return "Serwer zdalnego sterowania jest zatrzymany.", 503
         decoded_game_name = urllib.parse.unquote(game_name)
         if decoded_game_name in self.games:
             self.root.after(0, lambda gn=decoded_game_name: self.close_game(gn))
             return redirect(url_for("index"))
         else:
-            return "...", 404
+            return f"Nie znaleziono gry „{decoded_game_name}” w bibliotece.", 404
 
     self._flask_thread = threading.Thread(
         target=self._flask_server_target, args=(port_to_use,), daemon=True
