@@ -25,15 +25,15 @@ Kod Go jest w folderze `go/` repozytorium (Python zostaje w katalogu głównym).
 | Plik / folder | Co robi wersja Go |
 |---|---|
 | `data\config\config.json` | odczyt i zapis w formacie v1.5.0: kolejność kluczy, nieznane pola i zapis liczb zachowane (zapis 1:1 jak `json.dump(indent=4, ensure_ascii=False)`, także CRLF jeśli plik go miał). Przed pierwszym zapisem w sesji powstaje `config.json.bak`; uszkodzony plik jest odkładany jako `.broken-<data>` i nigdy nie jest nadpisywany. |
-| `data\config\local_settings.json` | jw.; sekrety (RAWG, Last.fm, GitHub, hasła czatu) nigdy nie trafiają do UI ani logów. Zmienne `GL_RAWG_API_KEY`, `GL_LASTFM_API_KEY`, `GL_GITHUB_TOKEN`, `GL_REMOTE_TOKEN` mają pierwszeństwo i nie są zapisywane do pliku. |
+| `data\config\local_settings.json` | jw.; sekrety (RAWG, Last.fm, GitHub, hasła czatu) są szyfrowane DPAPI i nigdy nie trafiają do UI ani logów. Zmienne `GL_RAWG_API_KEY`, `GL_LASTFM_API_KEY`, `GL_GITHUB_TOKEN`, `GL_REMOTE_TOKEN` mają pierwszeństwo i nie są zapisywane do pliku. |
 | `data\games_saves\<gra>\saves\Save_N%_RRRRMMDD_GGMMSS`, `_autosave` | ten sam układ kopii zapisów. |
-| `data\chat\chat.db` | tylko odczyt (`mode=ro&immutable=1`), bez plików journal/WAL. |
+| `data\chat\chat.db` | baza serwera czatu; tworzona dopiero przy włączeniu serwera czatu, uszkodzona nigdy nie jest nadpisywana (patrz „Zmiany formatu danych”). |
 | `images\`, `internal_music\`, `data\config\achievements_def.json` | używane bez zmian. |
 | `data\go_cache\thumbs` | nowe: miniatury okładek (JPEG). |
 | `data\webview2` | nowe: profil WebView2 (patrz Przenośność). |
 | `data\logs\go_launcher.log` | nowe: log. |
 
-Test migracji na kopii danych użytkownika: `GL_TEST_USERDATA=<kopia folderu> go test ./internal/ojson ./internal/store ./internal/saves ./internal/chatdb`
+Test migracji na kopii danych użytkownika: `GL_TEST_USERDATA=<kopia folderu> go test ./internal/ojson ./internal/store ./internal/saves`
 (nigdy na oryginale – testy kopiują pliki do katalogu tymczasowego).
 
 ### Przenośność (pendrive)
@@ -62,7 +62,7 @@ wyjściu z gry, menedżer kopii zapisów (z kopią bezpieczeństwa przed wczytan
 wymagania, okładka), okładki własne, statystyki z dowolnym zakresem dat, roadmapa z
 automatycznym statusem „Nie ukończona na czas”, archiwum, przypomnienia, osiągnięcia (te same
 reguły co w Pythonie), muzyka (playlisty, losowo, powtarzanie, głośność, Stop), pilot WWW,
-archiwum czatu (tylko odczyt), ustawienia.
+czat, ustawienia – pełna lista niżej.
 
 Pilot WWW: osobny port (domyślnie 5050, nigdy 5000 = czat), token (nagłówek, `?token=` przy
 pierwszym wejściu → ciasteczko HttpOnly SameSite=Strict), akcje tylko POST, POST z obcego
@@ -103,14 +103,45 @@ Uwagi: WebView2 (Edge) uruchamia własne procesy (przeglądarka, GPU, sieć, ren
 większa suma working set całego drzewa (współdzielone strony są tam liczone wielokrotnie).
 Pierwszy start generuje miniatury okładek (~1 s jednorazowo); kolejne starty korzystają z cache.
 
-### Czego jeszcze nie ma (w porównaniu z Pythonem)
+### Lista zgodności z wersją Python
 
-* Czat: klient Socket.IO i serwer (`chat_server.py`) – jest tylko podgląd archiwum `chat.db`.
-* Kopia w chmurze GitHub, aktualizator (GitHub Releases + SHA256), Discord RPC, ikona w
-  zasobniku, globalne skróty klawiszowe (poza oknem), powiadomienia systemowe, autostart.
-* Menedżer modów, newsy RSS, wyszukiwanie duplikatów, edytor motywów, edytor definicji
-  osiągnięć, kopia/odtwarzanie całego launchera, skanowanie screenshotów, Last.fm (okładki muzyki).
-* Google Drive – świadomie **pominięty** (w Pythonie nie działał; patrz FEATURES.md).
+| Obszar | Stan |
+|---|---|
+| Biblioteka: kafelki/lista (przełącznik widoczny), wyszukiwanie, grupy, gatunki, tagi, typ, sortowanie | ✅ |
+| Filtry zaawansowane (zapisane filtry z Pythona działają, także reguły na listach) | ✅ |
+| Dodawanie/edycja gry bez utraty pól, zmiana nazwy, profile, emulatory | ✅ |
+| Skanowanie folderów z oknem weryfikacji | ✅ |
+| Uruchamianie (cwd = folder gry), emulatory, zamykanie, czas gry i sesje, autozapis | ✅ |
+| Menedżer kopii zapisów, RAWG, okładki, screenshoty (ręczne + skanowanie wzorców) | ✅ |
+| Statystyki (dowolny zakres dat), roadmapa z monitorem terminów, przypomnienia (+ powiadomienie systemowe) | ✅ |
+| Osiągnięcia (te same reguły) + edytor definicji | ✅ |
+| Muzyka: playlisty, losowo/powtarzanie, Stop, okładki Last.fm | ✅ |
+| Czat: serwer + klient (WebSocket, bcrypt, tokeny sesji, limity, pokoje z hasłem, `join_specific_room`, DM, blokowanie, emoji, pliki) | ✅ |
+| Pilot WWW (token, POST, localhost) | ✅ |
+| Kopia w chmurze GitHub (zawsze prywatne repo, wysyłanie różnicowe) | ✅ |
+| Aktualizator (semver, wzorzec pliku, SHA-256, podmiana z wycofaniem) | ✅ |
+| Zasobnik, globalne skróty, powiadomienia, autostart (ścieżka w cudzysłowie), Discord RPC | ✅ |
+| Newsy RSS/Atom, duplikaty, edytor motywów, pełna kopia .zip, ikona i wersja w exe | ✅ |
+| Nawigacja strzałkami i padem (X ≠ Y) | ✅ |
+| Menedżer modów | ⏳ zarezerwowane miejsce (`internal/modmgr`, strona „Mody”); dane `mods_data` zachowane |
+| Google Drive | ✖ świadomie pominięty (w Pythonie nie działał) |
+| Wielojęzyczność | ✖ UI tylko po polsku (jak w Pythonie po wyłączeniu tłumaczeń) |
+
+### Zmiany formatu danych (względem wersji Python)
+
+* `local_settings.json`: klucze API, token GitHub, token pilota i hasła serwerów czatu są
+  szyfrowane **DPAPI** (`"dpapi:<base64>"`), przy pierwszym uruchomieniu wersji Go. Wersja
+  Python nie odczyta już tych wartości; na innym komputerze/koncie Windows trzeba je wpisać ponownie.
+* Nowe klucze `local_settings.json`: `global_hotkeys_enabled`, `launcher_hotkey`,
+  `chat_host_server`, `chat_host_port`, `chat_host_lan`, `github_backup_repo`, `github_last_backup`.
+* `data/chat/chat.db`: nowa baza czatu (tworzona dopiero przy włączeniu serwera czatu). Nazwy
+  tabel jak w modelach SQLAlchemy + tabela `session` i kolumna `message.is_deleted`; stara, poprawna
+  baza Pythona jest podnoszona (konta ze starymi hasłami logują się i dostają hash bcrypt).
+  Uszkodzona baza nie jest nadpisywana.
+* Autostart: wpis w rejestrze jest źródłem prawdy, `settings.autostart` jest tylko kopią.
+
+Czat działa po zwykłym WebSockecie (bez Socket.IO): klient Pythona nie połączy się z nowym
+serwerem. Serwer można uruchomić w launcherze (Czat → Własny serwer czatu) albo osobno: `glchat.exe -addr 0.0.0.0:5000`.
 
 ---
 
@@ -127,7 +158,7 @@ can sit next to `game_launcher.py` in the same folder. The Go code lives in `go/
   `json.dump(indent=4, ensure_ascii=False)` (key order, unknown keys, number text and line
   endings preserved; `.bak` before the first save, broken files are set aside). Secrets never
   reach the UI or logs; `GL_*` environment variables override them and are never written.
-  `chat.db` is opened read-only. Save backups keep the Python layout.
+  The chat database is created only when the chat server is enabled. Save backups keep the Python layout.
 * Portability: the app folder is the exe folder; game paths on the launcher drive are stored
   without the drive letter and re-resolved after a drive letter change (tested); the WebView2
   profile is kept in `data\webview2` via a patched `webview_go` (`WEBVIEW_GO_USER_DATA_FOLDER`).
@@ -138,7 +169,12 @@ can sit next to `game_launcher.py` in the same folder. The Go code lives in `go/
   520 ms), library rendered in 573 ms, app process 29 MB working set (Python 106 MB); the whole
   tree including WebView2 is 378 MB WS / 337 MB private; single 13 MB exe vs ~288 MB
   PyInstaller onedir.
-* Not ported yet: chat client/server (archive viewer only), GitHub cloud backup, updater,
-  Discord RPC, tray, global hotkeys, system notifications, autostart, mod manager, RSS news,
-  duplicates, theme editor, achievement definition editor, full backup/restore, screenshot
-  scanning, Last.fm covers. Google Drive is intentionally dropped.
+* Phase 2 added: chat server + client (plain WebSocket, bcrypt, session tokens, rate limits,
+  rooms incl. `join_specific_room`, DMs, blocking, emoji, uploads with size/type limits), GitHub
+  backup (always private repos, diff-based), updater (semver, asset pattern, mandatory SHA-256,
+  self-replace with rollback), tray, global hotkeys (opt-in), notifications, autostart with a
+  quoted path, Discord RPC, RSS news, duplicate finder, theme editor, achievement definition
+  editor, full zip backup/restore, screenshot scanning, Last.fm covers, exe icon + version info.
+* Data format changes: secrets in `local_settings.json` are DPAPI-encrypted (`dpapi:<base64>`);
+  new chat database schema (compatible table names, plus `session`); see the Polish section.
+* Not done: the mod manager (a reserved package and UI page); Google Drive is dropped.

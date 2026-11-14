@@ -1077,7 +1077,7 @@
   gl.on('chat:event', function (ev) {
     var d = ev.data || {}
     switch (ev.type) {
-      case 'hello': C.me = d.user; chatSend('list_rooms'); chatSend('list_users'); break
+      case 'hello': C.me = d.user; chatSend('list_rooms'); chatSend('list_users'); if (C.autoJoin) { chatSend('join_specific_room', { room_id: C.autoJoin }); C.autoJoin = 0 } break
       case 'rooms': C.rooms = d || []; break
       case 'users': C.users = d || []; (C.users).forEach(function (u) { if (u.unread) C.unread['u' + u.id] = u.unread }); break
       case 'rooms_changed': chatSend('list_rooms'); return
@@ -1708,8 +1708,17 @@
   updateRunning()
   var sp = gl.boot && gl.boot.startPage || ''
   if (sp.indexOf('game:') === 0) { go('library'); details(sp.slice(5)) }
-  else if (sp.indexOf('modal:') === 0) { go('library'); ({ scan: scanDialog, groups: groupsDialog, add: function () { gameForm(null) } }[sp.slice(6)] || function () {})() }
-  else go(PAGES[sp] ? sp : 'library')
+  else if (sp.indexOf('modal:') === 0) { go('library'); ({ scan: scanDialog, groups: groupsDialog, add: function () { gameForm(null) }, achdefs: achEditor, dups: dupDialog }[sp.slice(6)] || function () {})() }
+  else if (sp.indexOf('chat#') === 0) { C.autoJoin = Number(sp.slice(5)) || 0; go('chat') }
+  else if (sp.indexOf('>') > 0) {
+    // "settings>Kopie zapasowe": open a page and scroll to a section (demos/screenshots)
+    go(sp.split('>')[0])
+    var want = sp.split('>')[1]
+    var tries = 0, t = setInterval(function () {
+      var hit = $all('h2', main).filter(function (x) { return x.textContent.indexOf(want) === 0 })[0]
+      if (hit || ++tries > 40) { clearInterval(t); if (hit) hit.scrollIntoView({ block: 'start' }) }
+    }, 100)
+  } else go(PAGES[sp] ? sp : 'library')
   ;(gl.boot && gl.boot.warnings || []).forEach(function (w) { toast(w, 'err') })
   if (gl.boot && gl.boot.remapped) toast('Zmieniła się litera dysku launchera – przemapowano ścieżek: ' + gl.boot.remapped, 'ok')
   requestAnimationFrame(function () {
