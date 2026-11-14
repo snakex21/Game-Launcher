@@ -50,6 +50,9 @@ type Entry struct {
 	FileID  string           `json:"fileId,omitempty"`
 	ModTime int64            `json:"modTime"`
 	Orig    *Orig            `json:"orig,omitempty"`
+	// Mutable files (configs, load order files) may be rewritten by the
+	// game or a mod while deployed: changed content is still ours.
+	Mutable bool `json:"mutable,omitempty"`
 }
 
 // Manifest is the deployed state of one game install.
@@ -72,6 +75,9 @@ type Desired struct {
 	Size   int64
 	Kind   string    // hardlink|copy (preference; copy is the fallback)
 	MTime  time.Time // set after placing (timestamp load orders); zero = keep
+	// Mutable: deployed as a writable copy; edits by the game are kept
+	// while the same file stays deployed and removed by purge.
+	Mutable bool
 }
 
 // State kinds of a key.
@@ -89,6 +95,8 @@ type KeyState struct {
 	Size   int64  `json:"size,omitempty"`
 	Hard   bool   `json:"hard,omitempty"` // prefer a hardlink
 	MTime  int64  `json:"mtime,omitempty"`
+	// Mutable content may differ from the store file (edited by the game).
+	Mutable bool `json:"mutable,omitempty"`
 }
 
 // Op is the transition of one target path.

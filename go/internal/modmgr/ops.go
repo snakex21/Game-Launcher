@@ -301,12 +301,19 @@ func (s *Service) inSync(man *deploy.Manifest, ds *desiredState, in *Install) bo
 	if man.ProfileID != in.ActiveProfile || len(man.Entries) != len(ds.desired) {
 		return false
 	}
-	have := map[string]string{}
+	have := map[string]deploy.Entry{}
 	for _, en := range man.Entries {
-		have[en.Target.Key()] = en.SHA256
+		have[en.Target.Key()] = en
 	}
 	for _, w := range ds.desired {
-		if have[w.Target.Key()] != w.SHA256 {
+		en, ok := have[w.Target.Key()]
+		if !ok {
+			return false
+		}
+		if en.Mutable && w.Source.Type != "@blob" && en.Source == w.Source {
+			continue // the game may have edited it: still the same deployed file
+		}
+		if en.SHA256 != w.SHA256 {
 			return false
 		}
 	}
@@ -595,7 +602,7 @@ func (s *Service) Import(in ImportIn) (*ModRow, *DeployResult, error) {
 	if in.Enable {
 		dr, err = s.autoDeploy(inst, d)
 		if err != nil {
-			return row, nil, uerr("Mod zainstalowany w magazynie, ale wdrożenie do gry nie powiodło się: %v", err)
+			return row, nil, wrapDeploy("Mod zainstalowany w magazynie, ale wdrożenie do gry nie powiodło się", err)
 		}
 	}
 	return row, dr, nil
@@ -639,9 +646,19 @@ func (s *Service) editProfile(id string, fn func(in *Install, d *gamedef.Definit
 	}
 	dr, err := s.autoDeploy(in, d)
 	if err != nil {
-		return nil, uerr("Zmiana zapisana w profilu, ale wdrożenie nie powiodło się: %v", err)
+		return nil, wrapDeploy("Zmiana zapisana w profilu, ale wdrożenie nie powiodło się", err)
 	}
 	return dr, nil
+}
+
+// wrapDeploy prefixes a deployment error and keeps its consent request
+// (protected files): the UI then asks and calls Deploy with consent.
+func wrapDeploy(prefix string, err error) error {
+	var ue *UserError
+	if errors.As(err, &ue) && ue.Confirm != "" {
+		return &UserError{Message: prefix + ":\n" + ue.Message, Confirm: ue.Confirm}
+	}
+	return uerr("%s: %v", prefix, err)
 }
 
 // SetEnabled turns a mod on or off in the active profile.
@@ -861,7 +878,7 @@ func (s *Service) ActivateProfile(id, profileID string) (*DeployResult, error) {
 	}
 	dr, err := s.autoDeploy(in, d)
 	if err != nil {
-		return nil, uerr("Profil przełączony, ale wdrożenie nie powiodło się: %v", err)
+		return nil, wrapDeploy("Profil przełączony, ale wdrożenie nie powiodło się", err)
 	}
 	return dr, nil
 }
@@ -888,8 +905,42 @@ func (s *Service) UninstallMod(id, modID string) error {
 		}
 	}
 	for _, other := range sharing {
+		if err := s.checkNotRunning(other); err != nil {
+			return err
+		}
+	}
+	// profiles are changed first (the redeploy needs them without the mod)
+	// and put back if removing the files from a game fails
+	type saved struct {
+		in *Install
+		p  Profile
+	}
+	var backup []saved
+	restore := func() {
+		for _, b := range backup {
+			p := b.p
+			_ = s.saveProfile(b.in, &p)
+		}
+	}
+	for _, other := range sharing {
 		profs, err := s.profiles(other)
 		if err != nil {
+			return err
+		}
+		for _, p := range profs {
+			cp := *p
+			cp.Mods = append([]ProfileMod(nil), p.Mods...)
+			cp.FileOverrides = map[string]string{}
+			for k, v := range p.FileOverrides {
+				cp.FileOverrides[k] = v
+			}
+			backup = append(backup, saved{other, cp})
+		}
+	}
+	for _, other := range sharing {
+		profs, err := s.profiles(other)
+		if err != nil {
+			restore()
 			return err
 		}
 		for _, p := range profs {
@@ -909,6 +960,7 @@ func (s *Service) UninstallMod(id, modID string) error {
 			}
 			if changed {
 				if err := s.saveProfile(other, p); err != nil {
+					restore()
 					return err
 				}
 			}
@@ -917,6 +969,7 @@ func (s *Service) UninstallMod(id, modID string) error {
 		e, _ := s.engine(other)
 		man, err := e.Manifest()
 		if err != nil {
+			restore()
 			return err
 		}
 		uses := false
@@ -928,6 +981,7 @@ func (s *Service) UninstallMod(id, modID string) error {
 		if uses {
 			od := s.defs.Get(other.DefID)
 			if _, err := s.apply(other, od, false, true); err != nil {
+				restore()
 				return uerr("Nie można usunąć plików moda z gry „%s”: %v", other.Name, err)
 			}
 		}

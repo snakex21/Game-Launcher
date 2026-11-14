@@ -108,6 +108,9 @@ type disk struct {
 	size     int64
 	readOnly bool
 	mtime    int64
+	// linked: the file is still our hardlink (same file id), even if a tool
+	// changed its content in place
+	linked bool
 }
 
 // observe looks at a target; the hash is only computed when the cheap
@@ -124,13 +127,16 @@ func (e *Engine) observe(abs string, cur *Entry) (disk, error) {
 		return disk{}, fmt.Errorf("%s nie jest zwykłym plikiem (folder albo dowiązanie) – nie zostanie nadpisany", abs)
 	}
 	d := disk{exists: true, size: st.Size(), readOnly: st.Mode().Perm()&0o200 == 0, mtime: st.ModTime().UnixNano()}
-	if cur != nil && st.Size() == cur.Size {
-		if cur.Kind == "hardlink" && cur.FileID != "" {
-			if id, err := fsx.FileID(abs); err == nil && id == cur.FileID {
+	if cur != nil && cur.Kind == "hardlink" && cur.FileID != "" {
+		if id, err := fsx.FileID(abs); err == nil && id == cur.FileID {
+			d.linked = true
+			if st.Size() == cur.Size {
 				d.sha = cur.SHA256
 				return d, nil
 			}
 		}
+	}
+	if cur != nil && st.Size() == cur.Size {
 		if cur.Kind == "copy" && cur.ModTime != 0 && cur.ModTime == d.mtime {
 			d.sha = cur.SHA256
 			return d, nil
@@ -188,6 +194,9 @@ func (e *Engine) PlanTo(desired []Desired, profileID string, fingerprint map[str
 		if err != nil {
 			return nil, err
 		}
+		if err := e.noLinks(target); err != nil {
+			return nil, err
+		}
 		d, err := e.observe(abs, c)
 		if err != nil {
 			return nil, err
@@ -201,7 +210,14 @@ func (e *Engine) PlanTo(desired []Desired, profileID string, fingerprint map[str
 		case !d.exists:
 			op.Before = KeyState{Kind: StAbsent}
 		case c != nil && d.sha == c.SHA256:
-			op.Before = KeyState{Kind: StMod, Source: c.Source, SHA256: c.SHA256, Size: c.Size, Hard: c.Kind == "hardlink", MTime: c.ModTime}
+			op.Before = KeyState{Kind: StMod, Source: c.Source, SHA256: c.SHA256, Size: c.Size, Hard: c.Kind == "hardlink", MTime: c.ModTime, Mutable: c.Mutable}
+		case c != nil && d.linked:
+			// our hardlink, written in place by a tool: still ours (the
+			// store copy changed with it; Verify reports that)
+			op.Before = KeyState{Kind: StMod, Source: c.Source, SHA256: d.sha, Size: d.size, Hard: true}
+		case c != nil && c.Mutable && (c.Orig == nil || c.Orig.SHA256 != d.sha):
+			// a deployed config edited by the game: still ours
+			op.Before = KeyState{Kind: StMod, Source: c.Source, SHA256: d.sha, Size: d.size, Mutable: true}
 		default:
 			op.Before = KeyState{Kind: StOrig, SHA256: d.sha, Size: d.size}
 		}
@@ -211,7 +227,11 @@ func (e *Engine) PlanTo(desired []Desired, profileID string, fingerprint map[str
 			if !w.MTime.IsZero() {
 				mt = w.MTime.UnixNano()
 			}
-			op.After = KeyState{Kind: StMod, Source: w.Source, SHA256: w.SHA256, Size: w.Size, Hard: w.Kind == "hardlink" && mt == 0, MTime: mt}
+			op.After = KeyState{Kind: StMod, Source: w.Source, SHA256: w.SHA256, Size: w.Size, Hard: w.Kind == "hardlink" && mt == 0 && !w.Mutable, MTime: mt, Mutable: w.Mutable}
+			if w.Mutable && op.Before.Kind == StMod && op.Before.Mutable && c != nil && c.Source == w.Source && c.SHA256 == w.SHA256 && op.Before.SHA256 != c.SHA256 {
+				// same file still deployed, edited by the game: keep the edits
+				op.After.SHA256, op.After.Size, op.After.MTime = op.Before.SHA256, op.Before.Size, 0
+			}
 			op.NewOrig = op.OldOrig
 			if foreign {
 				// a game file (or a newer one after a game update) becomes the original
@@ -255,6 +275,29 @@ func (e *Engine) PlanTo(desired []Desired, profileID string, fingerprint map[str
 	}
 	sort.Slice(p.CreatedDirs, func(i, j int) bool { return p.CreatedDirs[i].Key() < p.CreatedDirs[j].Key() })
 	return p, nil
+}
+
+// noLinks refuses targets whose folders pass through a symbolic link or a
+// junction: files would land outside the game folder, where the backups
+// and the purge cannot follow them.
+func (e *Engine) noLinks(l gamedef.Location) error {
+	root, ok := e.Roots[l.Root]
+	if !ok {
+		return nil
+	}
+	cur := root
+	parts := strings.Split(l.Rel, "/")
+	for i := 0; i < len(parts)-1; i++ {
+		cur = filepath.Join(cur, parts[i])
+		st, err := os.Lstat(cur)
+		if err != nil {
+			return nil // the rest does not exist yet: it will be created as normal folders
+		}
+		if st.Mode()&(fs.ModeSymlink|fs.ModeIrregular) != 0 {
+			return fmt.Errorf("folder %s jest dowiązaniem (symlink/junction) – menedżer nie wdraża plików przez dowiązania, bo nie mógłby ich bezpiecznie przywrócić", cur)
+		}
+	}
+	return nil
 }
 
 // Result reports a finished transaction.
@@ -387,7 +430,7 @@ func (e *Engine) commit(w *wal, p *Plan, old *Manifest) error {
 		if op.After.Kind != StMod {
 			continue
 		}
-		en := Entry{Target: op.Target, Source: op.After.Source, SHA256: op.After.SHA256, Size: op.After.Size, Kind: "copy", Orig: op.NewOrig}
+		en := Entry{Target: op.Target, Source: op.After.Source, SHA256: op.After.SHA256, Size: op.After.Size, Kind: "copy", Orig: op.NewOrig, Mutable: op.After.Mutable}
 		if abs, err := e.abs(op.Target); err == nil {
 			if st, err := os.Stat(abs); err == nil {
 				en.ModTime = st.ModTime().UnixNano()
@@ -766,6 +809,8 @@ func (e *Engine) Verify() ([]DriftItem, *Manifest, error) {
 		case err != nil || !d.exists:
 			out = append(out, DriftItem{Target: en.Target.String(), State: "missing"})
 		case d.sha == en.SHA256:
+		case en.Mutable && (en.Orig == nil || d.sha != en.Orig.SHA256):
+			// a config the game rewrote: expected
 		case en.Orig != nil && d.sha == en.Orig.SHA256:
 			out = append(out, DriftItem{Target: en.Target.String(), State: "original"})
 		default:

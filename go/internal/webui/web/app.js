@@ -1343,6 +1343,9 @@
       if (ch === 'mods.setEnabled' && e.confirm === 'executable') flag = 'ack'
       return confirmBox(e.message, e.confirm === 'duplicate' ? 'Zainstaluj kopię' : 'Kontynuuj', e.confirm !== 'duplicate').then(function (ok) {
         if (!ok) return null
+        // protected game files after an automatic deployment: the change is
+        // saved, only the deployment needs the consent
+        if (e.confirm === 'protected' && ch !== 'mods.deploy') return call('mods.deploy', { id: payload.id || payload.install, allow: true })
         var p = Object.assign({}, payload)
         p[flag] = true
         return callAsk(ch, p)
@@ -1719,6 +1722,7 @@
           callAsk('mods.import', p).then(function (r) {
             if (!r) { btn.disabled = false; return }
             m.close()
+            if (!r.mod) { deployToast(r, 'Zainstalowano i wdrożono.'); refresh(); return }
             deployToast(r.deploy, 'Zainstalowano „' + r.mod.name + '”' + (r.mod.enabled ? ' i wdrożono.' : '.'))
             refresh()
           }).catch(function (err) { btn.disabled = false; fail(err) })

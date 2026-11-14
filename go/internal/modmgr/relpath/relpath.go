@@ -26,6 +26,8 @@ var reserved = map[string]bool{
 	"com1": true, "com2": true, "com3": true, "com4": true, "com5": true, "com6": true, "com7": true, "com8": true, "com9": true,
 	"lpt1": true, "lpt2": true, "lpt3": true, "lpt4": true, "lpt5": true, "lpt6": true, "lpt7": true, "lpt8": true, "lpt9": true,
 	"conin$": true, "conout$": true,
+	// Windows also opens devices for superscript digits
+	"com¹": true, "com²": true, "com³": true, "lpt¹": true, "lpt²": true, "lpt³": true,
 }
 
 // Clean validates raw (from an archive, a manifest or a definition) and

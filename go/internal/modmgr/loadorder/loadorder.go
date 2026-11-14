@@ -42,8 +42,12 @@ type Input struct {
 	Files []Placed
 	// Order is the profile's plugin order (may be empty = automatic).
 	Order []Plugin
-	// ReadFile returns the current content of a location (nil if missing).
+	// ReadFile returns the original content of a location (before any
+	// deployment; error if missing).
 	ReadFile func(gamedef.Location) ([]byte, error)
+	// ReadCurrent returns what is on disk now (the game or another tool may
+	// have edited a load order file we wrote).
+	ReadCurrent func(gamedef.Location) ([]byte, error)
 	// ListDir lists file names in a location (for plugins installed by hand).
 	ListDir func(gamedef.Location) ([]string, error)
 }
@@ -175,9 +179,35 @@ func bethesda(in Input, out *Output) error {
 		}
 		return all[i].modIdx < all[j].modIdx
 	})
+	// enabled state: the profile's own list, else what the plugins file on
+	// disk says now (the user may have switched plugins off in the game's
+	// launcher or another tool), else on
+	disk := map[string]bool{}
+	if lo.Format != "ini-gamefile" && in.ReadCurrent != nil {
+		if file, err := in.Res.Location(lo.File); err == nil {
+			if b, err := in.ReadCurrent(file); err == nil {
+				for _, line := range strings.Split(string(b), "\n") {
+					n := strings.TrimSpace(line)
+					if n == "" || strings.HasPrefix(n, "#") {
+						continue
+					}
+					on := true
+					if lo.Format == "asterisk" {
+						on = strings.HasPrefix(n, "*")
+						n = strings.TrimPrefix(n, "*")
+					}
+					disk[strings.ToLower(n)] = on
+				}
+			}
+		}
+	}
 	enabled := map[string]bool{}
 	for _, p := range all {
-		enabled[strings.ToLower(p.name)] = true
+		on, known := disk[strings.ToLower(p.name)]
+		if !known {
+			on = len(disk) == 0 || lo.Format == "asterisk" || p.fromMod
+		}
+		enabled[strings.ToLower(p.name)] = on
 	}
 	// the profile's own order wins for the plugins it lists
 	if len(in.Order) > 0 {
@@ -220,6 +250,21 @@ func bethesda(in Input, out *Output) error {
 	}
 
 	enc := func(s string) ([]byte, error) { return encode(s, lo.Encoding) }
+	// a plugin whose name the game cannot read from the file is left out
+	var kept []pl
+	for _, p := range all {
+		if _, err := encode(p.name, lo.Encoding); err != nil {
+			out.Warnings = append(out.Warnings, fmt.Sprintf("Plugin „%s” ma w nazwie znaki, których gra nie odczyta z pliku kolejności (%s) – pominięty. Zmień nazwę pliku pluginu.", p.name, lo.Encoding))
+			for i := range out.Plugins {
+				if out.Plugins[i].Name == p.name {
+					out.Plugins[i].Enabled = false
+				}
+			}
+			continue
+		}
+		kept = append(kept, p)
+	}
+	all = kept
 	var lines, order []string
 	for _, p := range all {
 		on := enabled[strings.ToLower(p.name)]
@@ -271,7 +316,7 @@ func bethesda(in Input, out *Output) error {
 		}
 		var active []string
 		for _, p := range out.Plugins {
-			if p.Enabled {
+			if _, err := encode(p.Name, lo.Encoding); p.Enabled && err == nil {
 				active = append(active, p.Name)
 			}
 		}
@@ -383,7 +428,7 @@ func encode(s, enc string) ([]byte, error) {
 			default:
 				c, ok := cp1252[r]
 				if !ok {
-					return nil, fmt.Errorf("nazwy %q nie da się zapisać w kodowaniu Windows-1252 (gra jej nie odczyta) – zmień nazwę pliku pluginu", s)
+					return nil, fmt.Errorf("znaku %q nie da się zapisać w kodowaniu Windows-1252 (gra go nie odczyta)", r)
 				}
 				b.WriteByte(c)
 			}

@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/bodgit/sevenzip"
 
@@ -105,6 +106,11 @@ func Sniff(path string) (string, error) {
 		return "7z", nil
 	case bytes.HasPrefix(head, magicRar):
 		return "rar", nil
+	}
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".zip", ".7z", ".rar":
+		// a truncated download or an HTML error page saved as .zip
+		return "", fmt.Errorf("plik %s nie jest prawidłowym archiwum (uszkodzony albo niedokończony plik?)", filepath.Base(path))
 	}
 	return "file", nil
 }
@@ -216,6 +222,11 @@ func openZip(path string) (Source, error) {
 			rc.Close()
 			return nil, errors.New("archiwum jest zaszyfrowane (hasło) – nieobsługiwane")
 		}
+		if f.NonUTF8 && !utf8.ValidString(name) {
+			// Explorer and old packers store names in the OEM code page
+			// (CP852 on Polish Windows) without the UTF-8 flag
+			name = decodeOEM(name)
+		}
 		s.add(name, int64(f.UncompressedSize64), i)
 	}
 	if err := s.finish(); err != nil {
@@ -239,16 +250,22 @@ func (s *zipSource) Open(e Entry) (io.ReadCloser, error) {
 	return &ratioReader{rc: rc, compressed: compressed}, nil
 }
 
-// ratioReader enforces the compression ratio limit as bytes arrive.
+// ratioReader enforces the compression ratio limit as bytes arrive (a
+// bomb is stopped after RatioMinSize bytes, not after the whole entry).
 type ratioReader struct {
 	rc         io.ReadCloser
 	compressed int64
 	n          int64
+	maxRatio   int64
+	minSize    int64
 }
 
 func (r *ratioReader) Read(p []byte) (int, error) {
 	n, err := r.rc.Read(p)
 	r.n += int64(n)
+	if r.maxRatio > 0 && r.n >= r.minSize && r.n/max(r.compressed, 1) > r.maxRatio {
+		return n, fmt.Errorf("%w: podejrzany współczynnik kompresji (bomba ZIP?)", ErrLimit)
+	}
 	return n, err
 }
 func (r *ratioReader) Close() error { return r.rc.Close() }
@@ -465,6 +482,13 @@ func writeEntry(src Source, e Entry, target string, lim Limits, budget int64) (n
 		return 0, "", err
 	}
 	defer rc.Close()
+	if rr, ok := rc.(*ratioReader); ok && lim.MaxRatio > 0 {
+		// the header already shows a bomb: refuse before writing anything
+		if e.Size >= lim.RatioMinSize && e.Size/max(rr.compressed, 1) > lim.MaxRatio {
+			return 0, "", fmt.Errorf("%w: podejrzany współczynnik kompresji (bomba ZIP?)", ErrLimit)
+		}
+		rr.maxRatio, rr.minSize = lim.MaxRatio, lim.RatioMinSize
+	}
 	f, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
 	if err != nil {
 		return 0, "", err

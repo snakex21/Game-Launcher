@@ -447,3 +447,39 @@ func TestMaliciousArchiveLeavesNothing(t *testing.T) {
 		t.Fatal("escaped")
 	}
 }
+
+// Configs (*.cfg, *.ini, *.json...) are deployed as writable copies: the
+// game may rewrite them; the edit is kept while the same mod stays deployed,
+// it is not reported as drift, and purge still returns to vanilla.
+func TestEditedConfigIsKeptAndPurged(t *testing.T) {
+	w := newWorld(t)
+	game, in := w.game(gamedef.GenericID)
+	vanilla := w.snapshotAll(game)
+	w.importMod(in.ID, w.zip("cfg.zip", map[string]string{"BepInEx/config/mod.cfg": "volume=1", "BepInEx/plugins/mod.dll": "dll"}), true)
+	cfg := filepath.Join(game, "BepInEx", "config", "mod.cfg")
+	if st, err := os.Stat(cfg); err != nil || st.Mode().Perm()&0o200 == 0 {
+		t.Fatal("config not deployed as a writable file", err)
+	}
+	if err := os.WriteFile(cfg, []byte("volume=7 (zapisane przez grę)"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	vr, err := w.svc.Verify(in.ID)
+	if err != nil || len(vr.Drift) != 0 || len(vr.StoreIssues) != 0 {
+		t.Fatalf("edited config reported: %+v %v", vr, err)
+	}
+	if _, err := w.svc.Deploy(in.ID, false); err != nil {
+		t.Fatal(err)
+	}
+	if readOr(cfg) != "volume=7 (zapisane przez grę)" {
+		t.Fatal("redeploy overwrote the game's edit:", readOr(cfg))
+	}
+	if v, _ := w.svc.GetView(in.ID); !v.InSync {
+		t.Fatal("edited config makes the profile look out of date")
+	}
+	if _, err := w.svc.Purge(in.ID); err != nil {
+		t.Fatal(err)
+	}
+	if diff := testkit.Diff(vanilla, w.snapshotAll(game)); diff != "" {
+		t.Fatal(diff)
+	}
+}

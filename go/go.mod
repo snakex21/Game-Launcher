@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	golang.org/x/crypto v0.59.0
 	golang.org/x/sys v0.50.0
+	golang.org/x/text v0.44.0
 )
 
 require (
@@ -24,7 +25,6 @@ require (
 	github.com/stangelandcl/ppmd v0.1.1 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	go4.org v0.0.0-20260112195520-a5071408f32f // indirect
-	golang.org/x/text v0.44.0 // indirect
 )
 
 require (
