@@ -1545,6 +1545,9 @@
       }
       if (v.plugins && v.plugins.length) area.appendChild(pluginsCard(id, v, after))
       if (inst.game) legacyCard(area, inst.game)
+      // GL_START_PAGE=mods:conflicts / mods:files (demos and screenshots)
+      if (S.modsDemo === 'conflicts') { S.modsDemo = null; conflictsModal(id, function () {}) }
+      if (S.modsDemo === 'files' && mods.length) { S.modsDemo = null; modFilesModal(id, mods[mods.length - 1], function () {}) }
     }).catch(function (e) { clear(area); area.appendChild(h('div', { class: 'card' }, h('p', { text: e.message || String(e) }))) })
   }
 
@@ -2100,6 +2103,7 @@
   var sp = gl.boot && gl.boot.startPage || ''
   if (sp.indexOf('game:') === 0) { go('library'); details(sp.slice(5)) }
   else if (sp.indexOf('modal:') === 0) { go('library'); ({ scan: scanDialog, groups: groupsDialog, add: function () { gameForm(null) }, achdefs: achEditor, dups: dupDialog }[sp.slice(6)] || function () {})() }
+  else if (sp.indexOf('mods:') === 0) { S.modsDemo = sp.slice(5); go('mods') }
   else if (sp.indexOf('chat#') === 0) { C.autoJoin = Number(sp.slice(5)) || 0; go('chat') }
   else if (sp.indexOf('>') > 0) {
     // "settings>Kopie zapasowe": open a page and scroll to a section (demos/screenshots)

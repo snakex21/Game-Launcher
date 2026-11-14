@@ -15,6 +15,7 @@ import (
 	"github.com/snakex21/game-launcher/go/internal/modmgr/gamedef"
 	"github.com/snakex21/game-launcher/go/internal/modmgr/testkit"
 	"github.com/snakex21/game-launcher/go/internal/ojson"
+	"github.com/snakex21/game-launcher/go/internal/store"
 )
 
 func modsEnv(t *testing.T) (*env, *modmgr.Service) {
@@ -108,5 +109,48 @@ func TestLegacyModsDataIsReadOnly(t *testing.T) {
 	after, _ := os.ReadFile(filepath.Join(e.dir, "data", "config", "config.json"))
 	if string(before) != string(after) {
 		t.Fatal("legacy view changed config")
+	}
+}
+
+// On a COPY of the user's 1.5.0 data (GL_TEST_USERDATA): the mod manager
+// opens next to it, shows the old mods_data read-only and changes nothing
+// in config.json.
+func TestModsOnUserDataCopy(t *testing.T) {
+	src := os.Getenv("GL_TEST_USERDATA")
+	if src == "" {
+		t.Skip("GL_TEST_USERDATA not set")
+	}
+	dir := t.TempDir()
+	for _, f := range []string{"config.json", "local_settings.json"} {
+		b, err := os.ReadFile(filepath.Join(src, "data", "config", f))
+		if err != nil {
+			t.Fatal(err)
+		}
+		os.MkdirAll(filepath.Join(dir, "data", "config"), 0o755)
+		os.WriteFile(filepath.Join(dir, "data", "config", f), b, 0o644)
+	}
+	before, _ := os.ReadFile(filepath.Join(dir, "data", "config", "config.json"))
+	st, err := store.Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := New(st, &fakeHost{}, fakeDialogs{})
+	a.SetModOptions(modmgr.Options{Folders: testkit.Folders(t, filepath.Join(dir, "u"))})
+	s, err := a.modsService()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(s.Installs()) != 0 {
+		t.Fatal("installs from nowhere")
+	}
+	var names []string
+	a.S.ReadConfig(func(cfg *ojson.Object) { names = cfg.Obj("mods_data").Keys() })
+	for _, n := range names {
+		b, _ := json.Marshal(a.legacyMods(n))
+		t.Logf("%s: %s", n, b)
+	}
+	after, _ := os.ReadFile(filepath.Join(dir, "data", "config", "config.json"))
+	if string(before) != string(after) {
+		t.Fatal("config.json changed by the mod manager")
 	}
 }

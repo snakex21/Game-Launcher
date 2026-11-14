@@ -6,7 +6,7 @@
 
 ## Polski
 
-Port Game Launchera z Pythona/Tkinter do Go + WebView2. Jeden plik
+Game Launcher 2.0 – wersja w Go + WebView2 (główny opis: README.md w katalogu głównym repozytorium). Jeden plik
 `GameLauncher.exe` (~13 MB), interfejs HTML/CSS/JS osadzony w exe, ciemny motyw,
 obsługa klawiatury i pada. **Czyta dane wersji Pythona bez konwersji**, więc exe
 można położyć obok `game_launcher.py` w tym samym folderze.
@@ -123,7 +123,7 @@ Pierwszy start generuje miniatury okładek (~1 s jednorazowo); kolejne starty ko
 | Zasobnik, globalne skróty, powiadomienia, autostart (ścieżka w cudzysłowie), Discord RPC | ✅ |
 | Newsy RSS/Atom, duplikaty, edytor motywów, pełna kopia .zip, ikona i wersja w exe | ✅ |
 | Nawigacja strzałkami i padem (X ≠ Y) | ✅ |
-| Menedżer modów | ⏳ zarezerwowane miejsce (`internal/modmgr`, strona „Mody”); dane `mods_data` zachowane |
+| Menedżer modów (nowy: magazyn, profile, konflikty, wdrożenie z dziennikiem i powrotem do vanilla, 15 gier + „Dowolna gra”) | ✅ `internal/modmgr`, opis: `docs/MOD_MANAGER.md`; stare `mods_data` tylko do odczytu |
 | Google Drive | ✖ świadomie pominięty (w Pythonie nie działał) |
 | Wielojęzyczność | ✖ UI tylko po polsku (jak w Pythonie po wyłączeniu tłumaczeń) |
 
@@ -177,4 +177,4 @@ can sit next to `game_launcher.py` in the same folder. The Go code lives in `go/
   editor, full zip backup/restore, screenshot scanning, Last.fm covers, exe icon + version info.
 * Data format changes: secrets in `local_settings.json` are DPAPI-encrypted (`dpapi:<base64>`);
   new chat database schema (compatible table names, plus `session`); see the Polish section.
-* Not done: the mod manager (a reserved package and UI page); Google Drive is dropped.
+* Mod manager (2.0.0): store outside the game, profiles, per-file conflicts, journaled deployment with backups and purge to vanilla, crash recovery, load order files; 15 game definitions + a generic one (`internal/modmgr`, `docs/MOD_MANAGER.md`). Google Drive is dropped.
