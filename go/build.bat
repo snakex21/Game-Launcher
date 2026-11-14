@@ -10,6 +10,8 @@ set CGO_ENABLED=1
 set GOOS=windows
 set GOARCH=amd64
 pushd "%~dp0"
+REM exe icon + version info (needs windres from MinGW-w64; the committed .syso is used otherwise)
+where windres >nul 2>nul && go run .\tools\mkrc %VERSION%
 go build -trimpath -ldflags="-H windowsgui -s -w -X main.version=%VERSION%" -o build\GameLauncher.exe .\cmd\gamelauncher
 if errorlevel 1 (
   popd

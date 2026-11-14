@@ -597,12 +597,19 @@
     load()
   }
   TAB.shots = function (box, d) {
+    box.appendChild(h('div', { class: 'row', style: 'margin-bottom:10px' },
+      h('button', { class: 'btn', onclick: function () { call('shots.add', { name: d.name }).then(function (ok) { if (ok) { d.screenshots++; clear(box); TAB.shots(box, d) } }).catch(fail) } }, '+ Dodaj screenshot'),
+      h('button', { class: 'btn', onclick: function () { call('shots.scan').then(function (r) { toast('Znaleziono: ' + r.found, 'ok'); call('game.get', { name: d.name }).then(function (x) { d.screenshots = x.screenshots; clear(box); TAB.shots(box, d) }) }).catch(fail) } }, 'Skanuj foldery')))
     if (!d.screenshots) { box.appendChild(h('p', { class: 'muted', text: 'Brak screenshotów.' })); return }
     var g = h('div', { class: 'shots' })
     for (var i = 0; i < d.screenshots; i++) {
-      var img = h('img', { alt: '', loading: 'lazy', src: '/media/shot?g=' + encodeURIComponent(d.name) + '&i=' + i + '&w=320' })
-      img.onerror = function () { this.remove() }
-      g.appendChild(img)
+      (function (i) {
+        var img = h('img', { alt: '', loading: 'lazy', src: '/media/shot?g=' + encodeURIComponent(d.name) + '&i=' + i + '&w=320' })
+        img.onerror = function () { this.style.opacity = '0.2' }
+        g.appendChild(h('div', null, img, h('button', { class: 'btn small danger', onclick: function () {
+          call('shots.remove', { name: d.name, index: i }).then(function () { d.screenshots--; clear(box); TAB.shots(box, d) }).catch(fail)
+        } }, 'Usuń z listy')))
+      })(i)
     }
     box.appendChild(g)
   }
@@ -928,7 +935,7 @@
 
   // ---- achievements
   PAGES.achievements = function (root) {
-    root.appendChild(h('h1', { text: 'Osiągnięcia' }))
+    root.appendChild(h('div', { class: 'row' }, h('h1', { class: 'grow', text: 'Osiągnięcia' }), h('button', { class: 'btn', onclick: achEditor }, 'Edytor definicji')))
     call('achievements.list').then(function (list) {
       var un = list.filter(function (a) { return a.unlocked }).length
       root.appendChild(h('p', { class: 'muted', text: 'Odblokowano ' + un + ' z ' + list.length + '.' }))
@@ -1035,8 +1042,11 @@
           var ids = tracks.filter(function (_, j) { return j !== i }).map(function (x) { return x.id })
           call('music.savePlaylist', { old: M.list, name: M.list, tracks: ids }).then(render).catch(fail)
         } }, 'Usuń') : null
+        var cov = t.hasCover ? h('img', { src: '/media/trackcover/' + t.id + '?w=96', alt: '', style: 'width:32px;height:32px;border-radius:4px;object-fit:cover' }) : h('button', { class: 'btn small', title: 'Pobierz okładkę z Last.fm', onclick: function (e) {
+          e.stopPropagation(); call('music.cover', { id: t.id }).then(function () { render() }).catch(fail)
+        } }, '🖼')
         right.appendChild(h('div', { class: 'track' + (cur ? ' cur' : '') + (t.exists ? '' : ' missing'), tabindex: '0', title: t.path, onclick: function () { M.queue = tracks; playIdx(i) },
-          onkeydown: function (e) { if (e.key === 'Enter') { M.queue = tracks; playIdx(i) } } }, h('span', { class: 'muted', style: 'width:28px', text: cur ? '♫' : String(i + 1) }), h('span', { class: 'grow', text: t.title }), addSel, rm))
+          onkeydown: function (e) { if (e.key === 'Enter') { M.queue = tracks; playIdx(i) } } }, h('span', { class: 'muted', style: 'width:28px', text: cur ? '♫' : String(i + 1) }), cov, h('span', { class: 'grow', text: t.title }), addSel, rm))
       })
       var vol = h('input', { type: 'range', min: 0, max: 1, step: 0.01, value: audio.volume })
       vol.oninput = function () { audio.volume = Number(vol.value) }
@@ -1255,6 +1265,224 @@
       } }, 'Zapisz')] })
   }
 
+  // ---- theme
+  var THEME_VARS = { background: '--bg', foreground: '--text', button_background: '--panel2', entry_background: '--bg2', tree_background: '--panel', tree_heading: '--muted', link_foreground: '--accent2', chart_bar_color: '--accent' }
+  function applyTheme(def) {
+    var st = document.documentElement.style
+    Object.keys(THEME_VARS).forEach(function (k) { st.removeProperty(THEME_VARS[k]) })
+    if (!def) return
+    Object.keys(THEME_VARS).forEach(function (k) { if (def[k]) st.setProperty(THEME_VARS[k], def[k]) })
+    var light = def.background && parseInt(def.background.slice(1, 3), 16) > 160
+    document.documentElement.style.colorScheme = light ? 'light' : 'dark'
+  }
+  gl.on('theme', function (tv) { applyTheme(tv.themes[tv.current]) })
+  gl.on('nav', function (p) { go(p) })
+  gl.on('music:cmd', function (a) {
+    if (a === 'play_pause') { audio.paused ? (M.idx < 0 ? (M.queue.length || loadInternalQueue(), playIdx(0)) : audio.play()) : audio.pause() }
+    else if (a === 'next_track') nextTrack(1)
+    else if (a === 'prev_track') nextTrack(-1)
+    else if (a === 'stop_music') stopMusic()
+    else if (a === 'volume_up' || a === 'volume_down') { audio.volume = Math.max(0, Math.min(1, audio.volume + (a === 'volume_up' ? 0.05 : -0.05))); call('music.state', { volume: audio.volume }) }
+  })
+  function loadInternalQueue() { if (M.view) M.queue = M.view.internal }
+
+  // ---- news
+  PAGES.news = function (root) {
+    root.appendChild(h('div', { class: 'row' }, h('h1', { class: 'grow', text: 'Newsy' }), h('button', { class: 'btn', onclick: function () { render() } }, '⟳ Odśwież'), h('button', { class: 'btn', onclick: feedsDialog }, 'Źródła')))
+    var box = h('div', null, h('p', { class: 'muted', text: 'Pobieranie kanałów…' }))
+    root.appendChild(box)
+    call('news.get').then(function (r) {
+      clear(box)
+      Object.keys(r.errors || {}).forEach(function (k) { box.appendChild(h('p', { class: 'small', style: 'color:var(--warn)', text: k + ': ' + r.errors[k] })) })
+      if (!r.items.length) box.appendChild(h('p', { class: 'muted', text: 'Brak wpisów. Dodaj albo włącz źródła RSS.' }))
+      r.items.forEach(function (it) {
+        box.appendChild(h('div', { class: 'card', style: 'margin-bottom:10px' },
+          h('div', { class: 'small muted', text: it.feed + (it.date && it.date.indexOf('0001') !== 0 ? ' · ' + new Date(it.date).toLocaleString('pl-PL') : '') }),
+          it.link ? h('a', { href: it.link, style: 'font-weight:600;font-size:15px', text: it.title }) : h('b', { text: it.title }),
+          h('p', { style: 'margin:6px 0 0', text: it.summary })))
+      })
+    }).catch(fail)
+  }
+  function feedsDialog() {
+    call('news.get').then(function (r) {
+      var feeds = r.feeds.slice(), lim = h('input', { type: 'number', min: 1, max: 200, value: r.limit, style: 'width:90px' })
+      var box = h('div')
+      function draw() {
+        clear(box)
+        feeds.forEach(function (f, i) {
+          var on = h('input', { type: 'checkbox', checked: f.active }); on.onchange = function () { f.active = on.checked }
+          box.appendChild(h('div', { class: 'check-item' }, on, h('span', { class: 'grow', text: f.name }), h('span', { class: 'mono muted', text: f.url.trim() }),
+            h('button', { class: 'btn small danger', onclick: function () { feeds.splice(i, 1); draw() } }, 'Usuń')))
+        })
+        var u = h('input', { type: 'text', placeholder: 'https://…/rss', class: 'grow' }), n = h('input', { type: 'text', placeholder: 'nazwa' })
+        box.appendChild(h('div', { class: 'row', style: 'margin-top:8px' }, n, u, h('button', { class: 'btn', onclick: function () { if (u.value.trim()) { feeds.push({ name: n.value || u.value, url: u.value.trim(), active: true }); draw() } } }, 'Dodaj')))
+      }
+      draw()
+      var m = modal({ title: 'Źródła newsów (RSS/Atom)', body: [box, h('label', { class: 'field', style: 'margin-top:10px' }, 'Liczba wpisów', lim)],
+        footer: [h('button', { class: 'btn', onclick: function () { m.close() } }, 'Anuluj'), h('button', { class: 'btn primary', onclick: function () {
+          call('news.save', { feeds: feeds, limit: Number(lim.value) || 10 }).then(function () { m.close(); if (S.page === 'news') render() }).catch(fail)
+        } }, 'Zapisz')] })
+    }).catch(fail)
+  }
+
+  // ---- mods (placeholder for the mod manager, see docs/mod_manager_design.md)
+  PAGES.mods = function (root) {
+    root.appendChild(h('h1', { text: 'Menedżer modów' }))
+    root.appendChild(h('div', { class: 'card' }, h('p', { style: 'margin-top:0', text: 'W przygotowaniu. Menedżer modów będzie osobnym modułem (internal/modmgr) według projektu: definicje gier w JSON, magazyn modów na dysku launchera, wdrożenia z dziennikiem i powrotem do stanu „vanilla”, konflikty na poziomie plików.' }),
+      h('p', { class: 'muted small', style: 'margin-bottom:0', text: 'Dane modów z wersji Python (config.json → mods_data) są zachowywane bez zmian.' })))
+  }
+
+  // ---- achievements definitions editor
+  function achEditor() {
+    call('achdefs.get').then(function (r) {
+      var box = h('div')
+      var m = modal({ title: 'Definicje osiągnięć', body: box, footer: [h('button', { class: 'btn', onclick: function () { m.close(); if (S.page === 'achievements') render() } }, 'Zamknij')] })
+      function draw(r) {
+        clear(box)
+        r.defs.forEach(function (d) {
+          box.appendChild(h('div', { class: 'check-item' }, h('b', { text: d.name || d.id }), h('span', { class: 'grow muted small', text: d.rule_type + ' ≥ ' + d.target_value + (d.genre ? ' (' + d.genre + ')' : '') + (d.tag ? ' (#' + d.tag + ')' : '') + (d.group ? ' [' + d.group + ']' : '') + (d.hidden ? ' · ukryte' : '') }),
+            h('button', { class: 'btn small', onclick: function () { form(d) } }, 'Edytuj'),
+            h('button', { class: 'btn small danger', onclick: function () { confirmBox('Usunąć definicję „' + (d.name || d.id) + '”?', 'Usuń', true).then(function (ok) { if (ok) call('achdefs.delete', { id: d.id }).then(draw).catch(fail) }) } }, 'Usuń')))
+        })
+        box.appendChild(h('button', { class: 'btn', style: 'margin-top:8px', onclick: function () { form(null) } }, '+ Nowe osiągnięcie'))
+      }
+      function form(d) {
+        d = d || { id: '', name: '', description: '', rule_type: r.ruleTypes[0], target_value: 1, hidden: false }
+        var id = h('input', { type: 'text', value: d.id }), nm = h('input', { type: 'text', value: d.name || '' }), ds = h('input', { type: 'text', value: d.description || '' })
+        var rt = h('select', null, r.ruleTypes.map(function (x) { return h('option', { value: x, text: x }) })); rt.value = d.rule_type
+        var tv = h('input', { type: 'number', step: 'any', value: d.target_value }), param = h('input', { type: 'text', value: d.genre || d.tag || d.group || '', placeholder: 'gatunek / tag / grupa (dla reguł z nimi)' })
+        var hd = h('input', { type: 'checkbox', checked: d.hidden })
+        var fm = modal({ title: d.id ? 'Edytuj osiągnięcie' : 'Nowe osiągnięcie', narrow: true,
+          body: h('div', { class: 'form' }, h('label', { class: 'field' }, 'ID', id), h('label', { class: 'field' }, 'Nazwa', nm), h('label', { class: 'field full' }, 'Opis', ds),
+            h('label', { class: 'field' }, 'Warunek', rt), h('label', { class: 'field' }, 'Wartość docelowa', tv), h('label', { class: 'field full' }, 'Parametr', param), h('label', { class: 'check' }, hd, 'Ukryte do odblokowania')),
+          footer: [h('button', { class: 'btn', onclick: function () { fm.close() } }, 'Anuluj'), h('button', { class: 'btn primary', onclick: function () {
+            var def = { id: id.value.trim(), name: nm.value, description: ds.value, rule_type: rt.value, target_value: Number(tv.value), hidden: hd.checked, genre: '', tag: '', group: '' }
+            if (/^genre_/.test(rt.value)) def.genre = param.value.trim()
+            if (/^tag_/.test(rt.value)) def.tag = param.value.trim()
+            if (/^group_/.test(rt.value)) def.group = param.value.trim()
+            call('achdefs.save', { old: d.id, def: def }).then(function (x) { fm.close(); r = x; draw(x) }).catch(fail)
+          } }, 'Zapisz')] })
+      }
+      draw(r)
+    }).catch(fail)
+  }
+
+  // ---- settings: additional sections (phase 2)
+  function settingsExtra(box, s) {
+    var c8 = section('Wygląd', 'Motywy wbudowane i własne (zapisywane w config.json → custom_themes, jak w wersji Python).')
+    box.appendChild(c8)
+    call('themes.get').then(function (tv) {
+      var names = Object.keys(tv.themes).sort(cmp)
+      var sel = h('select', null, names.map(function (n) { return h('option', { value: n, text: n + (tv.custom.indexOf(n) >= 0 ? ' (własny)' : '') }) })); sel.value = tv.current
+      c8.appendChild(h('div', { class: 'row' }, sel, h('button', { class: 'btn primary', onclick: function () { call('themes.apply', { name: sel.value }).then(function (x) { applyTheme(x.themes[x.current]); toast('Zastosowano motyw', 'ok') }).catch(fail) } }, 'Zastosuj'),
+        h('button', { class: 'btn', onclick: function () { themeEditor(tv, sel.value) } }, 'Edytor motywu…'),
+        tv.custom.indexOf(sel.value) >= 0 ? h('button', { class: 'btn danger', onclick: function () { call('themes.delete', { name: sel.value }).then(function (x) { applyTheme(x.themes[x.current]); drawSettings(box, s) }).catch(fail) } }, 'Usuń') : null))
+    }).catch(fail)
+
+    var c9 = section('System', 'Autostart zapisuje ścieżkę exe w cudzysłowie w HKCU\\…\\Run. Globalne skróty działają też poza oknem launchera (przejmują klawisz w całym systemie – dlatego są domyślnie wyłączone).')
+    box.appendChild(c9)
+    call('system.get').then(function (ss) {
+      var au = h('input', { type: 'checkbox', checked: ss.autostart }), dc = h('input', { type: 'checkbox', checked: ss.discord }), dt = h('input', { type: 'text', value: ss.discordText || '', placeholder: 'np. Wybiera grę' })
+      var hk = h('input', { type: 'checkbox', checked: ss.hotkeysOn }), lk = h('input', { type: 'text', value: ss.launcherHotkey || '', placeholder: 'np. Ctrl+Alt+G' })
+      var labels = { play_pause: 'Odtwórz / pauza', next_track: 'Następny', prev_track: 'Poprzedni', stop_music: 'Stop', volume_up: 'Głośniej', volume_down: 'Ciszej' }
+      var inputs = {}
+      var grid = h('div', { class: 'form' })
+      ss.actions.forEach(function (a) { inputs[a] = h('input', { type: 'text', value: ss.hotkeys[a] || '' }); grid.appendChild(h('label', { class: 'field' }, 'Muzyka: ' + labels[a] + (ss.hotkeyErrors[a] ? ' ⚠ ' + ss.hotkeyErrors[a] : ''), inputs[a])) })
+      grid.appendChild(h('label', { class: 'field' }, 'Pokaż launcher', lk))
+      c9.appendChild(h('div', { class: 'row' }, h('label', { class: 'check' }, au, 'Uruchamiaj z Windows (zminimalizowany do zasobnika)')))
+      if (ss.autostartOther) c9.appendChild(h('p', { class: 'small', style: 'color:var(--warn)', text: 'W autostarcie jest inny wpis: ' + ss.autostartOther }))
+      c9.appendChild(h('div', { class: 'row', style: 'margin-top:8px' }, h('label', { class: 'check' }, dc, 'Discord Rich Presence'), dt))
+      c9.appendChild(h('div', { class: 'row', style: 'margin-top:8px' }, h('label', { class: 'check' }, hk, 'Globalne skróty klawiszowe (format: Ctrl+Alt+P albo <ctrl>+<insert>)')))
+      c9.appendChild(grid)
+      c9.appendChild(h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn primary', onclick: function () {
+        var keys = {}; Object.keys(inputs).forEach(function (a) { keys[a] = inputs[a].value })
+        call('system.save', { autostart: au.checked, discord: dc.checked, discordText: dt.value, hotkeysOn: hk.checked, hotkeys: keys, launcherHotkey: lk.value })
+          .then(function (x) { var errs = Object.keys(x.hotkeyErrors || {}); toast(errs.length ? 'Zapisano. Nie zarejestrowano: ' + errs.join(', ') : 'Zapisano', errs.length ? 'err' : 'ok'); drawSettings(box, s) }).catch(fail)
+      } }, 'Zapisz')))
+    }).catch(fail)
+
+    var c10 = section('Screenshoty', 'Foldery przeszukiwane przy „Skanuj screenshoty”. Wzorce nazw z {game_name}, np. {game_name}*.png.')
+    var sf = (s.shotFolders || []).slice(), sfl = h('div')
+    function drawSF() { clear(sfl); sf.forEach(function (f, i) { sfl.appendChild(h('div', { class: 'check-item' }, h('span', { class: 'grow mono', text: f }), h('button', { class: 'btn small danger', onclick: function () { sf.splice(i, 1); drawSF() } }, 'Usuń'))) }) }
+    drawSF()
+    var pat = h('input', { type: 'text', value: (s.shotPatterns || []).join(', ') })
+    c10.appendChild(sfl)
+    c10.appendChild(h('div', { class: 'row', style: 'margin:8px 0' }, h('button', { class: 'btn', onclick: function () { call('dialog.pickFolder', { title: 'Folder ze screenshotami' }).then(function (p) { if (p) { sf.push(p); drawSF() } }).catch(fail) } }, '+ Folder')))
+    c10.appendChild(h('label', { class: 'field' }, 'Wzorce nazw', pat))
+    c10.appendChild(h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn primary', onclick: function () {
+      call('settings.save', { shotFolders: sf, shotPatterns: pat.value.split(',').map(function (x) { return x.trim() }).filter(Boolean) }).then(function (n) { toast('Zapisano', 'ok'); drawSettings(box, n) }).catch(fail)
+    } }, 'Zapisz'), h('button', { class: 'btn', onclick: function () { call('shots.scan').then(function (r) { toast('Znaleziono screenshotów: ' + r.found + ' (gier: ' + r.games + ')', 'ok') }).catch(fail) } }, 'Skanuj screenshoty')))
+    box.appendChild(c10)
+
+    var c11 = section('Kopie zapasowe', 'Chmura GitHub: repozytorium jest ZAWSZE prywatne (publiczne zostanie odrzucone), wysyłane są tylko zmienione pliki. Nie są wysyłane local_settings.json ani baza czatu. Kopia lokalna: pełne archiwum .zip.')
+    var repo = h('input', { type: 'text', value: s.cloudRepo || '' })
+    c11.appendChild(h('div', { class: 'row' }, h('span', { text: 'Repozytorium' }), repo,
+      h('button', { class: 'btn primary', disabled: !s.secrets.github_token, onclick: function (e) {
+        var b = e.target; b.disabled = true; b.textContent = 'Wysyłanie…'
+        call('cloud.backup', { repo: repo.value }).then(function (r) { toast('Kopia w ' + r.repo + ': wysłano ' + r.uploaded + ', usunięto ' + r.deleted + ', bez zmian ' + r.unchanged + (r.skipped && r.skipped.length ? '\nPominięto (za duże): ' + r.skipped.length : ''), 'ok'); drawSettings(box, s) })
+          .catch(function (er) { b.disabled = false; b.textContent = 'Wyślij do chmury'; fail(er) })
+      } }, 'Wyślij do chmury'),
+      h('button', { class: 'btn', disabled: !s.secrets.github_token, onclick: function () {
+        confirmBox('Pobrać kopię z GitHub i nadpisać zmienione pliki (config.json, zapisy, okładki)?', 'Przywróć', true).then(function (ok) { if (ok) call('cloud.restore').then(function (r) { toast('Przywrócono plików: ' + r.uploaded, 'ok'); refreshLibrary() }).catch(fail) })
+      } }, 'Przywróć z chmury')))
+    c11.appendChild(h('p', { class: 'small muted', text: s.secrets.github_token ? ('Ostatnia kopia: ' + (s.cloudLast || 'nigdy')) : 'Dodaj token GitHub w sekcji Klucze API (uprawnienie: repo).' }))
+    c11.appendChild(h('div', { class: 'row' }, h('button', { class: 'btn', onclick: function () { call('backup.create').then(function (r) { if (r) toast('Zapisano ' + r.files + ' plików:\n' + r.path, 'ok') }).catch(fail) } }, 'Utwórz kopię .zip…'),
+      h('button', { class: 'btn', onclick: function () {
+        confirmBox('Przywrócić launcher z kopii .zip? Obecne dane zostaną odłożone obok (…before-restore-…), nie usunięte.', 'Wybierz plik…', true).then(function (ok) { if (ok) call('backup.restore').then(function (r) { if (r) { toast('Przywrócono plików: ' + r.files, 'ok'); refreshLibrary() } }).catch(fail) })
+      } }, 'Przywróć z .zip…')))
+    box.appendChild(c11)
+
+    var c12 = section('Aktualizacje', 'Wydania z GitHub (snakex21/Game-Launcher): najnowsza wersja wg numeru, obowiązkowa suma SHA-256, podmiana exe z automatycznym powrotem do poprzedniej wersji, jeśli nowa się nie uruchomi.')
+    var upInfo = h('span', { class: 'muted', text: 'Wersja: ' + s.version })
+    c12.appendChild(h('div', { class: 'row' }, upInfo, h('button', { class: 'btn', onclick: function () {
+      upInfo.textContent = 'Sprawdzanie…'
+      call('update.check').then(function (r) {
+        clear(upInfo)
+        if (!r.available) { upInfo.textContent = 'Masz najnowszą wersję (' + r.current + ').'; return }
+        upInfo.appendChild(h('span', null, 'Dostępna ' + r.version + ' (' + r.asset + ') ', h('button', { class: 'btn primary', onclick: function () {
+          confirmBox('Zainstalować ' + r.version + '? Launcher uruchomi się ponownie.', 'Aktualizuj').then(function (ok) { if (ok) call('update.install').then(function () { toast('Uruchamianie nowej wersji…', 'ok') }).catch(fail) })
+        } }, 'Aktualizuj')))
+      }).catch(function (e) { upInfo.textContent = e.message })
+    } }, 'Sprawdź aktualizacje')))
+    box.appendChild(c12)
+
+    var c13 = section('Narzędzia biblioteki')
+    c13.appendChild(h('div', { class: 'row' }, h('button', { class: 'btn', onclick: dupDialog }, 'Znajdź duplikaty gier'), h('button', { class: 'btn', onclick: achEditor }, 'Edytor osiągnięć')))
+    box.appendChild(c13)
+  }
+  function themeEditor(tv, base) {
+    var def = Object.assign({}, tv.themes[base] || {})
+    var name = h('input', { type: 'text', value: tv.custom.indexOf(base) >= 0 ? base : 'Mój motyw' })
+    var labels = { background: 'Tło', foreground: 'Tekst', button_background: 'Przyciski', button_foreground: 'Tekst przycisków', entry_background: 'Pola', tree_background: 'Karty/listy', tree_heading: 'Tekst drugorzędny', link_foreground: 'Linki', chart_bar_color: 'Akcent / wykresy', scrollbar_trough: 'Pasek przewijania', scrollbar_slider: 'Suwak', chart_axis_color: 'Osie wykresów' }
+    var grid = h('div', { class: 'form' })
+    tv.keys.forEach(function (k) {
+      var inp = h('input', { type: 'color', value: def[k] || '#000000' })
+      inp.oninput = function () { def[k] = inp.value; applyTheme(def) }
+      grid.appendChild(h('label', { class: 'field' }, labels[k] || k, inp))
+    })
+    var prev = tv.themes[tv.current]
+    var m = modal({ title: 'Edytor motywu', body: [h('label', { class: 'field' }, 'Nazwa', name), h('p', { class: 'muted small', text: 'Zmiany widać od razu (podgląd).' }), grid],
+      onClose: function () { if (!m.saved) applyTheme(prev) },
+      footer: [h('button', { class: 'btn', onclick: function () { m.close() } }, 'Anuluj'), h('button', { class: 'btn primary', onclick: function () {
+        call('themes.save', { name: name.value, def: def, apply: true }).then(function () { m.saved = true; m.close(); toast('Zapisano motyw', 'ok') }).catch(fail)
+      } }, 'Zapisz i zastosuj')] })
+  }
+  function dupDialog() {
+    call('library.duplicates').then(function (groups) {
+      var body = h('div')
+      if (!groups.length) body.appendChild(h('p', { text: 'Nie znaleziono potencjalnych duplikatów.' }))
+      groups.forEach(function (g) {
+        var card = h('div', { class: 'card', style: 'margin-bottom:8px' })
+        g.forEach(function (x) {
+          card.appendChild(h('div', { class: 'check-item' }, h('b', { text: x.name }), h('span', { class: 'grow mono muted small', text: x.type === 'emulator' ? x.rom : x.exe }), h('span', { class: 'muted small', text: dur(x.playTime) }),
+            h('button', { class: 'btn small', onclick: function () { m.close(); details(x.name) } }, 'Szczegóły')))
+        })
+        body.appendChild(card)
+      })
+      var m = modal({ title: 'Potencjalne duplikaty', body: body, footer: [h('button', { class: 'btn', onclick: function () { m.close() } }, 'Zamknij')] })
+    }).catch(fail)
+  }
+
   // ---- settings
   PAGES.settings = function (root) {
     root.appendChild(h('h1', { text: 'Ustawienia' }))
@@ -1349,11 +1577,12 @@
     } }, 'Zamień prefiks we wszystkich grach'), h('button', { class: 'btn', onclick: function () { call('app.openPath', { which: 'data' }).catch(fail) } }, 'Otwórz folder danych')))
     box.appendChild(c6)
 
+    settingsExtra(box, s)
     var c7 = section('Sterowanie')
     c7.appendChild(h('div', { class: 'kv small' },
       h('span', { class: 'kbd', text: 'strzałki' }), h('span', { text: 'poruszanie po bibliotece' }), h('span', { class: 'kbd', text: 'Enter' }), h('span', { text: 'szczegóły gry' }),
       h('span', { class: 'kbd', text: 'Ctrl+Enter / P' }), h('span', { text: 'uruchom zaznaczoną grę' }), h('span', { class: 'kbd', text: 'Ctrl+F lub /' }), h('span', { text: 'szukaj' }),
-      h('span', { class: 'kbd', text: 'Esc' }), h('span', { text: 'zamknij okno / wróć' }), h('span', { class: 'kbd', text: 'Ctrl+1…8' }), h('span', { text: 'zakładki' }),
+      h('span', { class: 'kbd', text: 'Esc' }), h('span', { text: 'zamknij okno / wróć' }), h('span', { class: 'kbd', text: 'Ctrl+1…9, Ctrl+0' }), h('span', { text: 'zakładki' }),
       h('span', { class: 'kbd', text: 'Alt+Spacja, Alt+←/→, Alt+S' }), h('span', { text: 'muzyka: pauza, poprzedni/następny, stop' }),
       h('span', { class: 'kbd', text: 'Pad: D-pad / gałka' }), h('span', { text: 'poruszanie' }), h('span', { class: 'kbd', text: 'Pad: A / B' }), h('span', { text: 'otwórz / wróć' }),
       h('span', { class: 'kbd', text: 'Pad: X / Y' }), h('span', { text: 'uruchom grę / szukaj' }), h('span', { class: 'kbd', text: 'Pad: LB / RB' }), h('span', { text: 'poprzednia / następna zakładka' })))
@@ -1371,7 +1600,7 @@
   }
 
   // ------------------------------------------------------------ keyboard
-  var ORDER = ['home', 'library', 'stats', 'roadmap', 'achievements', 'music', 'chat', 'settings']
+  var ORDER = ['home', 'library', 'stats', 'roadmap', 'achievements', 'news', 'music', 'chat', 'mods', 'settings']
   document.addEventListener('keydown', function (e) {
     if (musicKey(e)) { e.preventDefault(); return }
     var tag = (e.target.tagName || '').toLowerCase()
@@ -1381,7 +1610,8 @@
       if (typing) { e.target.blur(); focusSel(); return }
     }
     if (modalStack.length) return
-    if (e.ctrlKey && e.key >= '1' && e.key <= '8') { e.preventDefault(); go(ORDER[Number(e.key) - 1]); return }
+    if (e.ctrlKey && e.key >= '1' && e.key <= '9') { e.preventDefault(); go(ORDER[Number(e.key) - 1]); return }
+    if (e.ctrlKey && e.key === '0') { e.preventDefault(); go('settings'); return }
     if ((e.ctrlKey && (e.key === 'f' || e.key === 'F')) || (!typing && e.key === '/')) {
       e.preventDefault()
       if (S.page !== 'library') go('library')
@@ -1474,6 +1704,7 @@
 
   // ------------------------------------------------------------ start
   applyBoot(gl.boot)
+  applyTheme(gl.boot && gl.boot.theme)
   updateRunning()
   var sp = gl.boot && gl.boot.startPage || ''
   if (sp.indexOf('game:') === 0) { go('library'); details(sp.slice(5)) }

@@ -62,7 +62,8 @@ type BootData struct {
 	Remapped int            `json:"remapped"`
 	Started  int64          `json:"started"`
 	// StartPage (GL_START_PAGE, for demos/screenshots): "stats" or "game:<name>".
-	StartPage string `json:"startPage,omitempty"`
+	StartPage string            `json:"startPage,omitempty"`
+	Theme     map[string]string `json:"theme"`
 }
 
 func profilesOf(g *ojson.Object) []Profile {
@@ -152,6 +153,8 @@ func (a *App) Boot() BootData {
 	})
 	b.Warnings = a.S.Warnings
 	b.StartPage = os.Getenv("GL_START_PAGE")
+	tv := a.themes()
+	b.Theme = tv.Themes[tv.Current]
 	b.Remapped = a.S.Remapped
 	return b
 }

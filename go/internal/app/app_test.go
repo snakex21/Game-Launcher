@@ -482,3 +482,67 @@ func freePort(t *testing.T) int {
 	defer l.Close()
 	return l.Addr().(*net.TCPAddr).Port
 }
+
+func TestExtras(t *testing.T) {
+	e := newEnv(t)
+	ctx := context.Background()
+	// duplicates
+	os.WriteFile(filepath.Join(e.dir, "g2.exe"), []byte("MZ"), 0o644)
+	e.a.gameSave(ctx, GameForm{Name: "GOTHIC!", Type: "pc", Exe: filepath.Join(e.dir, "g2.exe")})
+	if d := e.a.Duplicates(); len(d) != 1 || len(d[0]) != 2 {
+		t.Fatalf("%+v", d)
+	}
+	// themes: Python key set, apply counts theme changes
+	if _, err := e.a.themeSave(ctx, struct {
+		Name  string            `json:"name"`
+		Def   map[string]string `json:"def"`
+		Apply bool              `json:"apply"`
+	}{"Mój Motyw", map[string]string{"background": "#112233", "foreground": "#eeeeee"}, true}); err != nil {
+		t.Fatal(err)
+	}
+	if tv := e.a.themes(); tv.Current != "Mój Motyw" || tv.Themes["Mój Motyw"]["background"] != "#112233" {
+		t.Fatalf("%+v", tv)
+	}
+	if _, err := e.a.themeSave(ctx, struct {
+		Name  string            `json:"name"`
+		Def   map[string]string `json:"def"`
+		Apply bool              `json:"apply"`
+	}{"Zły", map[string]string{"background": "red;}"}, false}); err == nil {
+		t.Fatal("bad color accepted")
+	}
+	// achievement definitions editor keeps the file a JSON list
+	os.WriteFile(e.a.S.L.AchievDefFile, []byte(`[{"id": "a", "name": "A", "rule_type": "library_size", "target_value": 1, "hidden": false}]`), 0o644)
+	if _, err := e.a.achDefSave(ctx, struct {
+		Old string         `json:"old"`
+		Def map[string]any `json:"def"`
+	}{"", map[string]any{"id": "b", "name": "B", "rule_type": "genre_played_count", "genre": "RPG", "target_value": 2.0}}); err != nil {
+		t.Fatal(err)
+	}
+	if defs := e.a.loadAchievementDefs(); len(defs) != 2 || defs[1].Str("genre") != "RPG" || defs[1].Get("target_value") != ojson.Int(2) {
+		t.Fatal("defs not saved")
+	}
+	if _, err := e.a.achDefDelete(ctx, struct {
+		ID string `json:"id"`
+	}{"a"}); err != nil || len(e.a.loadAchievementDefs()) != 1 {
+		t.Fatal("delete failed", err)
+	}
+	// screenshot scan
+	shots := filepath.Join(e.dir, "Shots")
+	os.MkdirAll(filepath.Join(shots, "sub"), 0o755)
+	os.WriteFile(filepath.Join(shots, "sub", "Gothic_001.png"), []byte("x"), 0o644)
+	os.WriteFile(filepath.Join(shots, "Inna.png"), []byte("x"), 0o644)
+	e.a.S.UpdateConfig(func(c *ojson.Object) error {
+		c.EnsureObj("settings").Set("autoscan_screenshot_folders", []any{shots})
+		return nil
+	})
+	r, err := e.a.scanScreenshots(ctx, empty{})
+	if err != nil || r.(map[string]any)["found"] != 1 {
+		t.Fatal(r, err)
+	}
+	if _, err := e.a.newsSave(ctx, struct {
+		Feeds []feedIn `json:"feeds"`
+		Limit int      `json:"limit"`
+	}{[]feedIn{{URL: "javascript:alert(1)"}}, 10}); err == nil {
+		t.Fatal("bad feed url accepted")
+	}
+}

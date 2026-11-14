@@ -17,6 +17,7 @@ import (
 	"github.com/snakex21/game-launcher/go/internal/remote"
 	"github.com/snakex21/game-launcher/go/internal/saves"
 	"github.com/snakex21/game-launcher/go/internal/store"
+	"github.com/snakex21/game-launcher/go/internal/winsys"
 )
 
 // launchGrace: right after a launch, a launcher stub may exit before the
@@ -114,6 +115,7 @@ func (a *App) Launch(name, profileName string) (*LaunchResult, error) {
 		return nil
 	})
 	a.emit("game:started", map[string]any{"name": name, "profile": spec.ProfileName})
+	a.discordSet(&winsys.Activity{Details: "Gra: " + name, State: spec.ProfileName, Start: now})
 	return &LaunchResult{Game: name, Profile: spec.ProfileName, PID: pid}, nil
 }
 
@@ -227,6 +229,7 @@ func (a *App) Poll() {
 			return nil
 		})
 		a.emit("game:started", map[string]any{"name": name, "detected": true})
+		a.discordSet(&winsys.Activity{Details: "Gra: " + name, Start: now})
 	}
 	for _, f := range done {
 		a.recordSession(f.name, f.start, f.end)
@@ -275,6 +278,7 @@ func (a *App) recordSession(name string, start, end time.Time) {
 		}
 	}
 	a.emit("game:stopped", ev)
+	a.discordIdle()
 }
 
 // monitor runs the 5 s process poll and the 1 min roadmap/reminder checks.

@@ -52,6 +52,8 @@ type Media interface {
 	TrackFile(id string) string
 	// ChatFile returns a downloaded chat attachment ("" = none).
 	ChatFile(name string) string
+	// TrackCoverFile returns the cover of a music track id ("" = none).
+	TrackCoverFile(id string, w int) string
 }
 
 // Server is the running UI server.
@@ -217,6 +219,8 @@ func Handler(assets fs.FS, media Media, port int, token string) http.Handler {
 			serveFile(w, r, media.ScreenshotFile(q.Get("g"), i, width()), "private, max-age=300")
 		case strings.HasPrefix(r.URL.Path, "/media/track/"):
 			serveFile(w, r, media.TrackFile(strings.TrimPrefix(r.URL.Path, "/media/track/")), "private, no-cache")
+		case strings.HasPrefix(r.URL.Path, "/media/trackcover/"):
+			serveFile(w, r, media.TrackCoverFile(strings.TrimPrefix(r.URL.Path, "/media/trackcover/"), width()), "private, max-age=300")
 		case strings.HasPrefix(r.URL.Path, "/media/chatfile/"):
 			h.Set("Content-Security-Policy", "default-src 'none'; img-src 'self'")
 			serveFile(w, r, media.ChatFile(strings.TrimPrefix(r.URL.Path, "/media/chatfile/")), "private, max-age=3600")

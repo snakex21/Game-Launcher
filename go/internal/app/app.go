@@ -73,12 +73,14 @@ type App struct {
 	sessions  map[string]*session
 	owned     map[uint32]string // pid -> game we started
 	tracks    map[string]string // music id -> file
+	trackOrig map[string]string // file -> path as stored in the playlist
 	remote    *remote.Server
 	remoteErr string
 	started   time.Time
 	missing   map[string]bool
 
 	chat chatState
+	sys  sysState
 
 	// cloudBase overrides the GitHub API URL (tests).
 	cloudBase string
@@ -96,13 +98,14 @@ type App struct {
 func New(s *store.Store, host Host, dlg Dialogs) *App {
 	a := &App{
 		S: s, host: host, dlg: dlg, procs: realProcs{},
-		thumbs:   thumbs.New(filepath.Join(s.L.CacheDir, "thumbs")),
-		now:      time.Now,
-		sessions: map[string]*session{},
-		owned:    map[uint32]string{},
-		tracks:   map[string]string{},
-		missing:  map[string]bool{},
-		started:  time.Now(),
+		thumbs:    thumbs.New(filepath.Join(s.L.CacheDir, "thumbs")),
+		now:       time.Now,
+		sessions:  map[string]*session{},
+		owned:     map[uint32]string{},
+		tracks:    map[string]string{},
+		trackOrig: map[string]string{},
+		missing:   map[string]bool{},
+		started:   time.Now(),
 	}
 	a.StartProcess = a.startProcess
 	return a
@@ -201,6 +204,24 @@ func (a *App) Register(d *bridge.Dispatcher) {
 	reg("music.deletePlaylist", handler(a.musicDeletePlaylist))
 	reg("music.addFolder", handler(a.musicAddFolder))
 	reg("music.state", handler(a.musicState))
+	reg("news.get", handler(a.newsGet))
+	reg("news.save", handler(a.newsSave))
+	reg("library.duplicates", handler(func(_ context.Context, _ empty) (any, error) { return a.Duplicates(), nil }))
+	reg("themes.get", handler(func(_ context.Context, _ empty) (any, error) { return a.themes(), nil }))
+	reg("themes.save", handler(a.themeSave))
+	reg("themes.apply", handler(a.themeApply))
+	reg("themes.delete", handler(a.themeDelete))
+	reg("achdefs.get", handler(a.achDefs))
+	reg("achdefs.save", handler(a.achDefSave))
+	reg("achdefs.delete", handler(a.achDefDelete))
+	reg("backup.create", handler(a.backupCreate))
+	reg("backup.restore", handler(a.backupRestore))
+	reg("shots.scan", handler(a.scanScreenshots))
+	reg("shots.add", handler(a.screenshotAdd))
+	reg("shots.remove", handler(a.screenshotRemove))
+	reg("music.cover", handler(a.musicCover))
+	reg("system.get", handler(func(_ context.Context, _ empty) (any, error) { return a.systemSettings(), nil }))
+	reg("system.save", handler(a.systemSave))
 	reg("update.check", handler(a.updateCheck))
 	reg("update.install", handler(a.updateInstall))
 	reg("cloud.backup", handler(a.cloudBackup))
@@ -326,6 +347,7 @@ func (a *App) Shutdown() {
 	a.mu.Unlock()
 	r.Stop()
 	a.stopChat()
+	a.stopSystem()
 	a.recordUsage()
 }
 
@@ -374,6 +396,7 @@ func (a *App) Start(ctx context.Context) {
 		a.emit("library:files", a.CheckFiles())
 		a.startChatHost()
 		a.chatAutoConnect()
+		a.discordIdle()
 	}()
 	go a.monitor(ctx)
 }

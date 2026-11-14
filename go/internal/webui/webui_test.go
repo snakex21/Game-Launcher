@@ -21,6 +21,7 @@ func (m media) CoverFile(g string, w int) string {
 func (media) ScreenshotFile(string, int, int) string { return "" }
 func (media) TrackFile(string) string                { return "" }
 func (media) ChatFile(string) string                 { return "" }
+func (media) TrackCoverFile(string, int) string      { return "" }
 
 const port = 47999
 

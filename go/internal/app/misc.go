@@ -37,6 +37,10 @@ type SettingsDTO struct {
 	WebView2Profile string            `json:"webview2Profile"`
 	Version         string            `json:"version"`
 	TotalUsage      float64           `json:"totalUsage"`
+	ShotFolders     []string          `json:"shotFolders"`
+	ShotPatterns    []string          `json:"shotPatterns"`
+	CloudRepo       string            `json:"cloudRepo"`
+	CloudLast       string            `json:"cloudLast"`
 	ConsecutiveDays int64             `json:"consecutiveDays"`
 }
 
@@ -53,6 +57,8 @@ func (a *App) Settings() SettingsDTO {
 		d.AutoBackup = st.Bool("auto_backup_on_exit", true)
 		d.CustomGenres = st.Strings("custom_genres")
 		d.LauncherDrive = st.Str("launcher_drive")
+		d.ShotFolders = st.Strings("autoscan_screenshot_folders")
+		d.ShotPatterns = st.Strings("screenshot_filename_patterns")
 		if e := cfg.Obj("emulators"); e != nil {
 			for _, k := range e.Keys() {
 				d.Emulators[k] = e.Obj(k).Str("path")
@@ -64,7 +70,9 @@ func (a *App) Settings() SettingsDTO {
 		d.TilesPerRow = l.Int("tiles_per_row", 5)
 		d.TotalUsage = l.Float("total_launcher_usage_seconds", 0)
 		d.ConsecutiveDays = l.Int("consecutive_days", 0)
+		d.CloudLast = l.Str("github_last_backup")
 	})
+	d.CloudRepo = a.cloudRepoName()
 	for _, k := range []string{"rawg_api_key", "lastfm_api_key", "github_token"} {
 		d.Secrets[k] = a.S.SecretState(k)
 	}
@@ -80,6 +88,8 @@ type settingsIn struct {
 	AutoBackup    *bool     `json:"autoBackupOnExit"`
 	View          *string   `json:"view"`
 	TilesPerRow   *int64    `json:"tilesPerRow"`
+	ShotFolders   *[]string `json:"shotFolders"`
+	ShotPatterns  *[]string `json:"shotPatterns"`
 }
 
 func (a *App) settingsSave(_ context.Context, in settingsIn) (any, error) {
@@ -103,6 +113,17 @@ func (a *App) settingsSave(_ context.Context, in settingsIn) (any, error) {
 		}
 		if in.AutoBackup != nil {
 			st.Set("auto_backup_on_exit", *in.AutoBackup)
+		}
+		if in.ShotFolders != nil {
+			st.Set("autoscan_screenshot_folders", cleanList(*in.ShotFolders))
+		}
+		if in.ShotPatterns != nil {
+			for _, p := range *in.ShotPatterns {
+				if !strings.Contains(p, "{game_name}") {
+					return bridge.Errf("Wzorzec „%s” musi zawierać {game_name}.", p)
+				}
+			}
+			st.Set("screenshot_filename_patterns", cleanList(*in.ShotPatterns))
 		}
 		return nil
 	})
@@ -667,6 +688,7 @@ func (a *App) checkReminders() {
 	})
 	for _, m := range due {
 		a.emit("reminder", map[string]any{"message": m})
+		a.Notify("Przypomnienie", m)
 	}
 }
 
@@ -870,6 +892,7 @@ func (a *App) evaluateAchievements() []string {
 	})
 	for _, n := range unlocked {
 		a.emit("achievement", map[string]any{"name": n})
+		a.Notify("Nowe osiągnięcie", n)
 	}
 	return unlocked
 }
@@ -899,10 +922,11 @@ func (a *App) achievements() []Achievement {
 
 // Track is a playable file.
 type Track struct {
-	ID     string `json:"id"`
-	Title  string `json:"title"`
-	Path   string `json:"path"`
-	Exists bool   `json:"exists"`
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	Path     string `json:"path"`
+	Exists   bool   `json:"exists"`
+	HasCover bool   `json:"hasCover"`
 }
 
 // MusicView lists the internal folder and the saved playlists.
@@ -927,9 +951,12 @@ func (a *App) track(p string) Track {
 	}
 	a.mu.Lock()
 	a.tracks[id] = abs
+	a.trackOrig[abs] = p
 	a.mu.Unlock()
 	title := strings.TrimSuffix(paths.Base(p), filepath.Ext(p))
-	return Track{ID: id, Title: title, Path: p, Exists: fileExists(abs)}
+	var cover string
+	a.S.ReadLocal(func(l *ojson.Object) { cover = l.Obj("music_track_covers").Str(p) })
+	return Track{ID: id, Title: title, Path: p, Exists: fileExists(abs), HasCover: cover != ""}
 }
 
 func (a *App) musicList() MusicView {

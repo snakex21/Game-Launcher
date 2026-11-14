@@ -29,6 +29,7 @@ import (
 	"github.com/snakex21/game-launcher/go/internal/updater"
 	"github.com/snakex21/game-launcher/go/internal/webui"
 	"github.com/snakex21/game-launcher/go/internal/winapi"
+	"github.com/snakex21/game-launcher/go/internal/winsys"
 )
 
 // version is set at build time (-X main.version=...).
@@ -80,6 +81,7 @@ func run() int {
 	debug := flag.Bool("debug", false, "enable WebView2 devtools")
 	appDirFlag := flag.String("app-dir", "", "launcher folder with data/ (default: folder of the exe)")
 	_ = flag.Bool("post-update", false, "first start after an update (internal)")
+	minimized := flag.Bool("minimized", false, "start hidden in the tray (autostart)")
 	flag.Parse()
 	exePath, _ := os.Executable()
 	updState, _ := updater.OnStartup(exePath)
@@ -174,6 +176,12 @@ func run() int {
 	w.Init(bridge.InitScript(server.Origin, server.Token, boot))
 	w.Navigate(server.URL)
 	a.Start(ctx)
+	hwnd := uintptr(w.Window())
+	show := func(on bool) { w.Dispatch(func() { winsys.ShowMain(hwnd, on) }) }
+	go a.StartSystem(app.IconPath(filepath.Join(appDir, "data", "go_cache"), appIcon), show, host.Quit)
+	if *minimized {
+		show(false)
+	}
 
 	w.Run()
 
