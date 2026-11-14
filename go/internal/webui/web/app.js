@@ -215,7 +215,7 @@
     })
   }, { root: main, rootMargin: '400px 0px' }) : null
 
-  function coverEl(g, w) {
+  function coverEl(g, w, eager) {
     var c = h('div', { class: 'cover' })
     var ph = h('div', { class: 'ph', text: g.name })
     c.appendChild(ph)
@@ -224,7 +224,7 @@
       img.onload = function () { img.classList.add('loaded'); ph.remove() }
       img.onerror = function () { img.remove() }
       img.dataset.src = coverURL(g, w)
-      if (io) io.observe(img); else img.src = img.dataset.src
+      if (io && !eager) io.observe(img); else img.src = img.dataset.src
       c.insertBefore(img, ph)
     }
     return c
@@ -409,7 +409,7 @@
   }
   function showDetails(d) {
     var m
-    var cover = coverEl(d, 480)
+    var cover = coverEl(d, 480, true)
     var profiles = (d.profiles || []).filter(function (p) { return p.name })
     var profSel = null
     if (d.type === 'pc' && profiles.length > 1) {

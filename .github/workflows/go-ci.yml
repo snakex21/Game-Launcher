@@ -1,0 +1,77 @@
+name: Go launcher CI
+
+on:
+  push:
+    branches: [main, "port/**"]
+    paths: ["go/**", ".github/workflows/go-ci.yml"]
+  pull_request:
+    paths: ["go/**", ".github/workflows/go-ci.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: go
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go/go.mod
+          cache-dependency-path: go/go.sum
+
+      # webview_go needs CGO (MinGW-w64 gcc).
+      - name: Ensure gcc (MinGW-w64)
+        shell: pwsh
+        run: |
+          if (-not (Get-Command gcc -ErrorAction SilentlyContinue)) {
+            choco install mingw -y --no-progress
+            echo "C:\ProgramData\mingw64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+          }
+
+      - name: Tool versions
+        run: |
+          go version
+          gcc --version
+          node --version
+
+      - name: gofmt
+        shell: pwsh
+        run: |
+          $files = gofmt -l cmd internal
+          if ($files) { $files; exit 1 }
+
+      - name: JS syntax (embedded UI)
+        run: |
+          node --check internal/webui/web/app.js
+          node --check internal/bridge/shim.js
+
+      - name: go vet
+        env:
+          CGO_ENABLED: "1"
+        run: go vet ./...
+
+      - name: go test -race
+        env:
+          CGO_ENABLED: "1"
+        run: go test -race -count=1 ./...
+
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+      - name: Build (stripped, trimmed, GUI subsystem)
+        env:
+          CGO_ENABLED: "1"
+        run: go build -trimpath -ldflags "-H windowsgui -s -w -X main.version=ci-${{ github.sha }}" -o GameLauncher.exe ./cmd/gamelauncher
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GameLauncher-${{ github.sha }}
+          path: go/GameLauncher.exe
+          if-no-files-found: error

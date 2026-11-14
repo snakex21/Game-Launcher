@@ -361,6 +361,14 @@ func (a *App) statsGet(_ context.Context, in struct {
 // custom range [from, to] (inclusive days) is exact.
 func (a *App) ComputeStats(from, to string, loc *time.Location) (*Stats, error) {
 	now := a.now().In(loc)
+	if to == "" && from == "" {
+		// Default: the last 30 days; when nothing was played then, the 30
+		// days ending with the most recent session.
+		last := a.lastSessionEnd()
+		if !last.IsZero() && last.Before(now.AddDate(0, 0, -29)) {
+			now = last.In(loc)
+		}
+	}
 	if to == "" {
 		to = now.Format("2006-01-02")
 	}
@@ -379,7 +387,7 @@ func (a *App) ComputeStats(from, to string, loc *time.Location) (*Stats, error) 
 		return nil, bridge.Errf("Zakres może mieć najwyżej 10 lat.")
 	}
 	end := t.AddDate(0, 0, 1)
-	st := &Stats{Emulators: map[string]float64{}, Genres: map[string]float64{}, From: from, To: to}
+	st := &Stats{Emulators: map[string]float64{}, Genres: map[string]float64{}, From: from, To: to, Top: []TopGame{}, RangeGames: []TopGame{}, Days: []DayStat{}}
 	perDay := map[string]float64{}
 	perGameRange := map[string]float64{}
 	a.S.ReadConfig(func(cfg *ojson.Object) {
@@ -455,6 +463,24 @@ func (a *App) ComputeStats(from, to string, loc *time.Location) (*Stats, error) 
 	sort.SliceStable(st.RangeGames, func(i, j int) bool { return st.RangeGames[i].Seconds > st.RangeGames[j].Seconds })
 	a.S.ReadLocal(func(l *ojson.Object) { st.Launcher = l.Float("total_launcher_usage_seconds", 0) })
 	return st, nil
+}
+
+func (a *App) lastSessionEnd() time.Time {
+	var last float64
+	a.S.ReadConfig(func(cfg *ojson.Object) {
+		games := cfg.Obj("games")
+		for _, name := range games.Keys() {
+			for _, s := range games.Obj(name).Arr("play_sessions") {
+				if so, ok := s.(*ojson.Object); ok && so.Float("end", 0) > last {
+					last = so.Float("end", 0)
+				}
+			}
+		}
+	})
+	if last <= 0 {
+		return time.Time{}
+	}
+	return time.Unix(int64(last), 0)
 }
 
 // --------------------------------------------------------- roadmap/remind

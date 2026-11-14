@@ -525,3 +525,9 @@ Ten launcher jest zaprojektowany do zarządzania osobistymi kolekcjami gier. Uż
 ---
 
 **Made with ❤️ for retro and indie game enthusiasts**
+
+---
+
+## Wersja Go + WebView2 / Go + WebView2 version
+
+Port launchera do Go (jeden exe, te same dane) jest w folderze [`go/`](go/README.md). / A Go port (single exe, same data files) lives in [`go/`](go/README.md).

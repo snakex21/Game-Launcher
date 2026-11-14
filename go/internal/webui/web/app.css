@@ -72,7 +72,7 @@ label.check { display: inline-flex; gap: 8px; align-items: center; cursor: point
 .seg button.on { background: var(--panel2); color: var(--text); }
 
 /* grid */
-.grid { display: grid; grid-template-columns: repeat(var(--cols, auto-fill), minmax(var(--tile-w), 1fr)); gap: 16px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--tile-w), calc(var(--tile-w) * 1.3))); gap: 16px; }
 .tile { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
   overflow: hidden; cursor: pointer; display: flex; flex-direction: column; outline: none; transition: transform .08s ease, border-color .08s; }
 .tile:hover { border-color: #3d4663; }
@@ -152,7 +152,8 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .toast b { display: block; margin-bottom: 2px; }
 
 /* music */
-.player { position: sticky; bottom: -40px; margin-top: 18px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.player { position: sticky; bottom: -40px; margin-top: 18px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; box-shadow: 0 -8px 24px rgba(0,0,0,.35); }
+.player .grow { min-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .track { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
 .track:hover, .track:focus { background: var(--panel); outline: none; }
 .track.cur { color: var(--accent2); font-weight: 600; }
