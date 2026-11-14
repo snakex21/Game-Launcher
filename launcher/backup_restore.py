@@ -7,6 +7,7 @@ import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
+from launcher.paths import APP_DIR
 from launcher.config_store import (
     load_config as config_load_config,
     load_local_settings as config_load_local_settings,
@@ -308,7 +309,7 @@ def load_local_backup(self):
     def _perform_simple_restore_thread():
         restore_success_thread = True
         error_message_thread = ""
-        app_root_path = os.getcwd()
+        app_root_path = APP_DIR
 
         try:
             for idx, (

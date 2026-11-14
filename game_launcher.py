@@ -29,6 +29,7 @@ from io import BytesIO
 import webbrowser
 
 from ui.components import ToolTip
+from launcher.paths import APP_DIR, resource_path
 
 
 class _LazyModule:
@@ -209,9 +210,10 @@ class GameLauncher:
             if key not in self._button_icons:  # Użyj jednego cache
                 try:
                     size = icon_size_button if "_btn" in key else icon_size_menu
-                    img = Image.open(path).resize(size, RESAMPLING)
-                    if img.mode != "RGBA":
-                        img = img.convert("RGBA")
+                    with Image.open(resource_path(path)) as src:
+                        img = src.convert("RGBA")
+                    if img.size != size:
+                        img = img.resize(size, RESAMPLING)
                     self._button_icons[key] = ImageTk.PhotoImage(
                         img
                     )  # Zapisz w self._button_icons
@@ -3030,11 +3032,13 @@ class GameLauncher:
 
 
 # Główna część programu
-if __name__ == "__main__":
+def main():
+    # Dane (data/, images/, okładki "images/...") leżą obok aplikacji - niezależnie od
+    # tego, z jakiego katalogu (skrót, "Rozpocznij w") uruchomiono launcher.
+    os.chdir(APP_DIR)
     root = tk.Tk()
     try:
-        # Użyj ścieżki względnej lub bezwzględnej do ikony
-        icon_path = "icon.ico"  # Zakładamy, że plik jest w tym samym folderze co skrypt
+        icon_path = resource_path("icon.ico")
         if os.path.exists(icon_path):
             root.iconbitmap(icon_path)
         else:
@@ -3046,4 +3050,8 @@ if __name__ == "__main__":
         logging.error(f"Nieoczekiwany błąd podczas ustawiania ikony: {e}")
     app = GameLauncher(root)
     root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
 

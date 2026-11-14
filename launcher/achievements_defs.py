@@ -4,6 +4,7 @@ import os
 from tkinter import messagebox
 
 from ui.dialogs import AchievementForm
+from launcher.paths import APP_DIR
 from launcher.utils import ACHIEVEMENTS_DEFINITIONS_FILE
 
 
@@ -11,7 +12,7 @@ def _migrate_legacy_achievements_file():
     if os.path.exists(ACHIEVEMENTS_DEFINITIONS_FILE):
         return
 
-    legacy_path = os.path.join(os.getcwd(), "achievements_def.json")
+    legacy_path = os.path.join(APP_DIR, "achievements_def.json")
     if not os.path.exists(legacy_path):
         return
 

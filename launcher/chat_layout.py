@@ -520,7 +520,9 @@ def _create_chat_page_content(self):
     )
     self.chat_send_button.grid(row=0, column=0, sticky="ew", padx=(0, 5))
 
-    attach_file_icon_path = "icons/attach_16.png"
+    from launcher.paths import resource_path
+
+    attach_file_icon_path = resource_path("icons", "attach_16.png")
     icon_size = (20, 20)
     if os.path.exists(attach_file_icon_path):
         try:

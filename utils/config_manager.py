@@ -138,7 +138,9 @@ def load_config():
 def save_config(data):
     """Zapisuje główny plik konfiguracyjny, usuwając wrażliwe dane (np. tokeny)."""
     # Tworzymy kopię, aby nie modyfikować oryginalnego obiektu w pamięci
-    data_copy = json.loads(json.dumps(data))  # Głęboka kopia
+    from launcher.paths import make_config_portable
+
+    data_copy = make_config_portable(data)  # Głęboka kopia, przenośne ścieżki gier
 
     # Usuń potencjalnie wrażliwe dane przed zapisem do config.json
     # Tokeny powinny być w local_settings.json, ale na wszelki wypadek

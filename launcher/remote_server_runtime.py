@@ -8,6 +8,7 @@ from tkinter import messagebox
 from flask import Flask, abort, jsonify, redirect, render_template_string, send_file, url_for
 
 from launcher.config_store import save_local_settings
+from launcher.paths import APP_DIR
 from launcher.utils import IMAGES_FOLDER
 
 
@@ -301,8 +302,8 @@ def _start_flask_server(self):
             cover_rel_path = game_data.get("cover_image")
             if not cover_rel_path:
                 abort(404)
-            images_folder_abs = os.path.abspath(IMAGES_FOLDER)
-            cover_abs_path = os.path.abspath(os.path.join(os.getcwd(), cover_rel_path))
+            images_folder_abs = os.path.join(APP_DIR, IMAGES_FOLDER)
+            cover_abs_path = os.path.abspath(os.path.join(APP_DIR, cover_rel_path))
             if os.path.commonpath([images_folder_abs, cover_abs_path]) == images_folder_abs and os.path.exists(
                 cover_abs_path
             ):

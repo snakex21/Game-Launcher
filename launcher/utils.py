@@ -2,7 +2,7 @@
 Narzędzia i stałe dla Game Launchera.
 """
 
-PROGRAM_VERSION = "1.6.0"
+PROGRAM_VERSION = "1.5.0"
 
 import functools
 import logging
@@ -11,14 +11,19 @@ import os
 from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageColor, UnidentifiedImageError
 
 
-# Ścieżki plików i folderów
-DATA_DIR = os.path.join("data")
+from launcher.paths import APP_DIR, make_config_portable
+
+# Ścieżki plików i folderów - zawsze względem folderu aplikacji, nie CWD.
+DATA_DIR = os.path.join(APP_DIR, "data")
 CONFIG_DIR = os.path.join(DATA_DIR, "config")
 CHAT_DATA_DIR = os.path.join(DATA_DIR, "chat")
-EXTERNAL_DIR = os.path.join("external")
+EXTERNAL_DIR = os.path.join(APP_DIR, "external")
 
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 GAMES_FOLDER = os.path.join(DATA_DIR, "games_saves")
+# Te trzy nazwy są używane jednocześnie jako ścieżka i nazwa folderu w backupie/chmurze
+# oraz w ścieżkach okładek zapisanych w config.json ("images/..."), dlatego zostają
+# względne. Punkt wejścia robi os.chdir(APP_DIR), więc wskazują na folder aplikacji.
 IMAGES_FOLDER = "images"
 INTERNAL_MUSIC_DIR = "internal_music"
 CUSTOM_THEMES_DIR = "custom_themes"
@@ -261,7 +266,8 @@ def _load_theme_from_file(filepath: str) -> dict | None:
 
 
 def save_config(data):
-    data_copy = data.copy()
+    # Głęboka kopia ze ścieżkami gier w formie przenośnej (bez litery dysku launchera).
+    data_copy = make_config_portable(data)
     data_copy.get("settings", {}).pop("github_token", None)
     config_dir = os.path.dirname(CONFIG_FILE)
     if config_dir:

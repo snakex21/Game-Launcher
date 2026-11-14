@@ -35,21 +35,23 @@ MONTH_NAMES_PL = {
 # Wersja programu
 PROGRAM_VERSION = "1.5.0"
 
-# Ścieżki plików i folderów
-DATA_DIR = os.path.join("data")
+# Ścieżki plików i folderów - względem folderu aplikacji, nie CWD.
+from launcher.paths import APP_DIR
+
+DATA_DIR = os.path.join(APP_DIR, "data")
 CONFIG_DIR = os.path.join(DATA_DIR, "config")
 CHAT_DATA_DIR = os.path.join(DATA_DIR, "chat")
-EXTERNAL_DIR = os.path.join("external")
+EXTERNAL_DIR = os.path.join(APP_DIR, "external")
 
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 GAMES_FOLDER = os.path.join(DATA_DIR, "games_saves")
-IMAGES_FOLDER = "images"
+IMAGES_FOLDER = "images"  # względne: punkt wejścia robi os.chdir(APP_DIR)
 THUMBNAIL_FOLDER = os.path.join(IMAGES_FOLDER, "thumbnails")
 LOCAL_SETTINGS_FILE = os.path.join(CONFIG_DIR, "local_settings.json")
 ACHIEVEMENTS_DEFINITIONS_FILE = os.path.join(CONFIG_DIR, "achievements_def.json")
 CHAT_DB_FILE = os.path.join(CHAT_DATA_DIR, "chat.db")
 SCRIPTHOOK_CONFIG_FILE = os.path.join(EXTERNAL_DIR, "ScriptHookConfig.ini")
-MODS_STORAGE_FOLDER = "mods_storage"  # Dodano brakującą stałą
+MODS_STORAGE_FOLDER = "mods_storage"  # względne, jak wyżej  # Dodano brakującą stałą
 
 # Motywy
 THEMES = {

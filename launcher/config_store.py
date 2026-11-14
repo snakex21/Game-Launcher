@@ -7,6 +7,8 @@ import uuid
 
 from packaging import version
 
+from launcher.paths import APP_DIR, resolve_config_paths
+
 from launcher.utils import (
     CONFIG_FILE,
     GAMES_FOLDER,
@@ -20,7 +22,7 @@ def _migrate_legacy_file(legacy_filename: str, target_path: str):
     if os.path.exists(target_path):
         return
 
-    legacy_path = os.path.join(os.getcwd(), legacy_filename)
+    legacy_path = os.path.join(APP_DIR, legacy_filename)
     if not os.path.exists(legacy_path):
         return
 
@@ -41,7 +43,7 @@ def _migrate_legacy_directory(legacy_dirname: str, target_path: str):
     if os.path.exists(target_path):
         return
 
-    legacy_path = os.path.join(os.getcwd(), legacy_dirname)
+    legacy_path = os.path.join(APP_DIR, legacy_dirname)
     if not os.path.isdir(legacy_path):
         return
 
@@ -370,5 +372,11 @@ def load_config():
     data.setdefault("saved_filters", {})
     user_data = data.setdefault("user", {})
     user_data.setdefault("achievements", {})
+
+    remapped = resolve_config_paths(data)
+    if remapped:
+        logging.info(
+            f"Zmieniono literę dysku launchera - przemapowano {remapped} ścieżek gier."
+        )
 
     return data

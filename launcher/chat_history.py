@@ -8,6 +8,9 @@ import tkinter as tk
 import requests
 from plyer import notification
 
+from launcher.paths import resource_path
+
+
 def _display_active_chat_history(self, partner_id):
         """
         Wyczyść okno i wyrenderuj pełną historię czatu z partnerem.
@@ -625,7 +628,7 @@ def _notify_new_chat_message(
                 message=message_content,
                 app_name="Game Launcher Chat",
                 app_icon=(
-                    os.path.abspath("icon.ico") if os.path.exists("icon.ico") else None
+                    resource_path("icon.ico") if os.path.exists(resource_path("icon.ico")) else None
                 ),
                 timeout=5,
             )

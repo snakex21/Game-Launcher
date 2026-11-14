@@ -2,6 +2,7 @@
 # Panel admina: http://127.0.0.1:<port>/admin/ (port domyslnie 5000, zmienna GL_CHAT_PORT)
 import os
 import secrets
+import sys
 from flask import (
     Flask,
     request,
@@ -38,6 +39,11 @@ logger = logging.getLogger(__name__)
 # --- Inicjalizacja Aplikacji Flask i SocketIO ---
 app = Flask(__name__)
 
+# Dane serwera leżą obok skryptu/exe, a nie w bieżącym katalogu (CWD).
+BASE_DIR = os.path.dirname(
+    os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__)
+)
+
 UPLOAD_FOLDER = os.path.join("data", "chat", "uploads")
 LEGACY_UPLOAD_FOLDERS = ["chat_uploads", "uploads"]
 ALLOWED_EXTENSIONS = {
@@ -66,7 +72,7 @@ ALLOWED_EXTENSIONS = {
 MAX_FILE_SIZE_MB = 10  # Maksymalny rozmiar pliku w MB
 
 
-app.config["UPLOAD_FOLDER"] = os.path.join(os.getcwd(), UPLOAD_FOLDER)
+app.config["UPLOAD_FOLDER"] = os.path.join(BASE_DIR, UPLOAD_FOLDER)
 app.config["MAX_CONTENT_LENGTH"] = (
     MAX_FILE_SIZE_MB * 1024 * 1024
 )  # Ustawienie limitu w bajtach
@@ -77,7 +83,7 @@ def _migrate_legacy_upload_folders():
     os.makedirs(target_upload_dir, exist_ok=True)
 
     for legacy_folder in LEGACY_UPLOAD_FOLDERS:
-        legacy_upload_dir = os.path.join(os.getcwd(), legacy_folder)
+        legacy_upload_dir = os.path.join(BASE_DIR, legacy_folder)
         if not os.path.isdir(legacy_upload_dir):
             continue
 
@@ -112,9 +118,9 @@ def _migrate_legacy_upload_folders():
 _migrate_legacy_upload_folders()
 
 # Konfiguracja bazy danych SQLite
-CHAT_DATA_DIR = os.path.join(os.getcwd(), "data", "chat")
+CHAT_DATA_DIR = os.path.join(BASE_DIR, "data", "chat")
 CHAT_DB_PATH = os.path.join(CHAT_DATA_DIR, "chat.db")
-LEGACY_CHAT_DB_PATH = os.path.join(os.getcwd(), "chat.db")
+LEGACY_CHAT_DB_PATH = os.path.join(BASE_DIR, "chat.db")
 
 if not os.path.exists(CHAT_DB_PATH) and os.path.exists(LEGACY_CHAT_DB_PATH):
     os.makedirs(CHAT_DATA_DIR, exist_ok=True)

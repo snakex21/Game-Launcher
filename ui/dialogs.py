@@ -892,7 +892,9 @@ class AchievementForm(tk.Toplevel):
     def _select_icon(self):
         """Otwiera dialog wyboru pliku ikony."""
         # Zacznij w folderze 'icons' jeśli istnieje, inaczej w folderze aplikacji
-        initial_dir = "icons" if os.path.isdir("icons") else "."
+        from launcher.paths import APP_DIR, app_path
+
+        initial_dir = app_path("icons") if os.path.isdir(app_path("icons")) else APP_DIR
         path = filedialog.askopenfilename(
             title="Wybierz plik ikony osiągnięcia",
             filetypes=[("Obrazy PNG", "*.png"), ("Wszystkie pliki", "*.*")],
@@ -902,7 +904,7 @@ class AchievementForm(tk.Toplevel):
         if path:
             # Spróbuj zapisać ścieżkę względną, jeśli jest w podfolderze 'icons'
             try:
-                rel_path = os.path.relpath(path, os.getcwd())
+                rel_path = os.path.relpath(path, APP_DIR)
                 if not rel_path.startswith(
                     ".."
                 ):  # Jeśli jest w bieżącym folderze lub podfolderze
