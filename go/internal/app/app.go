@@ -80,6 +80,9 @@ type App struct {
 
 	chat chatState
 
+	// cloudBase overrides the GitHub API URL (tests).
+	cloudBase string
+
 	scanMu     sync.Mutex
 	scanCancel context.CancelFunc
 
@@ -196,6 +199,8 @@ func (a *App) Register(d *bridge.Dispatcher) {
 	reg("music.deletePlaylist", handler(a.musicDeletePlaylist))
 	reg("music.addFolder", handler(a.musicAddFolder))
 	reg("music.state", handler(a.musicState))
+	reg("cloud.backup", handler(a.cloudBackup))
+	reg("cloud.restore", handler(a.cloudRestore))
 	reg("chat.status", handler(func(_ context.Context, _ empty) (any, error) { return a.chatStatus(), nil }))
 	reg("chat.connect", handler(a.chatConnect))
 	reg("chat.logout", handler(a.chatLogout))
