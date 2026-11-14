@@ -1,7 +1,7 @@
 # chat_server.py
-# http://127.0.0.1:5000/admin/
-# d8f3b5f6a9c1e2d7b8f3c5a6b7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+# Panel admina: http://127.0.0.1:<port>/admin/ (port domyslnie 5000, zmienna GL_CHAT_PORT)
 import os
+import secrets
 from flask import (
     Flask,
     request,
@@ -131,9 +131,29 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + CHAT_DB_PATH
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = (
     False  # Wyłączamy, by zużywać mniej pamięci
 )
-app.config["SECRET_KEY"] = (
-    "twoj_sekretny_klucz_ktory_musisz_zmienic!"  # WAŻNE: ZMIEŃ NA UNIKATOWY KLUCZ
-)
+def _load_or_create_secret_key():
+    """SECRET_KEY: ze zmiennej GL_CHAT_SECRET_KEY albo losowy, zapisany w data/chat/secret_key."""
+    env_key = os.environ.get("GL_CHAT_SECRET_KEY", "").strip()
+    if env_key:
+        return env_key
+    key_path = os.path.join(CHAT_DATA_DIR, "secret_key")
+    try:
+        with open(key_path, "r", encoding="utf-8") as key_file:
+            stored = key_file.read().strip()
+        if stored:
+            return stored
+    except OSError:
+        pass
+    new_key = secrets.token_hex(32)
+    try:
+        with open(key_path, "w", encoding="utf-8") as key_file:
+            key_file.write(new_key)
+    except OSError as error:
+        logger.warning(f"Nie udało się zapisać SECRET_KEY czatu ({error}); klucz tylko na tę sesję.")
+    return new_key
+
+
+app.config["SECRET_KEY"] = _load_or_create_secret_key()
 
 # Inicjalizacja SQLAlchemy
 db = SQLAlchemy(app)
@@ -158,12 +178,14 @@ socketio = SocketIO(
 app.config["ADMIN_USERNAME"] = os.environ.get(
     "FLASK_ADMIN_USER", "admin"
 )  # Domyślny admin user
-ADMIN_PASSWORD_PLAIN = os.environ.get(
-    "FLASK_ADMIN_PASS", "supersecretpassword"
-)  # Hasło w postaci jawnej
+ADMIN_PASSWORD_PLAIN = os.environ.get("FLASK_ADMIN_PASS", "")
+if not ADMIN_PASSWORD_PLAIN:
+    # Brak domyślnego hasła w kodzie: bez FLASK_ADMIN_PASS panel admina jest zablokowany
+    # (losowe hasło, którego nikt nie zna).
+    logger.warning("FLASK_ADMIN_PASS nie ustawione - logowanie do panelu admina wyłączone.")
+    ADMIN_PASSWORD_PLAIN = secrets.token_urlsafe(32)
 app.config["ADMIN_PASSWORD_HASH"] = generate_password_hash(ADMIN_PASSWORD_PLAIN)
-# WAŻNE: Flask potrzebuje SECRET_KEY do używania sesji. Już go masz:
-# app.config['SECRET_KEY'] = 'twoj_sekretny_klucz_ktory_musisz_zmienic!'
+del ADMIN_PASSWORD_PLAIN
 
 
 def admin_required(f):
@@ -2786,5 +2808,7 @@ if __name__ == "__main__":
         db.create_all()
         logger.info("Database tables ensured to be created.")
 
-    logger.info("Starting Flask-SocketIO Chat Server on port 5000.")
-    socketio.run(app, debug=False, port=5000, use_reloader=False)
+    chat_port = int(os.environ.get("GL_CHAT_PORT", "5000"))
+    chat_host = os.environ.get("GL_CHAT_HOST", "127.0.0.1")
+    logger.info(f"Starting Flask-SocketIO Chat Server on {chat_host}:{chat_port}.")
+    socketio.run(app, host=chat_host, debug=False, port=chat_port, use_reloader=False)

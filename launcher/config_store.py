@@ -66,6 +66,66 @@ def _migrate_legacy_directory(legacy_dirname: str, target_path: str):
         )
 
 
+# Sekrety nigdy nie trafiaja do repozytorium. Zrodla (w kolejnosci waznosci):
+#   1. zmienna srodowiskowa (np. GL_RAWG_API_KEY),
+#   2. data/config/local_settings.json (ignorowany przez git).
+SECRET_ENV_VARS = {
+    "github_token": "GL_GITHUB_TOKEN",
+    "rawg_api_key": "GL_RAWG_API_KEY",
+    "lastfm_api_key": "GL_LASTFM_API_KEY",
+    "remote_control_token": "GL_REMOTE_TOKEN",
+}
+SECRET_KEYS = frozenset(SECRET_ENV_VARS)
+
+# Port czatu (chat_server.py) i pilota WWW musza byc rozne.
+DEFAULT_CHAT_SERVER_PORT = 5000
+DEFAULT_REMOTE_CONTROL_PORT = 5050
+
+# klucz -> (wartosc z pliku, wartosc ze zmiennej srodowiskowej)
+_env_overrides = {}
+
+
+def apply_secret_env_overrides(data, environ=None):
+    """Nadpisuje sekrety wartosciami ze zmiennych srodowiskowych (jesli ustawione)."""
+    environ = os.environ if environ is None else environ
+    for key, env_name in SECRET_ENV_VARS.items():
+        env_value = (environ.get(env_name) or "").strip()
+        if env_value:
+            _env_overrides[key] = (data.get(key), env_value)
+            data[key] = env_value
+    return data
+
+
+def _strip_env_overrides(data):
+    """Zwraca kopie danych do zapisu: sekrety ze zmiennych srodowiskowych nie trafiaja do pliku."""
+    to_save = dict(data)
+    for key, (file_value, env_value) in _env_overrides.items():
+        if to_save.get(key) == env_value:
+            if file_value is None:
+                to_save.pop(key, None)
+            else:
+                to_save[key] = file_value
+    return to_save
+
+
+def redact_settings(data):
+    """Wersja ustawien bezpieczna do logowania (bez sekretow i hasel)."""
+    redacted = {}
+    for key, value in data.items():
+        if key in SECRET_KEYS or "password" in key or "token" in key or "credentials" in key:
+            redacted[key] = "***" if value else value
+        elif key == "chat_servers" and isinstance(value, list):
+            redacted[key] = [
+                {k: ("***" if k == "credentials" and v else v) for k, v in s.items()}
+                if isinstance(s, dict)
+                else s
+                for s in value
+            ]
+        else:
+            redacted[key] = value
+    return redacted
+
+
 def load_local_settings():
     _migrate_legacy_file("local_settings.json", LOCAL_SETTINGS_FILE)
 
@@ -118,7 +178,7 @@ def load_local_settings():
             {
                 "id": default_server_id,
                 "name": "Serwer Lokalny (Domyslny)",
-                "url": "http://127.0.0.1:5000",
+                "url": f"http://127.0.0.1:{DEFAULT_CHAT_SERVER_PORT}",
                 "is_default": True,
                 "last_used": None,
                 "credentials": {},
@@ -138,7 +198,11 @@ def load_local_settings():
 
     data.setdefault("chat_auto_connect_to_default", True)
     data.setdefault("remote_control_enabled", False)
-    data.setdefault("remote_control_port", 5000)
+    data.setdefault("remote_control_port", DEFAULT_REMOTE_CONTROL_PORT)
+    if data.get("remote_control_port") == DEFAULT_CHAT_SERVER_PORT:
+        # Do v1.4 pilot domyslnie uzywal portu czatu (5000) - rozdzielamy je.
+        data["remote_control_port"] = DEFAULT_REMOTE_CONTROL_PORT
+    data.setdefault("remote_control_bind_lan", False)
     data.setdefault("window_state", "normal")
     data.setdefault("window_geometry", "1024x768+100+100")
     data.setdefault("library_view_mode", "tiles")
@@ -169,6 +233,7 @@ def load_local_settings():
     data.setdefault("show_track_overlay", False)
     data.setdefault("overlay_x_pos", None)
     data.setdefault("overlay_y_pos", None)
+    apply_secret_env_overrides(data)
     return data
 
 
@@ -177,7 +242,7 @@ def save_local_settings(data):
     if target_dir:
         os.makedirs(target_dir, exist_ok=True)
     with open(LOCAL_SETTINGS_FILE, "w", encoding="utf-8") as file:
-        json.dump(data, file, indent=4, ensure_ascii=False)
+        json.dump(_strip_env_overrides(data), file, indent=4, ensure_ascii=False)
 
 
 def _default_config():

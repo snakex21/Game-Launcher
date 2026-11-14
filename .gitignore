@@ -37,19 +37,34 @@ env/
 *~
 .DS_Store
 
-# User Data & Config
+# User Data & Config (nigdy nie commitować - sekrety i dane prywatne)
 data/
+data/config/local_settings.json
+data/config/config.json
+data/chat/
+data/games_saves/
+saves/
+*.sav
+data/logs/
 config.json
 local_settings.json
 achievements_def.json
 games_saves/
 chat.db
+*.db
+*.sqlite
+*.sqlite3
 chat_uploads/
 uploads/
 
 # Custom Content (user-generated)
 custom_themes/
 internal_music/
+*.mp3
+*.flac
+*.ogg
+*.wav
+*.m4a
 Screenshots/
 
 # Cloud & Auth
@@ -88,6 +103,9 @@ github_token.txt
 .env
 
 # Cache
+.pytest_cache/
+.coverage
+htmlcov/
 .cache/
 *.cache
 
@@ -99,3 +117,7 @@ thumbnails/
 # Music (user library)
 music/
 playlists/
+
+# Rzeczy z dysku uzytkownika (pendrive / stara kopia)
+mods_storage/
+launcher/pages/

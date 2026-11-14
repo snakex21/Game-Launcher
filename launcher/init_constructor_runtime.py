@@ -14,6 +14,8 @@ from launcher.config_store import (
     load_config as config_load_config,
     load_local_settings as config_load_local_settings,
     save_local_settings as config_save_local_settings,
+    redact_settings,
+    DEFAULT_REMOTE_CONTROL_PORT,
 )
 from launcher.utils import (
     CUSTOM_THEMES_DIR,
@@ -130,7 +132,7 @@ def initialize(self, root):
     self.game_type_filter_var = tk.StringVar(value="Wszystkie Typy")
     self.sort_var = tk.StringVar(value="Nazwa")
 
-    logging.info(f"Załadowano ustawienia lokalne: {self.local_settings}")
+    logging.info(f"Załadowano ustawienia lokalne: {redact_settings(self.local_settings)}")
     self.stats_bar_color = "#0078d7"
 
     saved_geometry_str = self.local_settings.get("window_geometry")
@@ -309,7 +311,9 @@ def initialize(self, root):
     self._flask_app = None
     self._flask_thread = None
     self._server_running = False
-    self.remote_server_port = self.local_settings.get("remote_control_port", 5000)
+    self.remote_server_port = self.local_settings.get(
+        "remote_control_port", DEFAULT_REMOTE_CONTROL_PORT
+    )
 
     self.global_hotkeys_listener = None
     self.active_hotkeys = {}
