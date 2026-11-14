@@ -82,35 +82,68 @@ A comprehensive game launcher designed for managing cracked, old, and DRM-free g
 ### 📋 Requirements
 
 - **OS**: Windows 10/11
-- **Python**: 3.8 or higher
-- **Dependencies**: See `requirements.txt`
+- **Python**: 3.12 or 3.13 (tested on 3.13.7; CI runs 3.12 and 3.13)
+- **Dependencies**: see `requirements.txt` (dev tools: `requirements-dev.txt`)
 
-### 🚀 Installation
+### 🚀 Installation (from source)
 
-1. **Clone the repository**
-```bash
-git clone https://github.com/yourusername/game-launcher.git
-cd game-launcher
-```
-
-2. **Install dependencies**
-```bash
+```bat
+git clone https://github.com/snakex21/Game-Launcher.git
+cd Game-Launcher
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
+python game_launcher.py
 ```
 
-3. **Set up configuration files (first time only)**
-```bash
-# Copy example config files
+On the first start the launcher creates `data\config\config.json` and `data\config\local_settings.json` **next to the program** (not in the current working directory), asks for a username and shows an empty library. You can also start from the templates:
+
+```bat
+mkdir data\config
 copy config.example.json data\config\config.json
 copy local_settings.example.json data\config\local_settings.json
 ```
 
-4. **Run the launcher**
-```bash
-python game_launcher.py
+### 🔐 Configuration and secrets
+
+- No keys or tokens live in the repository. `data\` (config, `local_settings.json`, `chat.db`, saves), `images\`, `internal_music\` and all `*.mp3` files are ignored by git.
+- API keys are entered in **Settings → API keys** and stored only in `data\config\local_settings.json`. Alternatively set environment variables (they win over the file and are never written to it):
+
+| Variable | Used for |
+|---|---|
+| `GL_GITHUB_TOKEN` | GitHub cloud sync |
+| `GL_RAWG_API_KEY` | covers/metadata from RAWG |
+| `GL_LASTFM_API_KEY` | album covers in the music player |
+| `GL_REMOTE_TOKEN` | fixed token for the web remote |
+| `GL_CHAT_SECRET_KEY`, `FLASK_ADMIN_USER`, `FLASK_ADMIN_PASS` | chat server (`chat_server.py`); without `FLASK_ADMIN_PASS` the admin panel is disabled |
+| `GL_CHAT_PORT`, `GL_CHAT_HOST` | chat server port/host (default `127.0.0.1:5000`) |
+
+- Logs: `data\logs\game_launcher.log` (secrets are redacted).
+
+### 💽 Portable use (USB drive, changing drive letters)
+
+- Game, ROM, save and emulator paths **on the same drive as the launcher** are stored without the drive letter (`\Games\Gothic\Gothic.exe`); games inside the launcher folder are stored relative to it. When the drive gets a different letter (E: → F:), the paths are resolved for the new letter automatically.
+- Old configs with absolute paths are remapped as soon as the launcher has recorded its drive once (`settings.launcher_drive`).
+- When an `.exe`/ROM is missing, the launcher also tries the same path on the launcher's drive; tiles of games whose file cannot be found are marked **"⚠ Brak pliku gry"**.
+- Games are started with the working directory set to the game's folder (emulated games: the emulator's folder).
+
+### 📦 Building the .exe (PyInstaller)
+
+```bat
+pip install -r requirements-dev.txt
+pyinstaller --noconfirm game_launcher.spec
 ```
 
-**Note**: The example config files (`*.example.json`) are safe templates. Your actual config files (`config.json`, `local_settings.json`) are ignored by git to protect your personal data and tokens.
+The result is `dist\GameLauncher\GameLauncher.exe` (one-folder build: faster start, data folder created next to the exe). Copy the whole `dist\GameLauncher` folder. The build contains only icons, `icon.ico` and the `*.example.json` templates – never your `data\` or music.
+
+### 🧪 Tests
+
+```bat
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+Tests cover path resolution/portability, config loading (defaults, env secrets, port migration), launch command building and web-remote authentication. GitHub Actions runs them on `windows-latest` (`.github/workflows/ci.yml`).
 
 ### 📦 Dependencies
 
@@ -132,13 +165,12 @@ Main libraries used:
 3. Configure your preferences in Settings
 
 #### Adding Games
-- **Auto Scan**: Settings → Scan Folders → Add folder paths
 - **Manual**: Library → Add Game → Fill in details
 - **Emulated Games**: Configure emulator first, then add ROM
 
 #### Chat Setup
-1. Go to Chat page
-2. Add server (default: localhost:5000)
+1. Start the server: `python chat_server.py` (port 5000, see `GL_CHAT_PORT`)
+2. Go to Chat page and add the server (default: `http://127.0.0.1:5000`)
 3. Register or login
 4. Start chatting!
 
@@ -176,9 +208,13 @@ On startup, data is migrated to the new structure when needed.
 
 ### 🔧 Advanced Features
 
-#### Remote Server
-Enable in Settings → Remote Server → Start Server
-Access from browser: `http://your-ip:5000`
+#### Web remote
+Enable in Settings → Remote control. The page shows the full address **with a token**
+(e.g. `http://127.0.0.1:5050/?token=...`). Without the token every request gets HTTP 401;
+games are started/closed only with POST requests.
+- Default port **5050** (the chat server uses 5000), listening only on `127.0.0.1`.
+- To use a phone on the same Wi-Fi, tick "Available on the local network" (binds `0.0.0.0`).
+- "New token" invalidates old links.
 
 #### Discord Rich Presence
 Enable in Settings → Discord Integration
@@ -190,7 +226,15 @@ Control music player from any application
 
 #### Cloud Sync
 - **GitHub**: Settings → Cloud → Configure GitHub token
-- **Google Drive**: Settings → Cloud → Setup Google Drive
+- **Google Drive**: not implemented yet (see `docs/ROADMAP.md`)
+
+### ⚠️ Known limitations
+
+- Google Drive sync is not implemented (only GitHub works).
+- Interface translations are disabled (Polish UI only).
+- Folder scanning for games exists in code (`launcher/scan_pipeline.py`) but has no menu entry yet.
+- Moving games to another drive letter that is *not* the launcher's drive still requires editing the game paths.
+- See `docs/ROADMAP.md` for planned features.
 
 ### 🤝 Contributing
 
@@ -298,35 +342,68 @@ Kompleksowy launcher do zarządzania crackedowymi, starymi i grami bez DRM. Idea
 ### 📋 Wymagania
 
 - **System**: Windows 10/11
-- **Python**: 3.8 lub wyższy
-- **Zależności**: Zobacz `requirements.txt`
+- **Python**: 3.12 lub 3.13 (testowane na 3.13.7; CI sprawdza 3.12 i 3.13)
+- **Zależności**: zobacz `requirements.txt` (narzędzia deweloperskie: `requirements-dev.txt`)
 
-### 🚀 Instalacja
+### 🚀 Instalacja (ze źródeł)
 
-1. **Sklonuj repozytorium**
-```bash
-git clone https://github.com/yourusername/game-launcher.git
-cd game-launcher
-```
-
-2. **Zainstaluj zależności**
-```bash
+```bat
+git clone https://github.com/snakex21/Game-Launcher.git
+cd Game-Launcher
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
+python game_launcher.py
 ```
 
-3. **Skonfiguruj pliki konfiguracyjne (tylko przy pierwszym uruchomieniu)**
-```bash
-# Skopiuj przykładowe pliki konfiguracyjne
+Przy pierwszym starcie launcher tworzy `data\config\config.json` i `data\config\local_settings.json` **obok programu** (nie w bieżącym katalogu), pyta o nazwę użytkownika i pokazuje pustą bibliotekę. Można też zacząć od szablonów:
+
+```bat
+mkdir data\config
 copy config.example.json data\config\config.json
 copy local_settings.example.json data\config\local_settings.json
 ```
 
-4. **Uruchom launcher**
-```bash
-python game_launcher.py
+### 🔐 Konfiguracja i sekrety
+
+- W repozytorium nie ma żadnych kluczy ani tokenów. `data\` (config, `local_settings.json`, `chat.db`, zapisy), `images\`, `internal_music\` i wszystkie pliki `*.mp3` są ignorowane przez git.
+- Klucze API wpisuje się w **Ustawienia → Klucze API** – trafiają tylko do `data\config\local_settings.json`. Zamiast tego można ustawić zmienne środowiskowe (mają pierwszeństwo przed plikiem i nigdy nie są do niego zapisywane):
+
+| Zmienna | Do czego |
+|---|---|
+| `GL_GITHUB_TOKEN` | synchronizacja z chmurą GitHub |
+| `GL_RAWG_API_KEY` | okładki i metadane z RAWG |
+| `GL_LASTFM_API_KEY` | okładki albumów w odtwarzaczu |
+| `GL_REMOTE_TOKEN` | stały token pilota WWW |
+| `GL_CHAT_SECRET_KEY`, `FLASK_ADMIN_USER`, `FLASK_ADMIN_PASS` | serwer czatu (`chat_server.py`); bez `FLASK_ADMIN_PASS` panel admina jest wyłączony |
+| `GL_CHAT_PORT`, `GL_CHAT_HOST` | port/host serwera czatu (domyślnie `127.0.0.1:5000`) |
+
+- Logi: `data\logs\game_launcher.log` (sekrety są w nim zamaskowane).
+
+### 💽 Praca z pendrive'a (zmiana litery dysku)
+
+- Ścieżki gier, ROM-ów, zapisów i emulatorów **na tym samym dysku co launcher** są zapisywane bez litery dysku (`\Gry\Gothic\Gothic.exe`), a gry w folderze launchera – względnie do niego. Gdy dysk dostanie inną literę (E: → F:), ścieżki są automatycznie rozwiązywane dla nowej litery.
+- Stare configi ze ścieżkami bezwzględnymi są przemapowywane, gdy launcher raz zapamięta swój dysk (`settings.launcher_drive`).
+- Gdy brakuje `.exe`/ROM-u, launcher próbuje też tej samej ścieżki na swoim dysku; kafelki gier, których pliku nie da się znaleźć, mają oznaczenie **„⚠ Brak pliku gry”**.
+- Gry startują z katalogiem roboczym ustawionym na folder gry (gry emulowane: folder emulatora).
+
+### 📦 Budowanie .exe (PyInstaller)
+
+```bat
+pip install -r requirements-dev.txt
+pyinstaller --noconfirm game_launcher.spec
 ```
 
-**Uwaga**: Przykładowe pliki konfiguracyjne (`*.example.json`) to bezpieczne szablony. Twoje rzeczywiste pliki konfiguracyjne (`config.json`, `local_settings.json`) są ignorowane przez git, aby chronić twoje dane osobowe i tokeny.
+Wynik: `dist\GameLauncher\GameLauncher.exe` (build „onedir”: szybszy start, folder `data` powstaje obok exe). Kopiuj cały folder `dist\GameLauncher`. Do paczki trafiają tylko ikony, `icon.ico` i szablony `*.example.json` – nigdy Twój `data\` ani muzyka.
+
+### 🧪 Testy
+
+```bat
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+Testy obejmują rozwiązywanie i przenośność ścieżek, wczytywanie konfiguracji (domyślne wartości, sekrety ze zmiennych, migracja portu), budowanie polecenia uruchomienia gry oraz autoryzację pilota WWW. GitHub Actions uruchamia je na `windows-latest` (`.github/workflows/ci.yml`).
 
 ### 📦 Zależności
 
@@ -348,13 +425,12 @@ Główne używane biblioteki:
 3. Skonfiguruj preferencje w Ustawieniach
 
 #### Dodawanie Gier
-- **Auto Skan**: Ustawienia → Foldery do Skanowania → Dodaj ścieżki folderów
 - **Ręcznie**: Biblioteka → Dodaj Grę → Wypełnij szczegóły
 - **Gry Emulowane**: Najpierw skonfiguruj emulator, potem dodaj ROM
 
 #### Konfiguracja Czatu
-1. Przejdź do strony Czat
-2. Dodaj serwer (domyślnie: localhost:5000)
+1. Uruchom serwer: `python chat_server.py` (port 5000, zob. `GL_CHAT_PORT`)
+2. Przejdź do strony Czat i dodaj serwer (domyślnie: `http://127.0.0.1:5000`)
 3. Zarejestruj się lub zaloguj
 4. Zacznij czatować!
 
@@ -392,9 +468,13 @@ Przy starcie dane są migrowane do nowej struktury gdy jest to potrzebne.
 
 ### 🔧 Zaawansowane Funkcje
 
-#### Serwer Zdalny
-Włącz w Ustawienia → Serwer Zdalny → Uruchom Serwer
-Dostęp z przeglądarki: `http://twoje-ip:5000`
+#### Pilot WWW
+Włącz w Ustawienia → Zdalne sterowanie. Launcher pokazuje pełny adres **z tokenem**
+(np. `http://127.0.0.1:5050/?token=...`). Bez tokenu każde żądanie dostaje HTTP 401,
+a gry uruchamia/zamyka się wyłącznie żądaniami POST.
+- Domyślny port **5050** (serwer czatu używa 5000), nasłuch tylko na `127.0.0.1`.
+- Telefon w tej samej sieci Wi-Fi: zaznacz „Dostępny w sieci lokalnej” (nasłuch na `0.0.0.0`).
+- „Nowy token” unieważnia stare linki.
 
 #### Discord Rich Presence
 Włącz w Ustawienia → Integracja Discord
@@ -406,7 +486,15 @@ Steruj odtwarzaczem muzyki z dowolnej aplikacji
 
 #### Synchronizacja w Chmurze
 - **GitHub**: Ustawienia → Chmura → Skonfiguruj token GitHub
-- **Google Drive**: Ustawienia → Chmura → Skonfiguruj Google Drive
+- **Google Drive**: jeszcze niezaimplementowane (zob. `docs/ROADMAP.md`)
+
+### ⚠️ Znane ograniczenia
+
+- Synchronizacja z Google Drive nie jest zaimplementowana (działa tylko GitHub).
+- Tłumaczenia interfejsu są wyłączone (UI tylko po polsku).
+- Skanowanie folderów w poszukiwaniu gier istnieje w kodzie (`launcher/scan_pipeline.py`), ale nie ma jeszcze pozycji w menu.
+- Przeniesienie gier na dysk o innej literze, który *nie* jest dyskiem launchera, nadal wymaga edycji ścieżek gier.
+- Planowane funkcje: `docs/ROADMAP.md`.
 
 ### 🤝 Współpraca
 
