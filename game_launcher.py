@@ -2291,6 +2291,12 @@ class GameLauncher:
     def _toggle_remote_server(self):
         return gl_remote_server_runtime._toggle_remote_server(self)
 
+    def _toggle_remote_lan(self):
+        return gl_remote_server_runtime._toggle_remote_lan(self)
+
+    def _regenerate_remote_token(self):
+        return gl_remote_server_runtime._regenerate_remote_token(self)
+
 
     def add_autoscan_folder(self):
         return gl_screenshot_scan_runtime.add_autoscan_folder(self)

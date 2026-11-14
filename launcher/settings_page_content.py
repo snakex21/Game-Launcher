@@ -742,7 +742,7 @@ def _create_settings_page_content(self):
     )
     remote_enable_check = ttk.Checkbutton(
         remote_frame,
-        text="Włącz zdalne sterowanie (uruchamianie gier przez przeglądarkę w sieci lokalnej)",
+        text="Włącz zdalne sterowanie (uruchamianie gier przez przeglądarkę)",
         variable=self.remote_server_enabled_var,
         command=self._toggle_remote_server,
     )
@@ -750,7 +750,7 @@ def _create_settings_page_content(self):
 
     ttk.Label(
         remote_frame,
-        text="Adres do wpisania w przeglądarce telefonu (w tej samej sieci Wi-Fi):",
+        text="Adres z tokenem (zachowaj go dla siebie - kto go zna, może uruchamiać gry):",
     ).grid(row=1, column=0, columnspan=3, sticky="w", padx=5, pady=(10, 0))
     self.remote_url_label = ttk.Label(
         remote_frame,
@@ -765,11 +765,25 @@ def _create_settings_page_content(self):
     port_frame.grid(row=3, column=0, columnspan=3, sticky="w", padx=5, pady=5)
 
     ttk.Label(port_frame, text="Port serwera:").pack(side=tk.LEFT, padx=(0, 5))
-    self.remote_port_var = tk.IntVar(value=self.local_settings.get("remote_control_port", 5000))
+    self.remote_port_var = tk.IntVar(value=self.local_settings.get("remote_control_port", 5050))
     port_entry = ttk.Entry(port_frame, textvariable=self.remote_port_var, width=6)
     port_entry.pack(side=tk.LEFT)
     save_port_btn = ttk.Button(port_frame, text="Zapisz Port", command=self._save_remote_port)
     save_port_btn.pack(side=tk.LEFT, padx=(10, 0))
+    ttk.Button(
+        port_frame, text="Nowy token", command=self._regenerate_remote_token
+    ).pack(side=tk.LEFT, padx=(10, 0))
+
+    self.remote_lan_var = tk.BooleanVar(
+        value=self.local_settings.get("remote_control_bind_lan", False)
+    )
+    ttk.Checkbutton(
+        remote_frame,
+        text="Dostępny w sieci lokalnej (telefon w tej samej sieci Wi-Fi). "
+        "Domyślnie tylko ten komputer (127.0.0.1).",
+        variable=self.remote_lan_var,
+        command=self._toggle_remote_lan,
+    ).grid(row=4, column=0, columnspan=3, sticky="w", padx=5, pady=(0, 5))
 
     current_row += 1
 
