@@ -50,7 +50,7 @@ BEGIN
       VALUE "FileDescription", "Game Launcher"
       VALUE "FileVersion", "%[2]s"
       VALUE "InternalName", "GameLauncher"
-      VALUE "LegalCopyright", "(c) %[3]d snakex21, MIT"
+      VALUE "LegalCopyright", "(c) %[3]d snakex21, GPL-3.0"
       VALUE "OriginalFilename", "GameLauncher.exe"
       VALUE "ProductName", "Game Launcher"
       VALUE "ProductVersion", "%[2]s"

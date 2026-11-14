@@ -2,7 +2,7 @@
 
 [English](#english) | [Polski](#polski)
 
-Game Launcher 2.0 is a rewrite in **Go + WebView2**: one `GameLauncher.exe` (~14 MB), starts in ~60 ms, reads the data of version 1.5.0 without conversion and adds a real **mod manager** (journaled deployment, conflicts, profiles, one-click return to vanilla).
+Game Launcher 2.0 is a rewrite in **Go + WebView2**: one `GameLauncher.exe` (~16 MB), starts in ~60 ms, reads the data of version 1.5.0 without conversion and adds a real **mod manager** (journaled deployment, conflicts, profiles, one-click return to vanilla).
 
 ![Biblioteka](docs/screenshots/01_biblioteka.png)
 
@@ -162,7 +162,7 @@ This launcher is meant for personal game collections; you are responsible for ha
 
 Launcher do własnej kolekcji gier – starych klasyków, gier bez DRM i ze sklepów: biblioteka z okładkami, czas gry i sesje, kopie zapisów, statystyki, roadmapa, osiągnięcia, odtwarzacz muzyki, czat, pilot WWW i menedżer modów, po którym każdy folder gry da się przywrócić do oryginału.
 
-Wersja 2.0.0 to przepisany od zera launcher w **Go + WebView2**: jeden plik `GameLauncher.exe` (~14 MB), okno po ~60 ms, odczyt danych wersji 1.5.0 bez konwersji. Poprzednia wersja Python/Tkinter (1.5.0) zostaje w katalogu głównym repozytorium (`game_launcher.py`) tylko do wglądu i nie jest już rozwijana.
+Wersja 2.0.0 to przepisany od zera launcher w **Go + WebView2**: jeden plik `GameLauncher.exe` (~16 MB), okno po ~60 ms, odczyt danych wersji 1.5.0 bez konwersji. Poprzednia wersja Python/Tkinter (1.5.0) zostaje w katalogu głównym repozytorium (`game_launcher.py`) tylko do wglądu i nie jest już rozwijana.
 
 ### Zrzuty ekranu
 
