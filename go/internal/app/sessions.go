@@ -85,6 +85,9 @@ func (a *App) Launch(name, profileName string) (*LaunchResult, error) {
 		}
 		return nil, buildErr
 	}
+	if err := a.modsBeforeLaunch(name); err != nil {
+		return nil, err
+	}
 	log.Printf("[launch] %s, cwd=%s", spec.Description, spec.Cwd)
 	pid, err := a.StartProcess(name, spec.Command, spec.Cwd)
 	if err != nil {
@@ -94,6 +97,12 @@ func (a *App) Launch(name, profileName string) (*LaunchResult, error) {
 		}
 		return nil, err
 	}
+	a.trackStarted(name, spec.ProfileName, pid)
+	return &LaunchResult{Game: name, Profile: spec.ProfileName, PID: pid}, nil
+}
+
+// trackStarted records a game started by the launcher (session, counters).
+func (a *App) trackStarted(name, profile string, pid uint32) {
 	now := a.now()
 	a.mu.Lock()
 	a.sessions[name] = &session{start: now, launched: true, grace: now.Add(launchGrace), pids: map[uint32]bool{pid: true}}
@@ -114,9 +123,8 @@ func (a *App) Launch(name, profileName string) (*LaunchResult, error) {
 		}
 		return nil
 	})
-	a.emit("game:started", map[string]any{"name": name, "profile": spec.ProfileName})
-	a.discordSet(&winsys.Activity{Details: "Gra: " + name, State: spec.ProfileName, Start: now})
-	return &LaunchResult{Game: name, Profile: spec.ProfileName, PID: pid}, nil
+	a.emit("game:started", map[string]any{"name": name, "profile": profile})
+	a.discordSet(&winsys.Activity{Details: "Gra: " + name, State: profile, Start: now})
 }
 
 // targets builds the process-matching targets for all games.

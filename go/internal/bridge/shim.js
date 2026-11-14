@@ -42,6 +42,7 @@
       if (ok) { p.resolve(payload); return }
       var err = new Error((payload && payload.message) || 'Nieznany błąd')
       err.title = payload && payload.title
+      err.confirm = payload && payload.confirm
       p.reject(err)
     },
     writable: false, configurable: false, enumerable: false

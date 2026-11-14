@@ -200,7 +200,7 @@ func Make(entries []archive.Entry, def *gamedef.Definition, opt Options) (*Plan,
 		// nothing recognisable: archive root (minus a single wrapper folder), default type
 		typ = def.DefaultModType().ID
 		root = stripWrapper(t, "")
-		if root != "" && opt.TargetHasDir != nil && opt.TargetHasDir(typ, root) {
+		if root != "" && ((opt.TargetHasDir != nil && opt.TargetHasDir(typ, root)) || !looksLikeWrapper(root, plan.ModName, opt.SourceName)) {
 			root = ""
 		}
 		plan.Ambiguous = !def.IsGeneric() || root != ""
@@ -367,6 +367,36 @@ func subfolder(def *gamedef.Definition, mt *gamedef.ModType, folder, name, names
 		return "", err
 	}
 	return relpath.Clean(safeFolder(s))
+}
+
+var versionLike = regexp.MustCompile(`\d+[._-]\d+|[-_ ]v\d`)
+
+// looksLikeWrapper: a single top folder is a packaging wrapper when it is
+// named like the archive/mod or carries a version ("MyMod-1.2"), not when
+// it is a game folder name like "Data" or "scripts".
+func looksLikeWrapper(dir, modName, source string) bool {
+	norm := func(s string) string {
+		var b strings.Builder
+		for _, r := range strings.ToLower(s) {
+			if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r > 127 {
+				b.WriteRune(r)
+			}
+		}
+		return b.String()
+	}
+	d := norm(dir)
+	if d == "" {
+		return false
+	}
+	if versionLike.MatchString(dir) {
+		return true
+	}
+	for _, n := range []string{norm(modName), norm(nameFromSource(source))} {
+		if len(n) >= 3 && len(d) >= 3 && (strings.HasPrefix(n, d[:min(len(d), 6)]) || strings.HasPrefix(d, n[:min(len(n), 6)])) {
+			return true
+		}
+	}
+	return false
 }
 
 // stripWrapper descends into a folder that is the only child (one level).

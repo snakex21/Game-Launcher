@@ -81,6 +81,7 @@ type App struct {
 
 	chat chatState
 	sys  sysState
+	mods modsState
 
 	// cloudBase overrides the GitHub API URL (tests).
 	cloudBase string
@@ -235,6 +236,7 @@ func (a *App) Register(d *bridge.Dispatcher) {
 	reg("chat.host", handler(a.chatHost))
 	reg("chat.serverSave", handler(a.chatServerSave))
 	reg("chat.serverDelete", handler(a.chatServerDelete))
+	a.registerMods(reg)
 }
 
 // --------------------------------------------------------------- helpers
@@ -306,6 +308,8 @@ func (a *App) dialogOpenFile(_ context.Context, in struct {
 		name, pat = "Programy", "*.exe;*.bat;*.cmd;*.lnk;*.url"
 	case "image":
 		name, pat = "Obrazy", "*.png;*.jpg;*.jpeg;*.webp;*.gif;*.bmp"
+	case "mod":
+		name, pat = "Mody (archiwa i pliki)", "*.zip;*.7z;*.rar;*.pak;*.pk3;*.pk7;*.wad;*.jar;*.esp;*.esm;*.esl;*.archive;*.asi;*.dll;*"
 	case "rom":
 		name, pat = "Obrazy gier", "*.iso;*.bin;*.cue;*.chd;*.cso;*.img;*.zip;*.7z;*.nes;*.sfc;*.smc;*.gba;*.gb;*.gbc;*.nds;*.n64;*.z64;*.gcm;*.rvz;*.wbfs;*.elf;*"
 	}

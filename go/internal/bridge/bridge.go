@@ -33,6 +33,8 @@ type Handler func(ctx context.Context, payload json.RawMessage) (any, error)
 type UserError struct {
 	Title   string `json:"title,omitempty"`
 	Message string `json:"message"`
+	// Confirm marks an action the UI may repeat after asking the user.
+	Confirm string `json:"confirm,omitempty"`
 }
 
 func (e *UserError) Error() string { return e.Message }

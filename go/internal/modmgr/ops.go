@@ -1136,3 +1136,32 @@ func (s *Service) DetectSteam() ([]detect.Found, error) {
 	}
 	return out, nil
 }
+
+// FolderPath returns a folder to open in Explorer: the game folder, the
+// mod store of the game or the backups of originals.
+func (s *Service) FolderPath(id, which string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	in, d, err := s.install(id)
+	if err != nil {
+		return "", err
+	}
+	var p string
+	switch which {
+	case "store":
+		p = filepath.Join(s.root, "store", gameKey(in, d))
+	case "backups":
+		p = filepath.Join(s.stateDir(in), "backups")
+	default:
+		p = s.gamePath(in)
+	}
+	if which == "store" || which == "backups" {
+		if err := os.MkdirAll(p, 0o755); err != nil {
+			return "", err
+		}
+	}
+	if _, err := os.Stat(p); err != nil {
+		return "", uerr("Folder nie istnieje: %s", p)
+	}
+	return p, nil
+}

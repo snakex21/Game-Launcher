@@ -460,6 +460,7 @@
           h('button', { class: 'btn', onclick: function () { m.close(); gameForm(d) } }, '✎ Edytuj'),
           h('button', { class: 'btn', onclick: function (e) { fetchRAWG(d.name, e.target, m) } }, '⇩ Dane z RAWG'),
           h('button', { class: 'btn', onclick: function () { call('app.openPath', { name: d.name, which: 'exe' }).catch(fail) } }, 'Folder gry'),
+          d.type === 'pc' ? h('button', { class: 'btn', onclick: function () { m.close(); S.modsFor = d.name; go('mods') } }, '⚒ Mody') : null,
           d.savePath ? h('button', { class: 'btn', onclick: function () { call('app.openPath', { name: d.name, which: 'save' }).catch(fail) } }, 'Folder zapisów') : null),
           info, tabBar, tabsBox)),
       footer: [
@@ -1325,11 +1326,401 @@
     }).catch(fail)
   }
 
-  // ---- mods (placeholder for the mod manager, see docs/mod_manager_design.md)
+  // ---- mods: mod manager (internal/modmgr; design: docs/MOD_MANAGER.md)
+  function fmtSize(n) {
+    n = n || 0
+    if (n < 1024) return n + ' B'
+    if (n < 1048576) return (n / 1024).toFixed(1).replace('.', ',') + ' KB'
+    if (n < 1073741824) return (n / 1048576).toFixed(1).replace('.', ',') + ' MB'
+    return (n / 1073741824).toFixed(2).replace('.', ',') + ' GB'
+  }
+  // callAsk repeats a call after the user agrees (executable mod, protected
+  // files, duplicate archive, folder not matching the game).
+  function callAsk(ch, payload) {
+    return call(ch, payload).catch(function (e) {
+      if (!e || !e.confirm) throw e
+      var flag = { executable: 'ackExecutable', duplicate: 'allowDuplicate', protected: 'allow', force: 'force' }[e.confirm]
+      if (ch === 'mods.setEnabled' && e.confirm === 'executable') flag = 'ack'
+      return confirmBox(e.message, e.confirm === 'duplicate' ? 'Zainstaluj kopię' : 'Kontynuuj', e.confirm !== 'duplicate').then(function (ok) {
+        if (!ok) return null
+        var p = Object.assign({}, payload)
+        p[flag] = true
+        return callAsk(ch, p)
+      })
+    })
+  }
+  function deployToast(r, okText) {
+    if (!r) { if (okText) toast(okText, 'ok'); return }
+    var t = okText || (r.purged ? 'Gra przywrócona do stanu bez modów.' : 'Wdrożono (' + r.changed + ' zmian).')
+    if (r.drift && r.drift.length) t += '\n\nPliki zmienione poza menedżerem:\n' + r.drift.slice(0, 6).join('\n')
+    if (r.warnings && r.warnings.length) t += '\n\n' + r.warnings.join('\n')
+    toast(t, r.drift && r.drift.length ? '' : 'ok')
+  }
+
   PAGES.mods = function (root) {
     root.appendChild(h('h1', { text: 'Menedżer modów' }))
-    root.appendChild(h('div', { class: 'card' }, h('p', { style: 'margin-top:0', text: 'W przygotowaniu. Menedżer modów będzie osobnym modułem (internal/modmgr) według projektu: definicje gier w JSON, magazyn modów na dysku launchera, wdrożenia z dziennikiem i powrotem do stanu „vanilla”, konflikty na poziomie plików.' }),
-      h('p', { class: 'muted small', style: 'margin-bottom:0', text: 'Dane modów z wersji Python (config.json → mods_data) są zachowywane bez zmian.' })))
+    var box = h('div', null, h('p', { class: 'muted', text: 'Wczytywanie…' }))
+    root.appendChild(box)
+    call('mods.installs').then(function (r) {
+      S.modsInstalls = r.installs || []
+      S.modsGames = r.games || []
+      if (S.modsFor) {
+        var link = S.modsInstalls.filter(function (i) { return i.game === S.modsFor })[0]
+        var g = S.modsFor
+        S.modsFor = null
+        if (link) S.modsSel = link.id
+        else { clear(box); drawModsTop(box, r); if (S.modsSel) drawInstall(box); addGameForm(g); return }
+      }
+      if (!S.modsInstalls.some(function (i) { return i.id === S.modsSel })) S.modsSel = S.modsInstalls.length ? S.modsInstalls[0].id : ''
+      clear(box)
+      drawModsTop(box, r)
+      if (S.modsSel) drawInstall(box)
+    }).catch(function (e) { clear(box); box.appendChild(h('div', { class: 'card' }, h('p', { text: e.message || String(e) }))) })
+  }
+
+  function drawModsTop(box, r) {
+    var sel = h('select', { title: 'Gra', onchange: function () { S.modsSel = sel.value; render() } },
+      S.modsInstalls.map(function (i) { return h('option', { value: i.id, text: i.name + (i.missing ? ' (brak folderu)' : '') + (i.deployed ? ' • ' + i.deployed + ' plików modów' : '') }) }))
+    sel.value = S.modsSel
+    box.appendChild(h('div', { class: 'toolbar' },
+      S.modsInstalls.length ? sel : null,
+      h('button', { class: 'btn primary', onclick: function () { addGameForm() } }, '+ Dodaj grę'),
+      h('button', { class: 'btn', onclick: detectSteam }, 'Wykryj gry ze Steam')))
+    ;(r.recovered || []).forEach(function (t) { box.appendChild(h('div', { class: 'card', style: 'border-color:var(--warn);margin-bottom:10px' }, '⚠ ' + t)) })
+    ;(r.problems || []).forEach(function (t) { box.appendChild(h('div', { class: 'card', style: 'border-color:var(--warn);margin-bottom:10px' }, 'Definicja gry z folderu użytkownika pominięta: ' + t)) })
+    if (!S.modsInstalls.length) {
+      box.appendChild(h('div', { class: 'card' },
+        h('p', { style: 'margin-top:0', text: 'Dodaj grę, a menedżer będzie trzymał mody w osobnym magazynie i wdrażał je do folderu gry z kopią nadpisanych plików. W każdej chwili możesz przywrócić grę do stanu bez modów („vanilla”).' }),
+        h('p', { class: 'muted small', style: 'margin-bottom:0', text: 'Wbudowane definicje: Skyrim SE, Fallout 4, Fallout NV, Starfield, Morrowind, Valheim (BepInEx), Minecraft Java, Stardew Valley (SMAPI), RimWorld, Baldur\'s Gate 3, Cyberpunk 2077, Wiedźmin 3, Doom (source porty), Half-Life, GTA San Andreas, a dla pozostałych gier – „Dowolna gra” (kopiuj do folderu).' })))
+    }
+  }
+
+  function detectSteam() {
+    call('mods.detectSteam').then(function (list) {
+      if (!list || !list.length) { toast('Nie znaleziono nowych obsługiwanych gier w bibliotekach Steam.'); return }
+      var m = modal({ title: 'Gry ze Steam', narrow: true, body: h('div', null, list.map(function (f) {
+        return h('div', { class: 'check-item' }, h('span', { class: 'grow' }, h('b', { text: f.name }), h('div', { class: 'mono muted', text: f.path })),
+          h('button', { class: 'btn small primary', disabled: !f.valid, title: f.valid ? '' : 'Brakuje plików gry', onclick: function () {
+            callAsk('mods.addInstall', { defId: f.defId, path: f.path, store: 'steam' }).then(function (inst) { if (inst) { m.close(); S.modsSel = inst.id; render() } }).catch(fail)
+          } }, 'Dodaj'))
+      })), footer: [h('button', { class: 'btn', onclick: function () { m.close() } }, 'Zamknij')] })
+    }).catch(fail)
+  }
+
+  function addGameForm(gameName) {
+    call('mods.defs').then(function (defs) {
+      var game = h('select', null, h('option', { value: '', text: '— bez powiązania —' }), (S.modsGames || []).map(function (g) { return h('option', { value: g.name, text: g.name }) }))
+      var path = h('input', { type: 'text', placeholder: 'C:\\Gry\\Moja gra' })
+      var def = h('select', null, defs.map(function (d) { return h('option', { value: d.id, text: d.name }) }))
+      var target = h('input', { type: 'text', placeholder: 'np. Data albo Mods (puste = folder gry)' })
+      var targetRow = h('label', { class: 'field full' }, 'Podfolder na mody (tylko „Dowolna gra”)', target)
+      var name = h('input', { type: 'text', placeholder: 'Nazwa w menedżerze (opcjonalnie)' })
+      var hint = h('div', { class: 'muted small full' })
+      function syncTarget() { var d = defs.filter(function (x) { return x.id === def.value })[0]; targetRow.classList.toggle('hidden', !(d && d.generic)) }
+      function suggest(p) {
+        if (!p) return
+        call('mods.suggest', { path: p }).then(function (s) {
+          if (s && s.length) { def.value = s[0].defId; path.value = s[0].root; hint.textContent = 'Rozpoznano: ' + s[0].name }
+          else { def.value = defs[defs.length - 1].id; hint.textContent = 'Nie rozpoznano gry – użyj „Dowolna gra” albo wybierz definicję ręcznie.' }
+          syncTarget()
+        }).catch(fail)
+      }
+      game.onchange = function () {
+        var g = (S.modsGames || []).filter(function (x) { return x.name === game.value })[0]
+        if (g && g.exe) { path.value = g.exe.replace(/[\\/][^\\/]*$/, ''); suggest(g.exe) }
+        if (g && !name.value) name.value = g.name
+      }
+      def.onchange = syncTarget
+      if (gameName) { game.value = gameName; game.onchange() }
+      syncTarget()
+      var m = modal({ title: 'Dodaj grę do menedżera modów', body: h('div', { class: 'form' },
+        h('label', { class: 'field full' }, 'Gra z biblioteki', game),
+        h('label', { class: 'field full' }, 'Folder gry', h('div', { class: 'pick' }, path,
+          h('button', { class: 'btn', onclick: function () { call('dialog.pickFolder', { title: 'Folder gry' }).then(function (p) { if (p) { path.value = p; suggest(p) } }).catch(fail) } }, 'Wybierz…'))),
+        h('label', { class: 'field full' }, 'Definicja gry', def), hint, targetRow,
+        h('label', { class: 'field full' }, 'Nazwa', name)),
+        footer: [h('button', { class: 'btn', onclick: function () { m.close() } }, 'Anuluj'), h('button', { class: 'btn primary', onclick: function () {
+          callAsk('mods.addInstall', { defId: def.value, path: path.value, name: name.value, game: game.value, modsTarget: target.value }).then(function (inst) {
+            if (inst) { m.close(); S.modsSel = inst.id; go('mods') }
+          }).catch(fail)
+        } }, 'Dodaj')] })
+    }).catch(fail)
+  }
+
+  function drawInstall(box) {
+    var id = S.modsSel
+    var area = h('div', null, h('p', { class: 'muted', text: 'Wczytywanie…' }))
+    box.appendChild(area)
+    call('mods.view', { id: id }).then(function (v) {
+      clear(area)
+      var refresh = function () { if (S.page === 'mods') render() }
+      var after = function (r, text) { deployToast(r, text); refresh() }
+      var inst = v.install
+      var status = v.pending ? h('span', { style: 'color:var(--warn)', text: '⚠ przerwana operacja – zostanie dokończona' })
+        : v.inSync ? h('span', { style: 'color:var(--ok)', text: v.deployed ? '✔ wdrożone (' + v.deployed + ' plików)' : '✔ gra bez modów' })
+        : h('span', { style: 'color:var(--warn)', text: '● zmiany nie są wdrożone' })
+      var auto = h('input', { type: 'checkbox', checked: inst.autoDeploy, onchange: function () { call('mods.setOptions', { id: id, autoDeploy: auto.checked }).then(refresh).catch(fail) } })
+      area.appendChild(h('div', { class: 'card' },
+        h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { style: 'font-size:16px', text: inst.name }), h('div', { class: 'muted small', text: v.def.name })), status),
+        h('div', { class: 'kv', style: 'margin-top:10px' },
+          h('span', { class: 'k', text: 'Folder gry' }), h('span', { class: 'mono', text: v.path }),
+          h('span', { class: 'k', text: 'Wdrażanie' }), h('span', { text: v.strategy }),
+          inst.game ? h('span', { class: 'k', text: 'Gra w bibliotece' }) : null, inst.game ? h('span', { text: inst.game }) : null,
+          v.launchArgs ? h('span', { class: 'k', text: 'Argumenty' }) : null, v.launchArgs ? h('span', { class: 'mono', text: v.launchArgs.join(' ') || '—' }) : null),
+        h('div', { class: 'row', style: 'margin-top:12px' },
+          h('button', { class: 'btn primary', onclick: function () { callAsk('mods.deploy', { id: id }).then(function (r) { if (r) after(r) }).catch(fail) } }, '⇩ Wdróż'),
+          h('button', { class: 'btn', onclick: function () {
+            confirmBox('Usunąć wszystkie pliki modów z folderu gry i przywrócić oryginały?\nMody zostają w magazynie – możesz je potem wdrożyć ponownie.', 'Przywróć vanilla', true).then(function (ok) {
+              if (ok) call('mods.purge', { id: id }).then(function (r) { after(r) }).catch(fail)
+            })
+          } }, '↺ Przywróć vanilla'),
+          h('button', { class: 'btn', onclick: function () { verifyInstall(id) } }, 'Sprawdź pliki'),
+          h('button', { class: 'btn', onclick: function () { conflictsModal(id, refresh) } }, 'Konflikty'),
+          (v.executables || []).some(function (x) { return x.exists }) ? h('button', { class: 'btn ok', onclick: function () {
+            call('mods.launch', { id: id }).then(function () { toast('Uruchomiono grę z modami.', 'ok') }).catch(fail)
+          } }, '▶ Uruchom z modami') : null,
+          h('span', { class: 'grow' }),
+          h('label', { class: 'check small' }, auto, 'Wdrażaj automatycznie po zmianach'),
+          h('button', { class: 'btn small', onclick: function () { call('mods.openFolder', { id: id, which: 'game' }).catch(fail) } }, 'Folder gry'),
+          h('button', { class: 'btn small', onclick: function () { call('mods.openFolder', { id: id, which: 'store' }).catch(fail) } }, 'Magazyn'),
+          h('button', { class: 'btn small', title: 'Ustawienia', onclick: function () { installSettings(v, refresh) } }, '⚙'))))
+      ;(v.warnings || []).forEach(function (t) { area.appendChild(h('div', { class: 'card pre', style: 'border-color:var(--warn);margin-top:10px' }, '⚠ ' + t)) })
+      if (v.notes && v.notes.length) area.appendChild(h('details', { class: 'card', style: 'margin-top:10px' }, h('summary', { class: 'muted', text: 'Wskazówki dla tej gry (' + v.notes.length + ')' }), h('ul', null, v.notes.map(function (n) { return h('li', { class: 'small', text: n }) }))))
+
+      // profiles
+      var psel = h('select', { title: 'Profil', onchange: function () {
+        call('mods.profileActivate', { id: id, profile: psel.value }).then(function (r) { after(r, 'Przełączono profil.') }).catch(function (e) { fail(e); refresh() })
+      } }, (v.profiles || []).map(function (p) { return h('option', { value: p.id, text: p.name }) }))
+      var activeP = (v.profiles || []).filter(function (p) { return p.active })[0]
+      if (activeP) psel.value = activeP.id
+      area.appendChild(h('div', { class: 'toolbar', style: 'margin-top:16px' },
+        h('b', { text: 'Profil:' }), psel,
+        h('button', { class: 'btn small', onclick: function () { promptBox('Nowy profil', 'Nazwa', '').then(function (n) { if (n) call('mods.profileCreate', { id: id, name: n }).then(refresh).catch(fail) }) } }, 'Nowy'),
+        h('button', { class: 'btn small', onclick: function () { promptBox('Kopia profilu', 'Nazwa', activeP ? activeP.name + ' (kopia)' : '').then(function (n) { if (n) call('mods.profileCreate', { id: id, name: n, copy: psel.value }).then(refresh).catch(fail) }) } }, 'Kopiuj'),
+        h('button', { class: 'btn small', onclick: function () { promptBox('Zmień nazwę profilu', 'Nazwa', activeP ? activeP.name : '').then(function (n) { if (n) call('mods.profileRename', { id: id, profile: psel.value, name: n }).then(refresh).catch(fail) }) } }, 'Zmień nazwę'),
+        (v.profiles || []).length > 1 ? h('button', { class: 'btn small danger', onclick: function () { profileDelete(id, v.profiles, refresh) } }, 'Usuń profil…') : null,
+        h('span', { class: 'grow' }),
+        h('button', { class: 'btn primary', onclick: function () { pickMod(id, 'file', refresh) } }, '+ Mod z pliku…'),
+        h('button', { class: 'btn', onclick: function () { pickMod(id, 'folder', refresh) } }, '+ Mod z folderu…')))
+
+      // mods table
+      var mods = v.mods || []
+      if (!mods.length) {
+        area.appendChild(h('div', { class: 'empty', text: 'Brak modów. Dodaj archiwum (.zip, .7z), folder albo pojedynczy plik (.esp, .pak, .wad, .jar…).' }))
+      } else {
+        var inOrder = mods.filter(function (m) { return m.order >= 0 })
+        var tb = h('tbody')
+        mods.forEach(function (mo) {
+          var cb = h('input', { type: 'checkbox', checked: mo.enabled, title: mo.enabled ? 'Wyłącz' : 'Włącz', onchange: function () {
+            callAsk('mods.setEnabled', { id: id, mod: mo.id, enabled: cb.checked }).then(function (r) { if (r !== null) after(r, cb.checked ? 'Mod włączony.' : 'Mod wyłączony.'); else refresh() }).catch(function (e) { fail(e); refresh() })
+          } })
+          var c = mo.conflicts || {}
+          var conf = c.wins || c.loses ? h('span', { title: 'Wygrywa: ' + c.wins + ', przegrywa: ' + c.loses + ', identyczne: ' + c.identical, style: 'color:' + (c.loses && c.wins ? 'var(--warn)' : c.loses ? 'var(--bad)' : 'var(--ok)') }, '⚡ +' + (c.wins || 0) + ' / −' + (c.loses || 0)) : (c.identical ? h('span', { class: 'muted', text: '= ' + c.identical }) : h('span', { class: 'muted', text: '—' }))
+          var badges = (mo.badges || []).map(function (b) {
+            if (b === 'executable') return h('span', { class: 'chip', title: 'Zawiera kod (DLL/ASI/skrypty)', style: 'background:#3b2a14' }, 'kod')
+            if (b.indexOf('needs:') === 0) return h('span', { class: 'chip', style: 'background:#3b1a1a', title: 'Brak wymaganego loadera w folderze gry' }, 'wymaga: ' + b.slice(6))
+            return h('span', { class: 'chip', text: b })
+          })
+          var idx = inOrder.indexOf(mo)
+          tb.appendChild(h('tr', null,
+            h('td', null, cb),
+            h('td', null, h('div', null, h('b', { text: mo.name }), mo.version ? h('span', { class: 'muted small', text: ' ' + mo.version }) : null, ' ', badges),
+              h('div', { class: 'muted small mono', text: mo.source + ' • ' + mo.installed })),
+            h('td', null, conf),
+            h('td', { class: 'num' }, String(mo.files)),
+            h('td', { class: 'num' }, fmtSize(mo.size)),
+            h('td', { style: 'white-space:nowrap' },
+              h('button', { class: 'btn small', title: 'Niższy priorytet', disabled: idx <= 0, onclick: function () { call('mods.move', { id: id, mod: mo.id, to: idx - 1 }).then(function (r) { after(r, 'Zmieniono kolejność.') }).catch(fail) } }, '↑'),
+              h('button', { class: 'btn small', title: 'Wyższy priorytet (wygrywa konflikty)', disabled: idx < 0 || idx >= inOrder.length - 1, onclick: function () { call('mods.move', { id: id, mod: mo.id, to: idx + 1 }).then(function (r) { after(r, 'Zmieniono kolejność.') }).catch(fail) } }, '↓'),
+              h('button', { class: 'btn small', onclick: function () { modFilesModal(id, mo, refresh) } }, 'Pliki'),
+              h('button', { class: 'btn small', title: 'Zmień nazwę', onclick: function () { promptBox('Nazwa moda', 'Nazwa', mo.name).then(function (n) { if (n) call('mods.rename', { id: id, mod: mo.id, name: n }).then(refresh).catch(fail) }) } }, '✎'),
+              h('button', { class: 'btn small danger', onclick: function () {
+                confirmBox('Odinstalować „' + mo.name + '”?\nPliki moda zostaną usunięte z gry (z przywróceniem oryginałów) i z magazynu, we wszystkich profilach.', 'Odinstaluj', true).then(function (ok) {
+                  if (ok) call('mods.uninstall', { id: id, mod: mo.id }).then(function () { toast('Mod odinstalowany.', 'ok'); refresh() }).catch(fail)
+                })
+              } }, 'Odinstaluj'))))
+        })
+        area.appendChild(h('div', { class: 'card', style: 'padding:6px 10px' }, h('table', null,
+          h('thead', null, h('tr', null, h('th', null, 'Wł.'), h('th', null, 'Mod (niżej = wyższy priorytet)'), h('th', null, 'Konflikty'), h('th', { class: 'num' }, 'Pliki'), h('th', { class: 'num' }, 'Rozmiar'), h('th'))), tb)))
+      }
+      if (v.plugins && v.plugins.length) area.appendChild(pluginsCard(id, v, after))
+      if (inst.game) legacyCard(area, inst.game)
+    }).catch(function (e) { clear(area); area.appendChild(h('div', { class: 'card' }, h('p', { text: e.message || String(e) }))) })
+  }
+
+  function profileDelete(id, profiles, refresh) {
+    var others = profiles.filter(function (p) { return !p.active })
+    var sel = h('select', null, others.map(function (p) { return h('option', { value: p.id, text: p.name }) }))
+    var m = modal({ title: 'Usuń profil', narrow: true, body: h('label', { class: 'field' }, 'Profil (nieaktywny)', sel),
+      footer: [h('button', { class: 'btn', onclick: function () { m.close() } }, 'Anuluj'), h('button', { class: 'btn stop', onclick: function () {
+        call('mods.profileDelete', { id: id, profile: sel.value }).then(function () { m.close(); refresh() }).catch(fail)
+      } }, 'Usuń')] })
+  }
+
+  function pluginsCard(id, v, after) {
+    var list = v.plugins.map(function (p) { return { name: p.name, enabled: p.enabled, implicit: p.implicit, external: p.external } })
+    var editable = v.loadOrder === 'bethesda-plugins'
+    var body = h('div')
+    function draw() {
+      clear(body)
+      list.forEach(function (p, i) {
+        body.appendChild(h('div', { class: 'check-item' },
+          h('input', { type: 'checkbox', checked: p.enabled, disabled: p.implicit || !editable, onchange: function (e) { p.enabled = e.target.checked } }),
+          h('span', { class: 'grow mono', text: (i + 1) + '. ' + p.name }),
+          p.implicit ? h('span', { class: 'chip', text: 'gra' }) : p.external ? h('span', { class: 'chip', text: 'spoza menedżera' }) : null,
+          editable && !p.implicit ? h('button', { class: 'btn small', onclick: function () { if (i > 0 && !list[i - 1].implicit) { list.splice(i - 1, 0, list.splice(i, 1)[0]); draw() } } }, '↑') : null,
+          editable && !p.implicit ? h('button', { class: 'btn small', onclick: function () { if (i < list.length - 1) { list.splice(i + 1, 0, list.splice(i, 1)[0]); draw() } } }, '↓') : null))
+      })
+    }
+    draw()
+    return h('details', { class: 'card', style: 'margin-top:12px' },
+      h('summary', null, h('b', { text: 'Kolejność ładowania (' + v.loadOrder + ', ' + list.length + ')' })), body,
+      editable ? h('div', { class: 'row', style: 'margin-top:8px' },
+        h('button', { class: 'btn primary small', onclick: function () {
+          call('mods.setPlugins', { id: id, plugins: list.filter(function (p) { return !p.implicit }).map(function (p) { return { name: p.name, enabled: p.enabled } }) }).then(function (r) { after(r, 'Zapisano kolejność pluginów.') }).catch(fail)
+        } }, 'Zapisz kolejność'),
+        h('button', { class: 'btn small', onclick: function () { call('mods.setPlugins', { id: id, plugins: [] }).then(function (r) { after(r, 'Kolejność automatyczna (mastery najpierw).') }).catch(fail) } }, 'Automatycznie'))
+        : h('p', { class: 'muted small', text: 'Kolejność wynika z kolejności modów na liście.' }))
+  }
+
+  function legacyCard(area, game) {
+    call('mods.legacy', { name: game }).then(function (profs) {
+      if (!profs || !profs.length) return
+      area.appendChild(h('details', { class: 'card', style: 'margin-top:12px' },
+        h('summary', { class: 'muted', text: 'Mody z wersji 1.5.0 (Python) – tylko do odczytu' }),
+        h('p', { class: 'small muted', text: 'Stary menedżer kopiował pliki prosto do gry. Te wpisy są zachowane w config.json bez zmian. Żeby zarządzać nimi tutaj, zainstaluj mod ponownie z archiwum lub folderu (stara kopia zapasowa jest w folderze _backup_… gry).' }),
+        profs.map(function (p) { return h('div', null, h('b', { text: 'Profil: ' + p.name }), h('ul', null, p.mods.map(function (mo) {
+          return h('li', { class: 'small' }, mo.name + (mo.active ? ' (aktywny)' : ' (nieaktywny)') + (mo.location ? ' – ' + mo.location : ''))
+        }))) })))
+    }).catch(function () {})
+  }
+
+  function installSettings(v, refresh) {
+    var inst = v.install
+    var name = h('input', { type: 'text', value: inst.name })
+    var iwad = h('input', { type: 'text', value: inst.iwad || '' })
+    var gd = h('input', { type: 'text', value: (inst.vars && inst.vars.selectedGameDir) || 'valve' })
+    var isDoom = v.def.id === 'doom-sourceport', isHL = v.def.id === 'halflife'
+    var m = modal({ title: 'Ustawienia: ' + inst.name, narrow: true, body: h('div', { class: 'form' },
+      h('label', { class: 'field full' }, 'Nazwa', name),
+      isDoom ? h('label', { class: 'field full' }, 'IWAD (np. DOOM2.WAD)', h('div', { class: 'pick' }, iwad, h('button', { class: 'btn', onclick: function () { call('dialog.openFile', { title: 'IWAD', kind: 'any' }).then(function (p) { if (p) iwad.value = p }).catch(fail) } }, 'Wybierz…'))) : null,
+      isHL ? h('label', { class: 'field full' }, 'Katalog gry dla dodatków (np. valve, cstrike)', gd) : null,
+      h('p', { class: 'muted small full', text: 'Definicja: ' + v.def.name + ' (' + v.def.id + ')' })),
+      footer: [h('button', { class: 'btn danger', onclick: function () {
+        confirmBox('Usunąć „' + inst.name + '” z menedżera modów?\nGra musi być w stanie bez modów. Profile zostaną usunięte' + (v.def.generic ? ', a mody tej gry – usunięte z magazynu.' : '; mody zostają w magazynie.'), 'Usuń', true).then(function (ok) {
+          if (ok) call('mods.removeInstall', { id: inst.id }).then(function () { m.close(); S.modsSel = ''; refresh() }).catch(fail)
+        })
+      } }, 'Usuń z menedżera'), h('button', { class: 'btn', onclick: function () { m.close() } }, 'Anuluj'), h('button', { class: 'btn primary', onclick: function () {
+        var p = { id: inst.id, name: name.value }
+        if (isDoom) p.iwad = iwad.value
+        if (isHL) p.selectedGameDir = gd.value
+        call('mods.setOptions', p).then(function () { m.close(); refresh() }).catch(fail)
+      } }, 'Zapisz')] })
+  }
+
+  function verifyInstall(id) {
+    call('mods.verify', { id: id }).then(function (r) {
+      var lines = []
+      if (r.gameUpdated) lines.push('Gra zmieniła się od ostatniego wdrożenia (aktualizacja?). „Wdróż” zachowa nowe pliki gry jako oryginały.')
+      ;(r.drift || []).forEach(function (d) { lines.push((d.state === 'missing' ? 'brak: ' : d.state === 'original' ? 'oryginał zamiast moda: ' : 'zmieniony: ') + d.target) })
+      ;(r.storeIssues || []).forEach(function (s) { lines.push('magazyn: ' + s) })
+      if (!lines.length) toast('Wszystkie wdrożone pliki są na miejscu.', 'ok')
+      else confirmBox(lines.slice(0, 30).join('\n') + (lines.length > 30 ? '\n…' : '') + '\n\nWdrożyć ponownie teraz?', 'Wdróż').then(function (ok) {
+        if (ok) callAsk('mods.deploy', { id: id }).then(function (x) { if (x) { deployToast(x); render() } }).catch(fail)
+      })
+    }).catch(fail)
+  }
+
+  function conflictsModal(id, refresh) {
+    call('mods.conflicts', { id: id }).then(function (rows) {
+      var body = h('div')
+      var m
+      if (!rows || !rows.length) body.appendChild(h('p', { class: 'muted', text: 'Brak konfliktów – żadne dwa włączone mody nie zmieniają tego samego pliku.' }))
+      else {
+        var tb = h('tbody')
+        rows.forEach(function (c) {
+          var sel = h('select', { onchange: function () { call('mods.setOverride', { id: id, key: c.key, mod: sel.value }).then(function (r) { deployToast(r, 'Zmieniono zwycięzcę.'); m.close(); conflictsModal(id, refresh) }).catch(fail) } },
+            c.providers.map(function (p) { return h('option', { value: p.id, text: p.name }) }))
+          sel.value = c.winnerId
+          tb.appendChild(h('tr', { style: c.identical ? 'opacity:.55' : '' }, h('td', { class: 'mono', text: c.target }), h('td', null, sel),
+            h('td', { class: 'small muted', text: c.identical ? 'identyczne' : c.rule === 'override' ? 'reguła' : 'kolejność' })))
+        })
+        body.appendChild(h('table', null, h('thead', null, h('tr', null, h('th', null, 'Plik'), h('th', null, 'Wygrywa'), h('th', null, 'Dlaczego'))), tb))
+      }
+      m = modal({ title: 'Konflikty plików (' + (rows ? rows.length : 0) + ')', body: body, onClose: refresh,
+        footer: [h('button', { class: 'btn', onclick: function () { call('mods.clearOverrides', { id: id, mod: '' }).then(function (r) { deployToast(r, 'Usunięto wszystkie reguły.'); m.close() }).catch(fail) } }, 'Wyczyść reguły'), h('button', { class: 'btn primary', onclick: function () { m.close() } }, 'Zamknij')] })
+    }).catch(fail)
+  }
+
+  function modFilesModal(id, mo, refresh) {
+    call('mods.files', { id: id, mod: mo.id }).then(function (rows) {
+      var colors = { wins: 'var(--ok)', loses: 'var(--bad)', identical: 'var(--muted)', only: '' }
+      var labels = { wins: 'wygrywa', loses: 'przegrywa', identical: 'identyczny', only: '' }
+      var list = h('div')
+      var m
+      rows.slice(0, 1000).forEach(function (f) {
+        list.appendChild(h('div', { class: 'check-item' },
+          h('span', { class: 'grow mono', style: 'color:' + colors[f.state], text: f.target }),
+          f.state !== 'only' ? h('span', { class: 'small muted', title: (f.providers || []).join(', '), text: labels[f.state] + (f.rule === 'override' ? ' (reguła)' : '') + (f.state === 'loses' ? ' z: ' + f.winner : '') }) : null,
+          f.state === 'loses' ? h('button', { class: 'btn small', onclick: function () { call('mods.setOverride', { id: id, key: f.key, mod: mo.id }).then(function (r) { deployToast(r, 'Ten plik wygrywa teraz z „' + mo.name + '”.'); m.close(); modFilesModal(id, mo, refresh) }).catch(fail) } }, 'Niech wygrywa ten mod') : null,
+          h('span', { class: 'small muted num', text: fmtSize(f.size) })))
+      })
+      if (rows.length > 1000) list.appendChild(h('p', { class: 'muted', text: '… i ' + (rows.length - 1000) + ' więcej' }))
+      m = modal({ title: 'Pliki: ' + mo.name + ' (' + rows.length + ')', body: list, onClose: refresh,
+        footer: [h('button', { class: 'btn', onclick: function () { call('mods.clearOverrides', { id: id, mod: mo.id }).then(function (r) { deployToast(r, 'Usunięto reguły tego moda.'); m.close() }).catch(fail) } }, 'Wyczyść reguły moda'), h('button', { class: 'btn primary', onclick: function () { m.close() } }, 'Zamknij')] })
+    }).catch(fail)
+  }
+
+  function pickMod(id, kind, refresh) {
+    var p = kind === 'folder' ? call('dialog.pickFolder', { title: 'Folder moda' }) : call('dialog.openFile', { title: 'Plik moda', kind: 'mod' })
+    p.then(function (path) { if (path) importPreview(id, { install: id, path: path }, refresh) }).catch(fail)
+  }
+
+  function importPreview(id, req, refresh) {
+    call('mods.preview', req).then(function (pv) {
+      var plan = pv.plan
+      var m
+      var name = h('input', { type: 'text', value: plan.modName })
+      var enable = h('input', { type: 'checkbox', checked: true })
+      var choices = [{ root: plan.root, modType: plan.modType, label: (plan.format === 'manual' ? 'Ręcznie: ' : 'Automatycznie: ') + (plan.root || '(korzeń archiwum)') + ' → ' + (plan.modType || plan.format) }]
+      ;(plan.candidates || []).forEach(function (c) { if (c.root !== plan.root || c.modType !== plan.modType) choices.push({ root: c.root, modType: c.modType, label: (c.root || '(korzeń archiwum)') + ' → ' + c.modType + ' (' + c.score + ')' }) })
+      var choice = h('select', null, choices.map(function (c, i) { return h('option', { value: String(i), text: c.label }) }))
+      var rootSel = h('select', null, h('option', { value: '/', text: '(korzeń archiwum)' }), (plan.dirs || []).slice(0, 300).map(function (d) { return h('option', { value: d, text: d }) }))
+      rootSel.value = plan.root || '/'
+      var typeSel = h('select', null, [])
+      call('mods.view', { id: id }).then(function (v) {
+        (v.def.modTypes || []).forEach(function (t) { typeSel.appendChild(h('option', { value: t.id, text: t.name })) })
+        typeSel.value = plan.modType || ''
+      }).catch(function () {})
+      var reload = function (root, type) { m.close(); importPreview(id, Object.assign({}, req, { root: root, modType: type, name: name.value }), refresh) }
+      choice.onchange = function () { var c = choices[Number(choice.value)]; reload(c.root || '/', c.modType) }
+      var files = h('div', { style: 'max-height:280px;overflow:auto' }, (pv.files || []).map(function (f) {
+        return h('div', { class: 'small mono', style: 'padding:2px 0;border-bottom:1px solid var(--line)' }, f.source + '  →  ' + f.target)
+      }), pv.more ? h('div', { class: 'muted small', text: '… i ' + pv.more + ' więcej' }) : null)
+      var warn = (plan.warnings || []).concat(pv.warnings || [])
+      if (plan.ambiguous) warn.unshift('Układ archiwum nie jest jednoznaczny – sprawdź, gdzie trafią pliki, i w razie potrzeby wskaż folder i typ ręcznie.')
+      m = modal({ title: 'Instalacja moda', body: h('div', null,
+        h('div', { class: 'form' }, h('label', { class: 'field full' }, 'Nazwa', name),
+          h('label', { class: 'field full' }, 'Układ', choice),
+          h('label', { class: 'field' }, 'Folder w archiwum (ręcznie)', rootSel), h('label', { class: 'field' }, 'Typ moda (ręcznie)', typeSel),
+          h('div', { class: 'full' }, h('button', { class: 'btn small', onclick: function () { reload(rootSel.value, typeSel.value) } }, 'Zastosuj ręczny wybór'))),
+        warn.map(function (w) { return h('p', { class: 'small pre', style: 'color:var(--warn)', text: '⚠ ' + w }) }),
+        plan.executableContent ? h('p', { class: 'small', style: 'color:var(--warn)', text: '⚠ Mod zawiera kod wykonywalny: ' + (plan.executableFiles || []).slice(0, 5).join(', ') }) : null,
+        h('h2', { text: 'Pliki (' + (plan.files || []).length + ')' + (plan.skipped && plan.skipped.length ? ' • pominięte: ' + plan.skipped.length : '') }), files,
+        h('label', { class: 'check', style: 'margin-top:12px' }, enable, 'Włącz od razu (i wdróż do gry)')),
+        footer: [h('button', { class: 'btn', onclick: function () { m.close() } }, 'Anuluj'), h('button', { class: 'btn primary', onclick: function (e) {
+          var btn = e.currentTarget
+          btn.disabled = true
+          var p = Object.assign({}, req, { name: name.value, enable: enable.checked })
+          if (plan.format !== 'manual') { p.root = ''; p.modType = '' }
+          callAsk('mods.import', p).then(function (r) {
+            if (!r) { btn.disabled = false; return }
+            m.close()
+            deployToast(r.deploy, 'Zainstalowano „' + r.mod.name + '”' + (r.mod.enabled ? ' i wdrożono.' : '.'))
+            refresh()
+          }).catch(function (err) { btn.disabled = false; fail(err) })
+        } }, 'Zainstaluj')] })
+    }).catch(fail)
   }
 
   // ---- achievements definitions editor
