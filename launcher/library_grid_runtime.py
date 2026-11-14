@@ -369,6 +369,28 @@ def update_game_grid(self):
             logging.info("Brak gier do wyświetlenia na tej stronie (kafelki).")
             for i in range(num_columns):
                 self.games_frame.columnconfigure(i, weight=1)
+            if not self.games:
+                empty_text = (
+                    "Biblioteka jest pusta.\n\n"
+                    "Dodaj pierwszą grę przyciskiem „Dodaj Grę” powyżej\n"
+                    "(gra PC: plik .exe, gra emulowana: ROM/ISO + emulator)."
+                )
+            else:
+                empty_text = (
+                    "Brak gier pasujących do wyszukiwania lub filtrów.\n\n"
+                    "Wyczyść pole wyszukiwania albo wybierz „Wszystkie Gry”."
+                )
+            empty_label = ttk.Label(
+                self.games_frame,
+                text=empty_text,
+                justify="center",
+                anchor="center",
+                font=("Segoe UI", 12),
+                foreground="#9a9a9a",
+            )
+            empty_label.grid(
+                row=0, column=0, columnspan=max(1, num_columns), pady=80, sticky="ew"
+            )
         else:
             for _idx, game_name in enumerate(games_on_this_page):
                 padx_config = default_padding_x

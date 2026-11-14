@@ -3038,11 +3038,57 @@ class GameLauncher:
 
 
 # Główna część programu
+def _setup_file_logging():
+    """Log do data/logs/game_launcher.log - w wersji exe (bez konsoli) to jedyne źródło błędów."""
+    from logging.handlers import RotatingFileHandler
+
+    log_dir = os.path.join(APP_DIR, "data", "logs")
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+        handler = RotatingFileHandler(
+            os.path.join(log_dir, "game_launcher.log"),
+            maxBytes=1_000_000,
+            backupCount=3,
+            encoding="utf-8",
+        )
+    except OSError:
+        return
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+    root_logger = logging.getLogger()
+    root_logger.addHandler(handler)
+    if root_logger.level > logging.INFO or root_logger.level == logging.NOTSET:
+        root_logger.setLevel(logging.INFO)
+
+
+def _install_tk_error_handler(root):
+    """Nieobsłużony wyjątek w callbacku Tk: zapis do logu + okno z komunikatem."""
+    shown = {"count": 0}
+
+    def report(exc_type, exc_value, exc_tb):
+        logging.error("Nieobsłużony błąd interfejsu", exc_info=(exc_type, exc_value, exc_tb))
+        if shown["count"] >= 3:  # nie zasypuj użytkownika oknami
+            return
+        shown["count"] += 1
+        try:
+            messagebox.showerror(
+                "Nieoczekiwany błąd",
+                f"{exc_type.__name__}: {exc_value}\n\n"
+                "Szczegóły zapisano w data\\logs\\game_launcher.log.",
+                parent=root,
+            )
+        except tk.TclError:
+            pass
+
+    root.report_callback_exception = report
+
+
 def main():
     # Dane (data/, images/, okładki "images/...") leżą obok aplikacji - niezależnie od
     # tego, z jakiego katalogu (skrót, "Rozpocznij w") uruchomiono launcher.
     os.chdir(APP_DIR)
+    _setup_file_logging()
     root = tk.Tk()
+    _install_tk_error_handler(root)
     try:
         icon_path = resource_path("icon.ico")
         if os.path.exists(icon_path):

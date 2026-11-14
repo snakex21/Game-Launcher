@@ -10,10 +10,26 @@ from launcher.utils import save_config
 
 
 def create_news_page(self):
-    from tkhtmlview import HTMLLabel
-
     for widget in self.news_frame.winfo_children():
         widget.destroy()
+
+    try:
+        from tkhtmlview import HTMLLabel
+        import feedparser  # noqa: F401  (sprawdzenie, czy pakiet jest zainstalowany)
+    except ImportError as error:
+        logging.error(f"Zakładka Newsy niedostępna - brak pakietu: {error}")
+        ttk.Label(
+            self.news_frame,
+            text=(
+                "Zakładka Newsy wymaga pakietów „feedparser” i „tkhtmlview”.\n\n"
+                "Zainstaluj je poleceniem:\n    pip install -r requirements.txt\n\n"
+                f"Szczegóły: {error}"
+            ),
+            justify="left",
+            font=("Segoe UI", 11),
+        ).grid(row=0, column=0, padx=30, pady=30, sticky="nw")
+        self.news_content = None
+        return
 
     header = ttk.Frame(self.news_frame)
     header.grid(row=0, column=0, sticky="ew")
@@ -152,7 +168,9 @@ def show_news(self):
 
     if not getattr(self, "_news_loaded", False):
         logging.info("Uruchamianie ładowania newsów w tle.")
-        if hasattr(self, "news_content") and self.news_content.winfo_exists():
+        if getattr(self, "news_content", None) is None:
+            logging.info("Newsy niedostępne (brak pakietów) - pomijam ładowanie.")
+        elif self.news_content.winfo_exists():
             threading.Thread(target=self.load_news, args=(self.news_content,), daemon=True).start()
             self._news_loaded = True
         else:

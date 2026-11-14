@@ -9,6 +9,17 @@ from launcher.utils import load_photoimage_from_path, save_config
 from ui.components import ToolTip
 
 
+def _game_file_missing(game_data):
+    """True, gdy exe (PC) albo ROM (emulator) nie istnieje - także po zmianie litery dysku."""
+    from launcher.launch_command import find_existing_path
+
+    if game_data.get("game_type", "pc") == "emulator":
+        path = game_data.get("rom_path")
+    else:
+        path = game_data.get("exe_path")
+    return bool(path) and find_existing_path(path) is None
+
+
 def _populate_game_tile(self, tile_frame, game_name, game_data, tile_width, tile_height):
     """Wypełnia ramkę o STAŁYM rozmiarze zawartością kafelka gry."""
     logging.debug(f"Populating tile for {game_name} with size {tile_width}x{tile_height}")
@@ -92,7 +103,10 @@ def _populate_game_tile(self, tile_frame, game_name, game_data, tile_width, tile
 
     label_text = f"{game_name}{type_info}\n"
 
+    missing_file = _game_file_missing(game_data)
     details = []
+    if missing_file:
+        details.append("⚠ Brak pliku gry")
     details.append(f"Czas: {self.format_play_time(game_data.get('play_time', 0))}")
     details.append(f"Ukoń.: {completion}%")
     if game_version:
@@ -112,6 +126,8 @@ def _populate_game_tile(self, tile_frame, game_name, game_data, tile_width, tile
         justify=tk.LEFT,
         font=info_font,
     )
+    if missing_file:
+        name_label.configure(foreground="#e0a040")
     name_label.grid(sticky="nsew")
     name_label.bind(
         "<Button-3>",
