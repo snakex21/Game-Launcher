@@ -13,6 +13,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	rdebug "runtime/debug"
 	"sync/atomic"
@@ -25,6 +26,7 @@ import (
 	"github.com/snakex21/game-launcher/go/internal/bridge"
 	"github.com/snakex21/game-launcher/go/internal/paths"
 	"github.com/snakex21/game-launcher/go/internal/store"
+	"github.com/snakex21/game-launcher/go/internal/updater"
 	"github.com/snakex21/game-launcher/go/internal/webui"
 	"github.com/snakex21/game-launcher/go/internal/winapi"
 )
@@ -60,6 +62,7 @@ func (h *windowHost) settle(id int64, ok bool, payload any) {
 	h.dispatchEval(bridge.SettleScript(id, ok, payload))
 }
 func (h *windowHost) HWND() uintptr { return uintptr(h.w.Window()) }
+func (h *windowHost) Quit()         { h.w.Dispatch(func() { h.w.Terminate() }) }
 
 type dialogs struct{}
 
@@ -76,7 +79,15 @@ func main() { os.Exit(run()) }
 func run() int {
 	debug := flag.Bool("debug", false, "enable WebView2 devtools")
 	appDirFlag := flag.String("app-dir", "", "launcher folder with data/ (default: folder of the exe)")
+	_ = flag.Bool("post-update", false, "first start after an update (internal)")
 	flag.Parse()
+	exePath, _ := os.Executable()
+	updState, _ := updater.OnStartup(exePath)
+	if updState == updater.RolledBack {
+		// the new version failed twice: the old exe is back - start it
+		_ = exec.Command(exePath, os.Args[1:]...).Start()
+		return 0
+	}
 	if *appDirFlag != "" {
 		_ = os.Setenv("GL_APP_DIR", *appDirFlag)
 	}
@@ -144,6 +155,9 @@ func run() int {
 		}
 		_ = json.Unmarshal(p, &in)
 		total := time.Since(procStart)
+		if updState == updater.Trial {
+			updater.Confirm(exePath) // the new version works: drop the old exe
+		}
 		log.Printf("[perf] boot data %v, window %v, first paint %v (%d games)", tBoot.Round(time.Millisecond), tWindow.Round(time.Millisecond), total.Round(time.Millisecond), in.Games)
 		if out := os.Getenv("GL_PERF_OUT"); out != "" {
 			b, _ := json.Marshal(map[string]any{"boot_ms": tBoot.Milliseconds(), "window_ms": tWindow.Milliseconds(), "first_paint_ms": total.Milliseconds(), "games": in.Games, "pid": os.Getpid()})

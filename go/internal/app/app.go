@@ -82,6 +82,8 @@ type App struct {
 
 	// cloudBase overrides the GitHub API URL (tests).
 	cloudBase string
+	// updateBase overrides the releases API URL (tests).
+	updateBase string
 
 	scanMu     sync.Mutex
 	scanCancel context.CancelFunc
@@ -199,6 +201,8 @@ func (a *App) Register(d *bridge.Dispatcher) {
 	reg("music.deletePlaylist", handler(a.musicDeletePlaylist))
 	reg("music.addFolder", handler(a.musicAddFolder))
 	reg("music.state", handler(a.musicState))
+	reg("update.check", handler(a.updateCheck))
+	reg("update.install", handler(a.updateInstall))
 	reg("cloud.backup", handler(a.cloudBackup))
 	reg("cloud.restore", handler(a.cloudRestore))
 	reg("chat.status", handler(func(_ context.Context, _ empty) (any, error) { return a.chatStatus(), nil }))
