@@ -559,7 +559,7 @@ func (a *App) remoteFromSettings() {
 	}
 	if token == "" {
 		token = remote.GenerateToken()
-		_ = a.S.UpdateLocal(func(l *ojson.Object) error { l.Set("remote_control_token", token); return nil })
+		_ = a.S.SetSecret("remote_control_token", token)
 	}
 	if port == store.DefaultChatServerPort || port < 1024 || port > 65535 {
 		port = store.DefaultRemoteControlPort
@@ -642,7 +642,7 @@ func (a *App) remoteRegenerate(_ context.Context, _ empty) (any, error) {
 		return nil, bridge.Errf("Token pochodzi ze zmiennej GL_REMOTE_TOKEN – zmień ją tam.")
 	}
 	t := remote.GenerateToken()
-	if err := a.S.UpdateLocal(func(l *ojson.Object) error { l.Set("remote_control_token", t); return nil }); err != nil {
+	if err := a.S.SetSecret("remote_control_token", t); err != nil {
 		return nil, err
 	}
 	a.remoteFromSettings()

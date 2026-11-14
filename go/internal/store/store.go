@@ -26,6 +26,7 @@ import (
 
 	"github.com/snakex21/game-launcher/go/internal/ojson"
 	"github.com/snakex21/game-launcher/go/internal/paths"
+	"github.com/snakex21/game-launcher/go/internal/secrets"
 )
 
 // ProgramVersion is the data format version written to config.json.
@@ -136,8 +137,18 @@ func (s *Store) Load() error {
 	}
 	s.localStyle = lstyle
 	applyLocalDefaults(local)
+	migrated := protectPlainSecrets(local)
 	s.envOverride = applySecretEnv(local, s.getenv)
 	s.local = local
+	if migrated > 0 {
+		// Plaintext secrets from the Python version: write them back
+		// encrypted right away (DPAPI) instead of keeping them readable.
+		if err := s.saveLocalLocked(); err != nil {
+			log.Printf("[store] could not re-save protected secrets: %v", err)
+		} else {
+			log.Printf("[store] %d secret value(s) moved to DPAPI", migrated)
+		}
+	}
 	return nil
 }
 
@@ -419,6 +430,35 @@ func applyLocalDefaults(d *ojson.Object) {
 	d.SetDefault("show_track_overlay", false)
 }
 
+// protectPlainSecrets encrypts plaintext secrets (API keys, tokens, chat
+// passwords) in place and returns how many were changed.
+func protectPlainSecrets(d *ojson.Object) int {
+	n := 0
+	enc := func(o *ojson.Object, key string) {
+		v, ok := o.Get(key).(string)
+		if !ok || v == "" || secrets.IsProtected(v) {
+			return
+		}
+		p, err := secrets.Protect(v)
+		if err != nil {
+			return
+		}
+		o.Set(key, p)
+		n++
+	}
+	for key := range SecretEnvVars {
+		enc(d, key)
+	}
+	for _, sv := range d.Arr("chat_servers") {
+		if so, ok := sv.(*ojson.Object); ok {
+			if c := so.Obj("credentials"); c != nil {
+				enc(c, "password")
+			}
+		}
+	}
+	return n
+}
+
 func applySecretEnv(d *ojson.Object, getenv func(string) string) map[string][2]any {
 	over := map[string][2]any{}
 	for key, env := range SecretEnvVars {
@@ -539,13 +579,50 @@ func (s *Store) ReadLocal(fn func(local *ojson.Object)) {
 	fn(s.local)
 }
 
-// Secret returns a secret value (env override first). Callers use it for
-// API calls only, never for logs or the UI.
+// Secret returns a secret value in plaintext (env override first). Callers
+// use it for API calls only, never for logs or the UI. A value that cannot
+// be decrypted (other PC/account) reads as "".
 func (s *Store) Secret(key string) string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return strings.TrimSpace(s.local.Str(key))
+	v, err := secrets.Reveal(strings.TrimSpace(s.local.Str(key)))
+	if err != nil {
+		return ""
+	}
+	return v
 }
+
+// SecretState is "", "plik", "zmienna" or "nieczytelny".
+func (s *Store) SecretState(key string) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.envOverride[key]; ok {
+		return "zmienna"
+	}
+	v := s.local.Str(key)
+	if v == "" {
+		return ""
+	}
+	if _, err := secrets.Reveal(v); err != nil {
+		return "nieczytelny"
+	}
+	return "plik"
+}
+
+// SetSecret stores a secret encrypted with DPAPI ("" clears it).
+func (s *Store) SetSecret(key, plain string) error {
+	enc, err := secrets.Protect(plain)
+	if err != nil {
+		return err
+	}
+	return s.UpdateLocal(func(l *ojson.Object) error { l.Set(key, enc); return nil })
+}
+
+// ProtectValue encrypts a value for storing in local_settings.
+func ProtectValue(plain string) (string, error) { return secrets.Protect(plain) }
+
+// RevealValue decrypts a stored value.
+func RevealValue(stored string) (string, error) { return secrets.Reveal(stored) }
 
 // SecretFromEnv reports whether key comes from an environment variable.
 func (s *Store) SecretFromEnv(key string) bool {

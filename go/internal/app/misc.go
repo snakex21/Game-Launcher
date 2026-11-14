@@ -67,14 +67,7 @@ func (a *App) Settings() SettingsDTO {
 		d.ConsecutiveDays = l.Int("consecutive_days", 0)
 	})
 	for _, k := range []string{"rawg_api_key", "lastfm_api_key", "github_token"} {
-		switch {
-		case a.S.SecretFromEnv(k):
-			d.Secrets[k] = "zmienna"
-		case a.S.Secret(k) != "":
-			d.Secrets[k] = "plik"
-		default:
-			d.Secrets[k] = ""
-		}
+		d.Secrets[k] = a.S.SecretState(k)
 	}
 	d.Remote = a.remoteStatus()
 	return d
@@ -148,7 +141,7 @@ func (a *App) settingsSetSecret(_ context.Context, in struct {
 	if len(v) > 200 || strings.ContainsAny(v, "\r\n\t ") {
 		return nil, bridge.Errf("Nieprawidłowy klucz.")
 	}
-	err := a.S.UpdateLocal(func(l *ojson.Object) error { l.Set(in.Key, v); return nil })
+	err := a.S.SetSecret(in.Key, v)
 	return a.Settings(), err
 }
 

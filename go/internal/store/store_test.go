@@ -97,8 +97,12 @@ func TestSecretsFromEnvAreNotWritten(t *testing.T) {
 		t.Fatal(err)
 	}
 	raw, _ := os.ReadFile(s.L.LocalFile)
-	if bytes.Contains(raw, []byte("FROM_ENV")) || bytes.Contains(raw, []byte("LFM_ENV")) || !bytes.Contains(raw, []byte("FROM_FILE")) {
-		t.Fatalf("env secret leaked into the file or file value lost")
+	if bytes.Contains(raw, []byte("FROM_ENV")) || bytes.Contains(raw, []byte("LFM_ENV")) || bytes.Contains(raw, []byte("FROM_FILE")) {
+		t.Fatalf("secret in plaintext in the file")
+	}
+	o, _ := ojson.DecodeObject(raw)
+	if v, err := RevealValue(o.Str("rawg_api_key")); err != nil || v != "FROM_FILE" {
+		t.Fatal("file value lost or not decryptable")
 	}
 	if !bytes.Contains(raw, []byte("\r\n")) {
 		t.Fatal("CRLF style not preserved")
@@ -214,12 +218,14 @@ func TestUserDataCopyMigration(t *testing.T) {
 			t.Fatal("config differs after a Go save + reload")
 		}
 	})
-	// Secrets in local_settings survived (compared without printing them).
+	// Secrets in local_settings survived, now DPAPI-protected (compared
+	// without printing them).
 	for _, k := range []string{"rawg_api_key", "lastfm_api_key", "github_token"} {
-		ov, _ := origLocal(t, src).Lookup(k)
-		nv, _ := origLocal(t, dir).Lookup(k)
-		if ov != nv {
-			t.Errorf("secret %s changed", k)
+		ov := origLocal(t, src).Str(k)
+		nv := origLocal(t, dir).Str(k)
+		plain, err := RevealValue(nv)
+		if err != nil || plain != ov || (ov != "" && nv == ov) {
+			t.Errorf("secret %s not preserved/protected", k)
 		}
 	}
 	t.Logf("migrated %d games, remapped %d paths", games, s.Remapped)

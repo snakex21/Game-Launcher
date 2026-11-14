@@ -1137,11 +1137,11 @@
     box.appendChild(c3)
 
     var c4 = section('Klucze API', 'Klucze są zapisywane w data\\config\\local_settings.json (nie trafiają do gita) i nigdy nie są wyświetlane. Można je też podać zmiennymi GL_RAWG_API_KEY i GL_LASTFM_API_KEY.')
-    ;[['rawg_api_key', 'RAWG (okładki i opisy gier)'], ['lastfm_api_key', 'Last.fm (okładki muzyki)']].forEach(function (k) {
+    ;[['rawg_api_key', 'RAWG (okładki i opisy gier)'], ['lastfm_api_key', 'Last.fm (okładki muzyki)'], ['github_token', 'GitHub (kopia w chmurze)']].forEach(function (k) {
       var st = s.secrets[k[0]]
       var inp = h('input', { type: 'password', placeholder: st ? '•••••• (ustawiony – wpisz nowy, aby zmienić)' : 'wklej klucz', autocomplete: 'off', disabled: st === 'zmienna' })
       c4.appendChild(h('div', { class: 'row', style: 'margin-bottom:8px' }, h('span', { style: 'width:220px', text: k[1] }), h('div', { class: 'grow' }, inp),
-        h('span', { class: 'muted small', style: 'width:150px', text: st === 'zmienna' ? 'ze zmiennej środowiskowej' : st ? 'ustawiony' : 'brak' }),
+        h('span', { class: 'muted small', style: 'width:150px', text: st === 'zmienna' ? 'ze zmiennej środowiskowej' : st === 'nieczytelny' ? 'nieczytelny (inny komputer) – wpisz ponownie' : st ? 'ustawiony (DPAPI)' : 'brak' }),
         h('button', { class: 'btn', disabled: st === 'zmienna', onclick: function () { call('settings.setSecret', { key: k[0], value: inp.value }).then(function (x) { toast('Zapisano klucz', 'ok'); drawSettings(box, x) }).catch(fail) } }, 'Zapisz')))
     })
     box.appendChild(c4)
