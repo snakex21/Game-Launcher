@@ -1,0 +1,51 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "template.generic",
+  "name": "Dowolna gra - kopiuj do folderu",
+  "abstract": true,
+  "engine": "generic",
+  "notes": "Szablon dla gier bez dedykowanej definicji. Uzytkownik wskazuje folder gry i folder docelowy modow (domyslnie korzen gry). Wszystko inne dziala tak samo: magazyn, profile, konflikty, dziennik, czyszczenie.",
+  "detection": {
+    "requiredFiles": [],
+    "allowManual": true
+  },
+  "paths": {
+    "modsTarget": "{game}"
+  },
+  "modTypes": [
+    {
+      "id": "files",
+      "name": "Pliki (kopiuj do folderu docelowego)",
+      "target": "{paths.modsTarget}",
+      "default": true,
+      "priority": 100
+    }
+  ],
+  "installer": {
+    "fomod": false,
+    "maxRootSearchDepth": 2,
+    "ignoreGlobs": ["readme*.txt", "*.url", "screenshots/**", "fomod/**", "meta.ini"]
+  },
+  "deployment": {
+    "strategies": ["hardlink", "symlink", "copy"],
+    "caseInsensitivePaths": true,
+    "preferStagingOnGameVolume": true
+  },
+  "loadOrder": { "kind": "deploy-priority" },
+  "updates": { "steamBuildId": true, "onUpdate": "verify-and-redeploy" },
+  "warnings": [
+    {
+      "id": "generic-no-validation",
+      "level": "info",
+      "when": "on-first-mod",
+      "text": "Ta gra nie ma dedykowanej definicji - menedzer nie sprawdza zgodnosci modow ani wymaganych loaderow."
+    },
+    {
+      "id": "generic-exec",
+      "level": "warn",
+      "when": "on-executable-content",
+      "text": "Mod zawiera pliki wykonywalne (DLL/ASI/EXE/skrypty). Instaluj tylko z zaufanych zrodel."
+    }
+  ]
+}

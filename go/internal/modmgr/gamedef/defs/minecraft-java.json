@@ -1,0 +1,119 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "minecraft-java",
+  "name": "Minecraft: Java Edition (instancje)",
+  "engine": "java-minecraft",
+  "adapter": "minecraft",
+  "notes": "Gra instancyjna: kazdy profil = instancja (wersja MC + loader + mody) w magazynie. Nie implementujemy logowania Microsoft ani pobierania gry - uruchamianie przez oficjalny launcher (profil z gameDir wskazujacym instancje, za zgoda uzytkownika) lub eksport instancji do Prism Launcher.",
+  "detection": {
+    "requiredFiles": [],
+    "allowManual": true
+  },
+  "paths": {
+    "officialLauncherProfiles": "{appData}/.minecraft/launcher_profiles.json"
+  },
+  "modTypes": [
+    {
+      "id": "mod",
+      "name": "Mod (.jar)",
+      "target": "{instance}/mods",
+      "flatten": true,
+      "default": true,
+      "priority": 10,
+      "match": { "anyFiles": ["*.jar"] },
+      "includeGlobs": ["*.jar"],
+      "executableContent": true
+    },
+    {
+      "id": "resourcepack",
+      "name": "Paczka zasobow",
+      "target": "{instance}/resourcepacks",
+      "priority": 20,
+      "match": { "anyFiles": ["pack.mcmeta"] },
+      "notes": "Instalowana jako pojedynczy plik .zip (nie rozpakowujemy)."
+    },
+    {
+      "id": "shaderpack",
+      "name": "Shader pack (Iris/OptiFine)",
+      "target": "{instance}/shaderpacks",
+      "priority": 30,
+      "match": { "anyDirs": ["shaders"] }
+    },
+    {
+      "id": "config",
+      "name": "Konfiguracja / overrides z modpacka",
+      "target": "{instance}",
+      "priority": 90,
+      "match": { "anyDirs": ["config", "defaultconfigs", "kubejs"] }
+    }
+  ],
+  "installer": {
+    "packageFormat": "modrinth-mrpack",
+    "maxRootSearchDepth": 0
+  },
+  "deployment": {
+    "strategies": ["hardlink", "copy"],
+    "caseInsensitivePaths": false,
+    "preferStagingOnGameVolume": false
+  },
+  "loadOrder": {
+    "kind": "dependency-sorted",
+    "readExternalChanges": false
+  },
+  "frameworks": [
+    {
+      "id": "fabric",
+      "name": "Fabric Loader",
+      "required": "if-mod-requires",
+      "detect": { "anyFiles": ["{instance}/.loader/fabric.json"] },
+      "modRequiresIf": { "anyFiles": ["fabric.mod.json"] },
+      "install": "instance-loader",
+      "notes": "Profil wersji pobierany z oficjalnego meta API Fabric (JSON) - bez uruchamiania instalatora."
+    },
+    {
+      "id": "quilt",
+      "name": "Quilt Loader",
+      "required": "if-mod-requires",
+      "detect": { "anyFiles": ["{instance}/.loader/quilt.json"] },
+      "modRequiresIf": { "anyFiles": ["quilt.mod.json"] },
+      "install": "instance-loader"
+    },
+    {
+      "id": "forge",
+      "name": "Minecraft Forge",
+      "required": "if-mod-requires",
+      "detect": { "anyFiles": ["{instance}/.loader/forge.json"] },
+      "modRequiresIf": { "anyFiles": ["META-INF/mods.toml"] },
+      "install": "external-installer",
+      "notes": "Instalator Forge to program Java wykonujacy procesory - uruchamia go uzytkownik (lub launcher zewnetrzny), nigdy automatycznie."
+    },
+    {
+      "id": "neoforge",
+      "name": "NeoForge",
+      "required": "if-mod-requires",
+      "detect": { "anyFiles": ["{instance}/.loader/neoforge.json"] },
+      "modRequiresIf": { "anyFiles": ["META-INF/neoforge.mods.toml"] },
+      "install": "external-installer"
+    }
+  ],
+  "sources": {
+    "modrinth": { "projectTypes": ["mod", "modpack", "resourcepack", "shader"] },
+    "curseforge": { "gameId": 432 }
+  },
+  "updates": { "steamBuildId": false, "epicVersion": false, "onUpdate": "warn" },
+  "warnings": [
+    {
+      "id": "mc-loader-mismatch",
+      "level": "warn",
+      "when": "always",
+      "text": "Mod musi pasowac do wersji Minecrafta i loadera instancji (Fabric/Quilt/Forge/NeoForge). Menedzer filtruje wyniki wyszukiwania wg instancji."
+    },
+    {
+      "id": "mc-servers",
+      "level": "info",
+      "when": "on-first-mod",
+      "text": "Mody serwerowe/klienckie: pole 'env' z modrinth.index.json decyduje, co instalujemy po stronie klienta."
+    }
+  ]
+}

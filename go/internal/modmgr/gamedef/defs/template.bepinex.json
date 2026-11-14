@@ -1,0 +1,96 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "template.bepinex",
+  "name": "Szablon: gra Unity z BepInEx + Thunderstore",
+  "abstract": true,
+  "engine": "unity",
+  "adapter": "bepinex",
+  "detection": {
+    "requiredFiles": ["UnityPlayer.dll"]
+  },
+  "modTypes": [
+    {
+      "id": "bepinex-pack",
+      "name": "BepInEx (pakiet bazowy)",
+      "target": "{game}",
+      "priority": 10,
+      "match": { "anyFiles": ["winhttp.dll", "doorstop_config.ini", "BepInEx/core/BepInEx*.dll"] },
+      "rootMarkers": ["winhttp.dll", "doorstop_config.ini", "BepInEx"],
+      "executableContent": true,
+      "notes": "Pakiety BepInExPack na Thunderstore maja wszystko w podfolderze (np. 'BepInExPack_<Gra>/'); wykrywanie korzenia go zdejmuje."
+    },
+    {
+      "id": "bepinex-patcher",
+      "name": "Patcher (preloader)",
+      "target": "{game}/BepInEx/patchers",
+      "perModSubfolder": "{mod.namespace}-{mod.name}",
+      "priority": 20,
+      "match": { "anyDirs": ["patchers"] },
+      "rootMarkers": ["patchers"],
+      "executableContent": true
+    },
+    {
+      "id": "bepinex-plugin",
+      "name": "Plugin BepInEx",
+      "target": "{game}/BepInEx/plugins",
+      "perModSubfolder": "{mod.namespace}-{mod.name}",
+      "priority": 30,
+      "default": true,
+      "match": { "anyFiles": ["*.dll", "plugins/**"] },
+      "rootMarkers": ["plugins", "config", "patchers", "manifest.json", "*.dll"],
+      "executableContent": true,
+      "notes": "Pakiet Thunderstore: plugins/ -> BepInEx/plugins/<Ns-Name>/, patchers/ -> BepInEx/patchers/<Ns-Name>/, config/ -> BepInEx/config/ (wspolne), luzne *.dll -> BepInEx/plugins/<Ns-Name>/."
+    },
+    {
+      "id": "bepinex-config",
+      "name": "Konfiguracja BepInEx",
+      "target": "{game}/BepInEx/config",
+      "priority": 40,
+      "match": { "anyDirs": ["config"] }
+    }
+  ],
+  "installer": {
+    "packageFormat": "thunderstore",
+    "maxRootSearchDepth": 2,
+    "ignoreGlobs": ["icon.png", "README.md", "CHANGELOG.md", "LICENSE*"]
+  },
+  "deployment": {
+    "strategies": ["hardlink", "copy", "external-folder"],
+    "caseInsensitivePaths": true,
+    "preferStagingOnGameVolume": true
+  },
+  "loadOrder": {
+    "kind": "dependency-sorted",
+    "sortHints": "manifest-dependencies",
+    "readExternalChanges": false
+  },
+  "frameworks": [
+    {
+      "id": "bepinex",
+      "name": "BepInEx 5 (Mono)",
+      "required": "always",
+      "detect": { "allFiles": ["winhttp.dll", "BepInEx/core/BepInEx.dll"] },
+      "install": "as-mod",
+      "notes": "Doorstop (winhttp.dll) laduje BepInEx przy starcie gry. Dla gier IL2CPP potrzebny BepInEx 6 / pakiet IL2CPP (inny folder core i interop)."
+    }
+  ],
+  "launch": {
+    "preferStoreLaunch": true
+  },
+  "updates": { "steamBuildId": true, "onUpdate": "verify-and-redeploy" },
+  "warnings": [
+    {
+      "id": "bepinex-dll",
+      "level": "warn",
+      "when": "on-executable-content",
+      "text": "Pluginy BepInEx to kod .NET uruchamiany z pelnymi uprawnieniami gry. Pobieraj tylko z Thunderstore/zaufanych zrodel."
+    },
+    {
+      "id": "bepinex-multiplayer",
+      "level": "info",
+      "when": "on-first-mod",
+      "text": "W grach sieciowych wszyscy gracze zwykle potrzebuja tych samych modow - eksportuj profil jako kod/plik."
+    }
+  ]
+}

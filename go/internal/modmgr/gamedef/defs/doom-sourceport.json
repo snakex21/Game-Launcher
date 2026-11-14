@@ -1,0 +1,65 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "doom-sourceport",
+  "name": "Doom (source porty: GZDoom/UZDoom, LZDoom, DSDA-Doom, Chocolate/Crispy)",
+  "engine": "doom",
+  "adapter": "doom",
+  "notes": "Gra = folder source portu (manual). IWAD-y wykrywamy z instalacji Steam/GOG (DOOM + DOOM II, Ultimate Doom, Doom II, Final Doom, Heretic, Hexen) i z folderu portu. Mody NIE sa kopiowane do gry - strategia launch-args przekazuje sciezki z magazynu.",
+  "detection": {
+    "requiredFiles": [],
+    "anyOfFiles": ["gzdoom.exe", "uzdoom.exe", "lzdoom.exe", "dsda-doom.exe", "chocolate-doom.exe", "crispy-doom.exe"],
+    "allowManual": true
+  },
+  "paths": {
+    "iwadSearch": "{game}"
+  },
+  "executables": [
+    { "id": "gzdoom", "name": "GZDoom", "path": "{game}/gzdoom.exe", "default": true, "kind": "game" },
+    { "id": "uzdoom", "name": "UZDoom", "path": "{game}/uzdoom.exe", "kind": "game" },
+    { "id": "dsda", "name": "DSDA-Doom", "path": "{game}/dsda-doom.exe", "kind": "game" },
+    { "id": "chocolate", "name": "Chocolate Doom", "path": "{game}/chocolate-doom.exe", "kind": "game" }
+  ],
+  "modTypes": [
+    {
+      "id": "wad",
+      "name": "PWAD / PK3 / PK7",
+      "target": "{modsStaging}",
+      "flatten": true,
+      "default": true,
+      "priority": 10,
+      "match": { "anyFiles": ["*.wad", "*.pk3", "*.pk7", "*.pke", "*.ipk3"] },
+      "includeGlobs": ["*.wad", "*.pk3", "*.pk7", "*.pke", "*.ipk3", "*.deh", "*.bex", "*.txt"],
+      "notes": "Archiwa .pk3/.pk7 to tez zipy - nie rozpakowujemy ich, przekazujemy jako plik. Przy imporcie ostrozniej: rozpakowujemy tylko zewnetrzne archiwum dystrybucyjne."
+    },
+    {
+      "id": "dehacked",
+      "name": "DeHackEd",
+      "target": "{modsStaging}",
+      "flatten": true,
+      "priority": 20,
+      "match": { "anyFiles": ["*.deh", "*.bex"] }
+    }
+  ],
+  "installer": { "maxRootSearchDepth": 2 },
+  "deployment": {
+    "strategies": ["launch-args"]
+  },
+  "loadOrder": {
+    "kind": "launch-args",
+    "format": "args",
+    "pluginGlobs": ["*.wad", "*.pk3", "*.pk7", "*.pke", "*.deh", "*.bex"],
+    "argTemplate": ["-iwad", "{iwad}", "-file", "{files:*.wad,*.pk3,*.pk7,*.pke...}", "-deh", "{files:*.deh,*.bex...}"],
+    "readExternalChanges": false
+  },
+  "launch": { "preferStoreLaunch": false },
+  "updates": { "steamBuildId": false, "onUpdate": "warn" },
+  "warnings": [
+    {
+      "id": "doom-port-compat",
+      "level": "info",
+      "when": "always",
+      "text": "Mody ZScript/PK3 dzialaja tylko w portach z rodziny ZDoom; mapy 'limit-removing'/'boom'/'MBF21' - w DSDA-Doom. Chocolate Doom: dla PWAD-ow zmieniajacych sprite uzyj -merge zamiast -file."
+    }
+  ]
+}

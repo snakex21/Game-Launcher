@@ -1,0 +1,110 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "baldursgate3",
+  "name": "Baldur's Gate 3",
+  "engine": "larian",
+  "adapter": "bg3",
+  "detection": {
+    "steam": { "appIds": [1086940] },
+    "gog": { "gameIds": ["1456460669"] },
+    "requiredFiles": ["bin/bg3.exe"],
+    "rootFromExe": "bin/bg3.exe"
+  },
+  "paths": {
+    "larian": "{localAppData}/Larian Studios/Baldur's Gate 3",
+    "modsDir": "{localAppData}/Larian Studios/Baldur's Gate 3/Mods",
+    "playerProfile": "{localAppData}/Larian Studios/Baldur's Gate 3/PlayerProfiles/Public"
+  },
+  "executables": [
+    { "id": "vulkan", "name": "BG3 (Vulkan)", "path": "{game}/bin/bg3.exe", "args": ["--skip-launcher"], "default": true, "kind": "game" },
+    { "id": "dx11", "name": "BG3 (DirectX 11)", "path": "{game}/bin/bg3_dx11.exe", "args": ["--skip-launcher"], "kind": "game" }
+  ],
+  "modTypes": [
+    {
+      "id": "pak",
+      "name": "Mod .pak",
+      "target": "{paths.modsDir}",
+      "flatten": true,
+      "default": true,
+      "priority": 10,
+      "match": { "anyFiles": ["*.pak"] },
+      "includeGlobs": ["*.pak"],
+      "notes": "Metadane (UUID, Folder, Version64, zaleznosci) czytamy z meta.lsx wewnatrz .pak (format LSPK - tylko odczyt naglowka i listy plikow) albo z info.json dolaczonego do archiwum."
+    },
+    {
+      "id": "script-extender",
+      "name": "BG3 Script Extender",
+      "target": "{game}/bin",
+      "priority": 5,
+      "match": { "allFiles": ["DWrite.dll"] },
+      "executableContent": true
+    },
+    {
+      "id": "native",
+      "name": "Native Mod (DLL)",
+      "target": "{game}/bin/NativeMods",
+      "priority": 6,
+      "match": { "anyFiles": ["NativeMods/*.dll"] },
+      "executableContent": true
+    },
+    {
+      "id": "loose",
+      "name": "Luzne pliki (Data)",
+      "target": "{game}/Data",
+      "priority": 40,
+      "match": { "anyDirs": ["Public", "Generated", "Localization", "Mods"] },
+      "notes": "Rzadkie; wspolny folder - konflikty miedzy modami sa wyrazne."
+    }
+  ],
+  "installer": {
+    "packageFormat": "bg3-pak",
+    "maxRootSearchDepth": 2
+  },
+  "deployment": {
+    "strategies": ["hardlink", "copy"],
+    "caseInsensitivePaths": true,
+    "preferStagingOnGameVolume": true,
+    "postDeploy": [ { "kind": "write-load-order", "requiresConsent": false } ]
+  },
+  "loadOrder": {
+    "kind": "bg3-modsettings",
+    "file": "{paths.playerProfile}/modsettings.lsx",
+    "format": "lsx",
+    "encoding": "utf-8",
+    "baseEntries": [
+      { "Folder": "GustavDev", "Name": "GustavDev", "UUID": "28ac9ce2-2aba-8cda-b3b5-6e922f71b6b8", "note": "Zawsze pierwszy; UUID i aktualny modul bazowy weryfikujemy z pliku zapisanego przez gre po kazdym patchu." }
+    ],
+    "sortHints": "manifest-dependencies",
+    "readExternalChanges": true
+  },
+  "frameworks": [
+    {
+      "id": "bg3se",
+      "name": "BG3 Script Extender",
+      "required": "if-mod-requires",
+      "detect": { "allFiles": ["bin/DWrite.dll"] },
+      "modRequiresIf": { "anyFiles": ["ScriptExtender/Config.json", "Mods/*/ScriptExtender/**"] },
+      "install": "as-mod",
+      "source": { "kind": "github" },
+      "notes": "DWrite.dll to tylko updater; wlasciwe pliki SE w %LOCALAPPDATA%/BG3ScriptExtender - nie zarzadzamy nimi."
+    }
+  ],
+  "launch": { "preferStoreLaunch": false },
+  "sources": { "nexus": { "domain": "baldursgate3" } },
+  "updates": { "steamBuildId": true, "watchFiles": ["bin/bg3.exe"], "onUpdate": "verify-and-redeploy" },
+  "warnings": [
+    {
+      "id": "bg3-disabled-pak",
+      "level": "warn",
+      "when": "always",
+      "text": "Plik .pak obecny w folderze Mods, ale nieobecny w modsettings.lsx, moze nadal nadpisywac pliki gry. Wylaczony mod usuwamy z folderu (purge), a nie tylko z listy."
+    },
+    {
+      "id": "bg3-ingame-manager",
+      "level": "info",
+      "when": "always",
+      "text": "Wbudowany menedzer modow gry (mod.io) tez zapisuje modsettings.lsx. Wykrywamy zmiany zewnetrzne i proponujemy import."
+    }
+  ]
+}

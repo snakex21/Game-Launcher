@@ -1,0 +1,59 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "fallout4",
+  "name": "Fallout 4",
+  "extends": "template.bethesda",
+  "engine": "creation",
+  "detection": {
+    "steam": { "appIds": [377160] },
+    "gog": { "gameIds": ["1998527297"] },
+    "xbox": { "moddable": "content-folder" },
+    "requiredFiles": ["Fallout4.exe", "Data/Fallout4.esm"]
+  },
+  "paths": {
+    "data": "{game}/Data",
+    "docs": "{myGames}/Fallout4",
+    "appdata": "{localAppData}/Fallout4"
+  },
+  "executables": [
+    { "id": "game", "name": "Fallout 4", "path": "{game}/Fallout4.exe", "kind": "game" },
+    { "id": "f4se", "name": "F4SE", "path": "{game}/f4se_loader.exe", "default": true, "requiresFramework": "f4se", "kind": "loader" }
+  ],
+  "loadOrder": {
+    "kind": "bethesda-plugins",
+    "file": "{paths.appdata}/plugins.txt",
+    "pluginsDir": "{paths.data}",
+    "pluginGlobs": ["*.esm", "*.esp", "*.esl"],
+    "format": "asterisk",
+    "encoding": "windows-1252",
+    "implicitPlugins": ["Fallout4.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCCoast.esm", "DLCworkshop02.esm", "DLCworkshop03.esm", "DLCNukaWorld.esm", "DLCUltraHighResolution.esm"],
+    "implicitListFile": "{game}/Fallout4.ccc",
+    "lightPlugins": { "supported": true, "extensions": [".esl"], "flagged": true, "maxCount": 4096 },
+    "maxFullPlugins": 254,
+    "sortHints": "masters-first"
+  },
+  "frameworks": [
+    {
+      "id": "f4se",
+      "name": "Fallout 4 Script Extender",
+      "required": "if-mod-requires",
+      "detect": { "allFiles": ["f4se_loader.exe"] },
+      "modRequiresIf": { "anyFiles": ["F4SE/Plugins/*.dll", "Data/F4SE/Plugins/*.dll"] },
+      "install": "as-mod",
+      "gameVersionLocked": true,
+      "launchVia": "f4se",
+      "notes": "Po aktualizacji 'next-gen' (2024) czesc pluginow F4SE wymaga wersji dla nowego exe - sprawdzamy zgodnosc wersji exe z wersja F4SE."
+    }
+  ],
+  "sources": { "nexus": { "domain": "fallout4" } },
+  "updates": { "steamBuildId": true, "watchFiles": ["Fallout4.exe"], "onUpdate": "verify-and-redeploy" },
+  "warnings": [
+    {
+      "id": "fo4-loose-files",
+      "level": "warn",
+      "when": "on-first-mod",
+      "text": "Aby gra czytala luzne pliki (tekstury, meshe), Fallout4Custom.ini musi zawierac [Archive] bInvalidateOlderFiles=1 i sResourceDataDirsFinal=. Menedzer zaproponuje te zmiane (z kopia zapasowa INI) - nie wprowadzi jej bez zgody."
+    }
+  ]
+}

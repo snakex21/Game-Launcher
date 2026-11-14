@@ -1,0 +1,55 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "halflife",
+  "name": "Half-Life (GoldSrc) i mody na nim",
+  "engine": "goldsrc",
+  "adapter": "goldsrc",
+  "detection": {
+    "steam": { "appIds": [70] },
+    "requiredFiles": ["hl.exe", "valve/liblist.gam"]
+  },
+  "executables": [
+    { "id": "game", "name": "Half-Life", "path": "{game}/hl.exe", "args": ["-game", "{selectedGameDir}"], "default": true, "kind": "game" }
+  ],
+  "modTypes": [
+    {
+      "id": "gamedir",
+      "name": "Mod jako osobny katalog gry (liblist.gam)",
+      "target": "{game}",
+      "perModSubfolder": "{mod.folderName}",
+      "priority": 10,
+      "match": { "manifestFile": "liblist.gam" },
+      "rootMarkers": ["liblist.gam", "cl_dlls", "dlls", "maps"],
+      "executableContent": true,
+      "notes": "Uruchamiany przez '-game <folder>'. Nie nadpisuje 'valve/' - brak konfliktow z gra bazowa."
+    },
+    {
+      "id": "addon",
+      "name": "Dodatek do katalogu gry (<gamedir>_addon)",
+      "target": "{game}/{selectedGameDir}_addon",
+      "default": true,
+      "priority": 50,
+      "rootMarkers": ["maps", "models", "sound", "sprites", "gfx", "*.wad"],
+      "notes": "Wymaga opcji 'Zezwalaj na zawartosc dodatkow' w grze. Nigdy nie piszemy do 'valve/'."
+    }
+  ],
+  "installer": { "maxRootSearchDepth": 2 },
+  "deployment": {
+    "strategies": ["hardlink", "copy"],
+    "caseInsensitivePaths": true,
+    "protectedPaths": ["valve/**", "hl.exe"]
+  },
+  "loadOrder": { "kind": "deploy-priority" },
+  "launch": { "preferStoreLaunch": true },
+  "sources": { "nexus": { "domain": "halflife" } },
+  "updates": { "steamBuildId": true, "onUpdate": "verify-and-redeploy" },
+  "warnings": [
+    {
+      "id": "hl-vac",
+      "level": "danger",
+      "when": "on-online-launch",
+      "text": "Mody z wlasnymi DLL klienta (cl_dlls) na serwerach VAC moga skutkowac banem. Graj z nimi tylko offline / na serwerach moda."
+    }
+  ]
+}

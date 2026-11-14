@@ -1,0 +1,88 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "witcher3",
+  "name": "Wiedzmin 3: Dziki Gon",
+  "engine": "redengine",
+  "adapter": "witcher3",
+  "detection": {
+    "steam": { "appIds": [292030] },
+    "gog": { "gameIds": ["1495134320", "1207664663"] },
+    "requiredFiles": ["content/content0/metadata.store"],
+    "anyOfFiles": ["bin/x64/witcher3.exe", "bin/x64_dx12/witcher3.exe"]
+  },
+  "paths": {
+    "docs": "{documents}/The Witcher 3"
+  },
+  "executables": [
+    { "id": "dx12", "name": "Wiedzmin 3 (DX12)", "path": "{game}/bin/x64_dx12/witcher3.exe", "default": true, "kind": "game" },
+    { "id": "dx11", "name": "Wiedzmin 3 (DX11)", "path": "{game}/bin/x64/witcher3.exe", "kind": "game" }
+  ],
+  "modTypes": [
+    {
+      "id": "mod",
+      "name": "Mod (folder Mods/modXxx)",
+      "target": "{game}/Mods",
+      "perModSubfolder": "{mod.folderName}",
+      "default": true,
+      "priority": 20,
+      "match": { "anyDirs": ["content"] },
+      "rootMarkers": ["content"],
+      "notes": "Nazwa folderu musi zaczynac sie od 'mod'; jesli nie - instalator dodaje prefiks i informuje uzytkownika."
+    },
+    {
+      "id": "dlc",
+      "name": "DLC moda (folder dlc/)",
+      "target": "{game}/dlc",
+      "priority": 15,
+      "match": { "anyDirs": ["dlc"] },
+      "rootMarkers": ["dlc"]
+    },
+    {
+      "id": "menu",
+      "name": "Menu XML (bin/config/...)",
+      "target": "{game}/bin/config/r4game/user_config_matrix/pc",
+      "flatten": true,
+      "priority": 25,
+      "match": { "anyFiles": ["bin/config/r4game/user_config_matrix/pc/*.xml"] },
+      "notes": "Wpisy do dx11filelist.txt / dx12filelist.txt dopisuje adapter (z kopia oryginalu)."
+    },
+    {
+      "id": "root",
+      "name": "Uklad od korzenia gry (Mods/, dlc/, bin/)",
+      "target": "{game}",
+      "priority": 50,
+      "rootMarkers": ["Mods", "dlc", "bin"]
+    }
+  ],
+  "installer": { "fomod": true, "maxRootSearchDepth": 3 },
+  "deployment": {
+    "strategies": ["hardlink", "copy"],
+    "caseInsensitivePaths": true,
+    "postDeploy": [ { "kind": "write-load-order", "requiresConsent": false } ]
+  },
+  "loadOrder": {
+    "kind": "witcher3-mods-settings",
+    "file": "{paths.docs}/mods.settings",
+    "format": "ini-priority",
+    "encoding": "utf-8",
+    "sortHints": "none",
+    "readExternalChanges": true
+  },
+  "sources": { "nexus": { "domain": "witcher3" } },
+  "updates": { "steamBuildId": true, "onUpdate": "verify-and-redeploy" },
+  "warnings": [
+    {
+      "id": "w3-scripts",
+      "level": "warn",
+      "when": "always",
+      "text": "Dwa mody zmieniajace ten sam plik .ws wymagaja scalenia (Script Merger / narzedzia spolecznosci). Menedzer wykrywa takie konflikty, ale nie scala skryptow."
+    },
+    {
+      "id": "w3-priority",
+      "level": "info",
+      "when": "always",
+      "text": "W mods.settings nizszy numer Priority = wyzszy priorytet (wygrywa). Bez wpisu mody sortowane sa po nazwie folderu (pierwszy alfabetycznie wygrywa)."
+    }
+  ]
+}

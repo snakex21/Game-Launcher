@@ -1,0 +1,146 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "cyberpunk2077",
+  "name": "Cyberpunk 2077",
+  "engine": "redengine",
+  "adapter": "cyberpunk",
+  "detection": {
+    "steam": { "appIds": [1091500] },
+    "gog": { "gameIds": ["1423049311"] },
+    "epic": { "appNames": ["77f2b98e2cef40c8a7437518bf420e47"] },
+    "requiredFiles": ["bin/x64/Cyberpunk2077.exe"],
+    "rootFromExe": "bin/x64/Cyberpunk2077.exe"
+  },
+  "executables": [
+    { "id": "game", "name": "Cyberpunk 2077", "path": "{game}/bin/x64/Cyberpunk2077.exe", "default": true, "kind": "game" },
+    { "id": "redmod", "name": "REDmod (deploy)", "path": "{game}/tools/redmod/bin/redMod.exe", "kind": "tool" }
+  ],
+  "modTypes": [
+    {
+      "id": "archive",
+      "name": "Mod .archive / ArchiveXL (.xl)",
+      "target": "{game}/archive/pc/mod",
+      "flatten": true,
+      "priority": 30,
+      "match": { "anyFiles": ["*.archive", "*.xl"] },
+      "includeGlobs": ["*.archive", "*.xl"],
+      "rootMarkers": ["archive"]
+    },
+    {
+      "id": "redmod",
+      "name": "REDmod",
+      "target": "{game}/mods",
+      "perModSubfolder": "{mod.folderName}",
+      "priority": 20,
+      "match": { "manifestFile": "info.json", "anyDirs": ["archives", "customSounds", "scripts", "tweaks"] },
+      "rootMarkers": ["info.json"]
+    },
+    {
+      "id": "cet",
+      "name": "Mod CET (Lua)",
+      "target": "{game}/bin/x64/plugins/cyber_engine_tweaks/mods",
+      "perModSubfolder": "{mod.folderName}",
+      "priority": 15,
+      "match": { "anyFiles": ["init.lua"] },
+      "executableContent": true
+    },
+    {
+      "id": "red4ext",
+      "name": "Plugin RED4ext",
+      "target": "{game}/red4ext/plugins",
+      "perModSubfolder": "{mod.folderName}",
+      "priority": 12,
+      "match": { "anyFiles": ["red4ext/plugins/**/*.dll"] },
+      "executableContent": true
+    },
+    {
+      "id": "root",
+      "name": "Uklad od korzenia gry (archive/, r6/, bin/, red4ext/, engine/)",
+      "target": "{game}",
+      "default": true,
+      "priority": 50,
+      "rootMarkers": ["archive", "bin", "r6", "red4ext", "engine", "mods"],
+      "notes": "Wiekszosc archiwow z Nexusa jest juz spakowana od korzenia gry; r6/scripts (*.reds) i r6/tweaks (*.yaml) laduja tu."
+    }
+  ],
+  "installer": {
+    "fomod": true,
+    "maxRootSearchDepth": 3,
+    "ignoreGlobs": ["readme*", "*.url", "fomod/**"]
+  },
+  "deployment": {
+    "strategies": ["hardlink", "copy"],
+    "caseInsensitivePaths": true,
+    "protectedPaths": ["bin/x64/Cyberpunk2077.exe"],
+    "postDeploy": [
+      { "kind": "write-load-order", "requiresConsent": false },
+      { "kind": "run-game-tool", "tool": "{game}/tools/redmod/bin/redMod.exe", "args": ["deploy", "{redmodOrderArgs}"], "requiresConsent": true }
+    ]
+  },
+  "loadOrder": {
+    "kind": "cyberpunk-modlist",
+    "file": "{game}/archive/pc/mod/modlist.txt",
+    "format": "lines",
+    "pluginGlobs": ["*.archive"],
+    "sortHints": "none",
+    "readExternalChanges": true
+  },
+  "frameworks": [
+    {
+      "id": "cet",
+      "name": "Cyber Engine Tweaks",
+      "required": "if-mod-requires",
+      "detect": { "allFiles": ["bin/x64/version.dll", "bin/x64/plugins/cyber_engine_tweaks.asi"] },
+      "modRequiresIf": { "anyFiles": ["**/init.lua"] },
+      "install": "as-mod",
+      "gameVersionLocked": true
+    },
+    {
+      "id": "red4ext",
+      "name": "RED4ext",
+      "required": "if-mod-requires",
+      "detect": { "allFiles": ["bin/x64/winmm.dll", "red4ext/RED4ext.dll"] },
+      "modRequiresIf": { "anyFiles": ["red4ext/plugins/**"] },
+      "install": "as-mod",
+      "gameVersionLocked": true
+    },
+    {
+      "id": "redscript",
+      "name": "redscript",
+      "required": "if-mod-requires",
+      "detect": { "anyFiles": ["engine/tools/scc.exe"] },
+      "modRequiresIf": { "anyFiles": ["r6/scripts/**/*.reds"] },
+      "install": "as-mod"
+    },
+    {
+      "id": "redmod-dlc",
+      "name": "REDmod (bezplatne DLC narzedziowe)",
+      "required": "if-mod-requires",
+      "detect": { "allFiles": ["tools/redmod/bin/redMod.exe"] },
+      "modRequiresIf": { "anyFiles": ["info.json"] },
+      "install": "manual",
+      "notes": "Instalowane przez sklep jako DLC. Wymaga argumentu -modded przy starcie."
+    }
+  ],
+  "launch": {
+    "preferStoreLaunch": true,
+    "moddedArgs": ["-modded"]
+  },
+  "sources": { "nexus": { "domain": "cyberpunk2077" } },
+  "updates": { "steamBuildId": true, "epicVersion": true, "watchFiles": ["bin/x64/Cyberpunk2077.exe"], "onUpdate": "verify-and-redeploy" },
+  "warnings": [
+    {
+      "id": "cp-update",
+      "level": "warn",
+      "when": "on-game-update",
+      "text": "Po aktualizacji gry CET, RED4ext i ArchiveXL/TweakXL zwykle wymagaja nowych wersji - do tego czasu uruchamiaj profil vanilla."
+    },
+    {
+      "id": "cp-order",
+      "level": "info",
+      "when": "always",
+      "text": "Bez modlist.txt archiwa laduja sie alfabetycznie; menedzer zapisuje modlist.txt zgodnie z kolejnoscia profilu."
+    }
+  ]
+}

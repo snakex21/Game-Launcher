@@ -1,0 +1,90 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "stardewvalley",
+  "name": "Stardew Valley",
+  "engine": "smapi",
+  "adapter": "smapi",
+  "detection": {
+    "steam": { "appIds": [413150] },
+    "gog": { "gameIds": ["1453375253"] },
+    "xbox": { "moddable": "no" },
+    "requiredFiles": ["Stardew Valley.dll"],
+    "anyOfFiles": ["Stardew Valley.exe", "StardewValley.exe"]
+  },
+  "executables": [
+    { "id": "game", "name": "Stardew Valley (vanilla)", "path": "{game}/Stardew Valley.exe", "kind": "game" },
+    {
+      "id": "smapi",
+      "name": "SMAPI",
+      "path": "{game}/StardewModdingAPI.exe",
+      "args": ["--mods-path", "{profileDir}/Mods"],
+      "default": true,
+      "requiresFramework": "smapi",
+      "kind": "loader"
+    }
+  ],
+  "modTypes": [
+    {
+      "id": "smapi-mod",
+      "name": "Mod SMAPI / content pack",
+      "target": "{game}/Mods",
+      "perModSubfolder": "{mod.folderName}",
+      "default": true,
+      "priority": 10,
+      "match": { "manifestFile": "manifest.json" },
+      "rootMarkers": ["manifest.json"],
+      "executableContent": true,
+      "notes": "Archiwum moze zawierac kilka modow (kazdy z wlasnym manifest.json) - kazdy staje sie osobna pozycja w magazynie, powiazana grupa."
+    }
+  ],
+  "installer": {
+    "packageFormat": "smapi-manifest",
+    "maxRootSearchDepth": 3,
+    "ignoreGlobs": ["__MACOSX/**", "*.pdb"]
+  },
+  "deployment": {
+    "strategies": ["external-folder", "hardlink", "copy"],
+    "caseInsensitivePaths": true,
+    "preferStagingOnGameVolume": false
+  },
+  "loadOrder": {
+    "kind": "dependency-sorted",
+    "sortHints": "manifest-dependencies",
+    "readExternalChanges": false
+  },
+  "frameworks": [
+    {
+      "id": "smapi",
+      "name": "SMAPI",
+      "required": "always",
+      "detect": { "allFiles": ["StardewModdingAPI.exe", "smapi-internal/StardewModdingAPI.config.json"] },
+      "install": "external-installer",
+      "source": { "kind": "url", "url": "https://smapi.io/" },
+      "launchVia": "smapi",
+      "notes": "Instalator SMAPI uruchamia uzytkownik. Menedzer tylko wykrywa wersje i podpowiada aktualizacje."
+    }
+  ],
+  "launch": {
+    "preferStoreLaunch": false,
+    "steamLaunchOptionsHint": "\"<folder gry>\\StardewModdingAPI.exe\" %command%"
+  },
+  "sources": {
+    "nexus": { "domain": "stardewvalley" }
+  },
+  "updates": { "steamBuildId": true, "onUpdate": "warn" },
+  "warnings": [
+    {
+      "id": "sdv-config",
+      "level": "info",
+      "when": "always",
+      "text": "Mody SMAPI zapisuja config.json we wlasnym folderze. Menedzer przechwytuje te pliki do nakladki profilu, zeby aktualizacja moda ich nie skasowala."
+    },
+    {
+      "id": "sdv-dotfolders",
+      "level": "info",
+      "when": "always",
+      "text": "SMAPI ignoruje foldery zaczynajace sie od kropki - nie uzywamy tego do wylaczania modow; wylaczony mod po prostu nie jest wdrazany."
+    }
+  ]
+}

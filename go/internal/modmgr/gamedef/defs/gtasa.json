@@ -1,0 +1,97 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "gtasa",
+  "name": "Grand Theft Auto: San Andreas (klasyczny, PC)",
+  "engine": "renderware",
+  "notes": "Tylko uklad plikow. Nie dostarczamy downgraderow ani patchy exe. Wersja 'Definitive Edition' to inna gra (Unreal) - osobna definicja.",
+  "detection": {
+    "steam": { "appIds": [12120] },
+    "requiredFiles": ["models/gta3.img"],
+    "anyOfFiles": ["gta_sa.exe", "gta-sa.exe"]
+  },
+  "executables": [
+    { "id": "game", "name": "GTA SA", "path": "{game}/gta_sa.exe", "default": true, "kind": "game" }
+  ],
+  "modTypes": [
+    {
+      "id": "modloader",
+      "name": "Mod przez Mod Loader (modloader/<mod>)",
+      "target": "{game}/modloader",
+      "perModSubfolder": "{mod.folderName}",
+      "default": true,
+      "priority": 50,
+      "rootMarkers": ["*.dff", "*.txd", "*.ifp", "*.col", "*.dat", "*.ide", "*.ipl", "data", "models"],
+      "notes": "Preferowane: Mod Loader wstrzykuje pliki do .img w locie - nie modyfikujemy gta3.img."
+    },
+    {
+      "id": "asi",
+      "name": "Plugin ASI",
+      "target": "{game}/scripts",
+      "flatten": true,
+      "priority": 10,
+      "match": { "anyFiles": ["*.asi"] },
+      "includeGlobs": ["*.asi", "*.ini"],
+      "executableContent": true
+    },
+    {
+      "id": "cleo",
+      "name": "Skrypt CLEO",
+      "target": "{game}/cleo",
+      "flatten": true,
+      "priority": 20,
+      "match": { "anyFiles": ["*.cs", "*.cm", "*.fxt"] },
+      "executableContent": true
+    },
+    {
+      "id": "root",
+      "name": "Pliki korzenia (loader ASI, CLEO, Mod Loader)",
+      "target": "{game}",
+      "priority": 5,
+      "match": { "anyFiles": ["vorbisFile.dll", "dinput8.dll", "cleo.asi", "modloader.asi"] },
+      "executableContent": true
+    }
+  ],
+  "installer": { "maxRootSearchDepth": 3 },
+  "deployment": {
+    "strategies": ["hardlink", "copy"],
+    "caseInsensitivePaths": true,
+    "protectedPaths": ["gta_sa.exe", "models/gta3.img"]
+  },
+  "loadOrder": { "kind": "deploy-priority" },
+  "frameworks": [
+    {
+      "id": "asi-loader",
+      "name": "ASI Loader",
+      "required": "if-mod-requires",
+      "detect": { "anyFiles": ["vorbisFile.dll", "dinput8.dll"] },
+      "modRequiresIf": { "anyFiles": ["*.asi"] },
+      "install": "as-mod"
+    },
+    {
+      "id": "cleo",
+      "name": "CLEO",
+      "required": "if-mod-requires",
+      "detect": { "anyFiles": ["cleo.asi", "CLEO.asi"] },
+      "modRequiresIf": { "anyFiles": ["*.cs"] },
+      "install": "as-mod"
+    },
+    {
+      "id": "modloader",
+      "name": "Mod Loader",
+      "required": "optional",
+      "detect": { "anyFiles": ["modloader.asi"] },
+      "install": "as-mod"
+    }
+  ],
+  "sources": { "nexus": { "domain": "gtasanandreas" } },
+  "updates": { "steamBuildId": true, "watchFiles": ["gta_sa.exe"], "onUpdate": "warn" },
+  "warnings": [
+    {
+      "id": "sa-version",
+      "level": "warn",
+      "when": "on-first-mod",
+      "text": "Wiele modow (CLEO, ASI) wymaga exe w wersji 1.0 US; wersja ze Steam/Rockstar Launcher jest nowsza. Menedzer rozpoznaje wersje po hashu exe i ostrzega - nie modyfikuje exe."
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "skyrimse",
+  "name": "The Elder Scrolls V: Skyrim Special Edition / Anniversary Edition",
+  "extends": "template.bethesda",
+  "engine": "creation",
+  "detection": {
+    "steam": { "appIds": [489830] },
+    "gog": { "gameIds": ["1711230643"] },
+    "xbox": { "moddable": "content-folder" },
+    "requiredFiles": ["SkyrimSE.exe", "Data/Skyrim.esm"]
+  },
+  "paths": {
+    "data": "{game}/Data",
+    "docs": "{myGames}/Skyrim Special Edition",
+    "appdata": "{localAppData}/Skyrim Special Edition"
+  },
+  "storeOverrides": {
+    "gog": { "paths": { "docs": "{myGames}/Skyrim Special Edition GOG", "appdata": "{localAppData}/Skyrim Special Edition GOG" } },
+    "epic": { "paths": { "docs": "{myGames}/Skyrim Special Edition EPIC", "appdata": "{localAppData}/Skyrim Special Edition EPIC" } },
+    "xbox": { "paths": { "docs": "{myGames}/Skyrim Special Edition MS", "appdata": "{localAppData}/Skyrim Special Edition MS" } }
+  },
+  "executables": [
+    { "id": "game", "name": "Skyrim SE", "path": "{game}/SkyrimSE.exe", "kind": "game" },
+    { "id": "skse", "name": "SKSE64", "path": "{game}/skse64_loader.exe", "default": true, "requiresFramework": "skse64", "kind": "loader" },
+    { "id": "launcher", "name": "Launcher", "path": "{game}/SkyrimSELauncher.exe", "kind": "launcher" }
+  ],
+  "loadOrder": {
+    "kind": "bethesda-plugins",
+    "file": "{paths.appdata}/plugins.txt",
+    "secondaryFile": "{paths.appdata}/loadorder.txt",
+    "pluginsDir": "{paths.data}",
+    "pluginGlobs": ["*.esm", "*.esp", "*.esl"],
+    "format": "asterisk",
+    "encoding": "windows-1252",
+    "implicitPlugins": ["Skyrim.esm", "Update.esm", "Dawnguard.esm", "HearthFires.esm", "Dragonborn.esm"],
+    "implicitListFile": "{game}/Skyrim.ccc",
+    "lightPlugins": { "supported": true, "extensions": [".esl"], "flagged": true, "maxCount": 4096 },
+    "maxFullPlugins": 254,
+    "sortHints": "masters-first",
+    "readExternalChanges": true
+  },
+  "frameworks": [
+    {
+      "id": "skse64",
+      "name": "Skyrim Script Extender 64",
+      "required": "if-mod-requires",
+      "detect": { "allFiles": ["skse64_loader.exe"] },
+      "modRequiresIf": { "anyFiles": ["SKSE/Plugins/*.dll", "Data/SKSE/Plugins/*.dll"] },
+      "install": "as-mod",
+      "source": { "kind": "url", "url": "https://skse.silverlock.org/" },
+      "gameVersionLocked": true,
+      "launchVia": "skse"
+    },
+    {
+      "id": "address-library",
+      "name": "Address Library for SKSE Plugins",
+      "required": "if-mod-requires",
+      "detect": { "anyFiles": ["Data/SKSE/Plugins/versionlib-*.bin", "Data/SKSE/Plugins/version-*.bin"] },
+      "install": "as-mod",
+      "source": { "kind": "nexus", "id": "skyrimspecialedition:32444" }
+    }
+  ],
+  "sources": { "nexus": { "domain": "skyrimspecialedition" } },
+  "updates": {
+    "steamBuildId": true,
+    "watchFiles": ["SkyrimSE.exe"],
+    "onUpdate": "verify-and-redeploy"
+  }
+}

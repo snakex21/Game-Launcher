@@ -1,0 +1,515 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gamelauncher.local/schemas/mod-game-definition/v1.json",
+  "title": "Game Launcher - definicja gry dla menedzera modow",
+  "description": "Deklaratywny opis gry: wykrywanie instalacji, sciezki, typy modow, kolejnosc ladowania, wymagane frameworki i uruchamianie. Sciezki moga zawierac zmienne {game}, {documents}, {myGames}, {localAppData}, {appData}, {localLow}, {userProfile}, {programData}, {savedGames}, {steamRoot}, {instance}, {profile}, {profileDir}, {modsStaging}, {paths.<nazwa>}, {mod.folderName}, {mod.namespace}, {mod.name}, {mod.id}.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name"],
+  "if": { "required": ["extends"] },
+  "then": {},
+  "else": { "required": ["detection", "modTypes"] },
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$",
+      "description": "Stabilny identyfikator gry (uzywany w sciezkach magazynu)."
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "extends": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$",
+      "description": "Id definicji bazowej (np. szablonu 'template.bethesda'); pola sa scalane gleboko, tablice zastepowane."
+    },
+    "abstract": {
+      "type": "boolean",
+      "default": false,
+      "description": "Szablon - nie pokazywany jako gra, sluzy tylko do 'extends'."
+    },
+    "aliases": { "type": "array", "items": { "type": "string" } },
+    "engine": {
+      "type": "string",
+      "enum": ["generic", "unity", "unity-il2cpp", "creation", "gamebryo", "redengine", "larian", "doom", "goldsrc", "source", "rage", "renderware", "java-minecraft", "smapi", "rimworld", "taleworlds", "other"]
+    },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "adapter": {
+      "type": "string",
+      "description": "Opcjonalny adapter Go (hooki niedajace sie opisac danymi), np. 'bethesda', 'minecraft', 'bg3'. Brak = wylacznie dane."
+    },
+    "detection": { "$ref": "#/$defs/detection" },
+    "paths": {
+      "type": "object",
+      "description": "Nazwane sciezki pomocnicze (szablony). Mozna je potem uzywac jako {paths.nazwa}.",
+      "additionalProperties": { "$ref": "#/$defs/pathTemplate" }
+    },
+    "storeOverrides": {
+      "type": "object",
+      "description": "Nadpisania pol 'paths' zalezne od sklepu (np. inny folder w Dokumentach dla wersji GOG).",
+      "propertyNames": { "$ref": "#/$defs/storeKind" },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "paths": { "type": "object", "additionalProperties": { "$ref": "#/$defs/pathTemplate" } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "executables": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/executable" }
+    },
+    "modTypes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/modType" }
+    },
+    "installer": { "$ref": "#/$defs/installer" },
+    "deployment": { "$ref": "#/$defs/deployment" },
+    "loadOrder": { "$ref": "#/$defs/loadOrder" },
+    "frameworks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/framework" }
+    },
+    "launch": { "$ref": "#/$defs/launch" },
+    "updates": { "$ref": "#/$defs/updates" },
+    "sources": { "$ref": "#/$defs/sources" },
+    "warnings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/warning" }
+    },
+    "notes": { "type": "string" }
+  },
+
+  "$defs": {
+    "storeKind": { "type": "string", "enum": ["steam", "gog", "epic", "xbox", "manual", "other"] },
+
+    "pathTemplate": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Sciezka z placeholderami {zmienna}; zawsze ukosniki '/' (normalizowane przy rozwiazywaniu). Zakaz '..' poza dozwolonymi bazami (sprawdzane w kodzie)."
+    },
+
+    "glob": { "type": "string", "minLength": 1, "description": "Wzorzec glob (case-insensitive na Windows), np. '*.esp', '**/*.dll'." },
+
+    "detection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "steam": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["appIds"],
+          "properties": {
+            "appIds": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 1 },
+            "installDirNames": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "gog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["gameIds"],
+          "properties": {
+            "gameIds": { "type": "array", "items": { "type": "string", "pattern": "^[0-9]+$" }, "minItems": 1 }
+          }
+        },
+        "epic": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "appNames": { "type": "array", "items": { "type": "string" } },
+            "catalogNamespaces": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "xbox": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "packageFamilyNames": { "type": "array", "items": { "type": "string" } },
+            "moddable": {
+              "type": "string",
+              "enum": ["no", "content-folder", "unknown"],
+              "description": "'content-folder' = gra instaluje sie do dostepnego folderu XboxGames/<gra>/Content (zaawansowane opcje zarzadzania); 'no' = WindowsApps, brak wsparcia."
+            }
+          }
+        },
+        "registry": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "value"],
+            "properties": {
+              "hive": { "type": "string", "enum": ["HKLM", "HKCU"], "default": "HKLM" },
+              "key": { "type": "string" },
+              "value": { "type": "string" },
+              "view": { "type": "string", "enum": ["32", "64", "both"], "default": "both" },
+              "subPath": { "type": "string", "description": "Doklejane do wartosci (np. gdy rejestr wskazuje folder nadrzedny)." }
+            }
+          }
+        },
+        "requiredFiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Pliki (wzgledem korzenia gry) potwierdzajace, ze wskazany folder to ta gra. Sprawdzane takze dla sciezki recznej. Pusta lista tylko dla szablonow i gier instancyjnych (Minecraft)."
+        },
+        "anyOfFiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Wystarczy jeden z tych plikow (rozne warianty exe)."
+        },
+        "rootFromExe": {
+          "type": "string",
+          "description": "Gdy uzytkownik wskaze exe zamiast folderu: wzgledna sciezka exe od korzenia (np. 'bin/x64/Cyberpunk2077.exe')."
+        },
+        "allowManual": { "type": "boolean", "default": true }
+      },
+      "required": ["requiredFiles"]
+    },
+
+    "executable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "path": { "$ref": "#/$defs/pathTemplate" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "workingDir": { "$ref": "#/$defs/pathTemplate" },
+        "default": { "type": "boolean", "default": false },
+        "requiresFramework": { "type": "string", "description": "Id frameworku z 'frameworks', ktory musi byc obecny." },
+        "kind": { "type": "string", "enum": ["game", "loader", "tool", "launcher"], "default": "game" }
+      }
+    },
+
+    "match": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Kryteria rozpoznania, ze zawartosc archiwum (po wykryciu korzenia) nalezy do tego typu moda.",
+      "properties": {
+        "anyFiles": { "type": "array", "items": { "$ref": "#/$defs/glob" } },
+        "allFiles": { "type": "array", "items": { "$ref": "#/$defs/glob" } },
+        "anyDirs": { "type": "array", "items": { "type": "string" } },
+        "manifestFile": { "type": "string", "description": "Plik manifestu identyfikujacy moda (np. 'manifest.json', 'About/About.xml', 'info.json')." }
+      }
+    },
+
+    "modType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "target"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$" },
+        "name": { "type": "string" },
+        "target": { "$ref": "#/$defs/pathTemplate", "description": "Folder docelowy wdrozenia." },
+        "priority": { "type": "integer", "default": 50, "description": "Kolejnosc proby dopasowania (nizsza = wczesniej)." },
+        "default": { "type": "boolean", "default": false, "description": "Typ uzywany, gdy zaden inny nie pasuje." },
+        "match": { "$ref": "#/$defs/match" },
+        "rootMarkers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Nazwy (pliki/foldery/globy) typowe dla korzenia moda tego typu; uzywane do wykrycia korzenia w archiwum."
+        },
+        "perModSubfolder": {
+          "type": "string",
+          "description": "Gdy mod laduje do wlasnego podfolderu: szablon nazwy, np. '{mod.folderName}' (RimWorld, Witcher 3, SMAPI) lub '{mod.namespace}-{mod.name}' (Thunderstore)."
+        },
+        "flatten": { "type": "boolean", "default": false, "description": "Splaszcz strukture - tylko pliki pasujace do 'match' trafiaja bezposrednio do target." },
+        "includeGlobs": { "type": "array", "items": { "$ref": "#/$defs/glob" } },
+        "excludeGlobs": { "type": "array", "items": { "$ref": "#/$defs/glob" } },
+        "executableContent": {
+          "type": "boolean",
+          "default": false,
+          "description": "Typ z natury zawiera kod natywny/skrypty (DLL, ASI, .lua...) - wymusza ostrzezenie i potwierdzenie."
+        },
+        "deployStrategy": { "$ref": "#/$defs/strategyPreference" },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "installer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fomod": { "type": "boolean", "default": false, "description": "Obsluga XML-owych instalatorow FOMOD (fomod/ModuleConfig.xml). Skrypty C# nigdy nie sa wykonywane." },
+        "maxRootSearchDepth": { "type": "integer", "minimum": 0, "maximum": 8, "default": 3 },
+        "ignoreGlobs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/glob" },
+          "description": "Pliki pomijane przy instalacji (readme, zrzuty ekranu, metadane innych menedzerow)."
+        },
+        "packageFormat": {
+          "type": "string",
+          "enum": ["none", "thunderstore", "modrinth-mrpack", "redmod", "smapi-manifest", "rimworld-about", "bg3-pak", "bannerlord-submodule"],
+          "default": "none"
+        }
+      }
+    },
+
+    "strategyPreference": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["hardlink", "symlink", "copy", "launch-args", "external-folder"] },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Kolejnosc preferencji strategii. 'launch-args' = brak plikow w grze, mody przekazywane argumentami; 'external-folder' = gra/loader czyta folder modow wskazany przez nas (np. SMAPI --mods-path, Doorstop target)."
+    },
+
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "strategies": { "$ref": "#/$defs/strategyPreference" },
+        "caseInsensitivePaths": { "type": "boolean", "default": true },
+        "protectedPaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Pliki gry, ktorych mody nie moga nadpisywac bez dodatkowego potwierdzenia (np. exe gry)."
+        },
+        "preferStagingOnGameVolume": {
+          "type": "boolean",
+          "default": true,
+          "description": "Gdy magazyn jest na innym woluminie (USB), utworz pamiec podreczna na woluminie gry, by umozliwic hardlinki."
+        },
+        "postDeploy": {
+          "type": "array",
+          "description": "Kroki po wdrozeniu. Uruchamiane tylko narzedzia gry/oficjalne, za zgoda uzytkownika.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind"],
+            "properties": {
+              "kind": { "type": "string", "enum": ["write-load-order", "run-game-tool", "touch-timestamps"] },
+              "tool": { "$ref": "#/$defs/pathTemplate" },
+              "args": { "type": "array", "items": { "type": "string" } },
+              "requiresConsent": { "type": "boolean", "default": true }
+            }
+          }
+        }
+      }
+    },
+
+    "loadOrder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "none",
+            "deploy-priority",
+            "bethesda-plugins",
+            "openmw-cfg",
+            "rimworld-modsconfig",
+            "bg3-modsettings",
+            "witcher3-mods-settings",
+            "cyberpunk-modlist",
+            "redmod-deploy",
+            "launch-args",
+            "dependency-sorted",
+            "bannerlord-launcher-data"
+          ],
+          "description": "'deploy-priority' = kolejnosc tylko rozstrzyga konflikty plikow; 'dependency-sorted' = gra/loader sortuje sama wg zaleznosci (SMAPI, BepInEx), my tylko walidujemy."
+        },
+        "file": { "$ref": "#/$defs/pathTemplate" },
+        "secondaryFile": { "$ref": "#/$defs/pathTemplate", "description": "Np. loadorder.txt obok plugins.txt." },
+        "pluginGlobs": { "type": "array", "items": { "$ref": "#/$defs/glob" } },
+        "pluginsDir": { "$ref": "#/$defs/pathTemplate" },
+        "format": {
+          "type": "string",
+          "enum": ["active-only", "asterisk", "textfile", "timestamp", "ini-gamefile", "xml", "lsx", "ini-priority", "lines", "args"],
+          "description": "Wariant formatu: 'active-only' (lista aktywnych, kolejnosc z dat modyfikacji), 'asterisk' (wszystkie pluginy, '*' = aktywny), 'textfile' (plugins.txt + loadorder.txt), 'timestamp', 'ini-gamefile' (Morrowind.ini)."
+        },
+        "encoding": { "type": "string", "enum": ["utf-8", "utf-8-bom", "windows-1252"], "default": "utf-8" },
+        "implicitPlugins": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Pluginy ladowane zawsze przez gre (nie zapisywane albo zapisywane na poczatku)."
+        },
+        "implicitListFile": { "$ref": "#/$defs/pathTemplate", "description": "Plik z dodatkowa lista pluginow ladowanych niejawnie (np. Skyrim.ccc)." },
+        "lightPlugins": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "supported": { "type": "boolean" },
+            "extensions": { "type": "array", "items": { "type": "string" } },
+            "flagged": { "type": "boolean", "description": "Czy flaga ESL w naglowku TES4 czyni plugin lekkim." },
+            "maxCount": { "type": "integer" }
+          }
+        },
+        "mediumPlugins": { "type": "boolean", "default": false },
+        "maxFullPlugins": { "type": "integer" },
+        "argTemplate": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Dla 'launch-args': szablon argumentow, np. ['-file', '{files...}']."
+        },
+        "baseEntries": {
+          "type": "array",
+          "items": { "type": "object" },
+          "description": "Wpisy obowiazkowe (np. GustavDev w BG3, ludeon.rimworld w RimWorld)."
+        },
+        "sortHints": {
+          "type": "string",
+          "enum": ["none", "masters-first", "manifest-dependencies", "about-xml-loadbefore", "loot-optional"],
+          "default": "none"
+        },
+        "readExternalChanges": {
+          "type": "boolean",
+          "default": true,
+          "description": "Wykrywaj zmiany pliku kolejnosci dokonane przez gre/inne narzedzia i pytaj, czy je zaimportowac."
+        }
+      }
+    },
+
+    "framework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "detect"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "required": {
+          "type": "string",
+          "enum": ["always", "if-mod-requires", "optional"],
+          "default": "if-mod-requires"
+        },
+        "detect": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "anyFiles": { "type": "array", "items": { "type": "string" } },
+            "allFiles": { "type": "array", "items": { "type": "string" } },
+            "versionFrom": { "type": "string", "description": "Plik, z ktorego odczytujemy wersje (np. wersja zasobu w DLL)." }
+          }
+        },
+        "modRequiresIf": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Kiedy uznajemy, ze mod wymaga frameworka.",
+          "properties": {
+            "anyFiles": { "type": "array", "items": { "$ref": "#/$defs/glob" } },
+            "manifestDependency": { "type": "string" }
+          }
+        },
+        "install": {
+          "type": "string",
+          "enum": ["as-mod", "external-installer", "manual", "instance-loader"],
+          "description": "'as-mod' = framework instalujemy jak zwykly mod (BepInEx pack, SKSE, CET); 'external-installer' = oficjalny instalator uruchamiany przez uzytkownika (SMAPI, Forge); 'instance-loader' = profil loadera w instancji (Fabric)."
+        },
+        "source": { "$ref": "#/$defs/sourceRef" },
+        "gameVersionLocked": {
+          "type": "boolean",
+          "default": false,
+          "description": "Framework jest przypiety do wersji exe gry (SKSE, F4SE, SFSE, ScriptHookV) - aktualizacja gry go psuje."
+        },
+        "launchVia": { "type": "string", "description": "Id executable, przez ktory nalezy uruchamiac gre z frameworkiem." },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "type": "string", "enum": ["nexus", "thunderstore", "modrinth", "curseforge", "github", "url", "manual"] },
+        "id": { "type": "string" },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+
+    "launch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preferStoreLaunch": {
+          "type": "boolean",
+          "default": true,
+          "description": "Uruchamiaj przez klienta sklepu (steam://run, com.epicgames.launcher://) gdy wymagany jest overlay/DRM sklepu."
+        },
+        "steamLaunchOptionsHint": { "type": "string", "description": "Tekst do skopiowania przez uzytkownika do opcji uruchamiania Steam (nie edytujemy configow Steam)." },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "moddedArgs": { "type": "array", "items": { "type": "string" }, "description": "Dodawane, gdy profil ma aktywne mody (np. '-modded' dla REDmod)." },
+        "env": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+
+    "updates": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "steamBuildId": { "type": "boolean", "default": true },
+        "epicVersion": { "type": "boolean", "default": true },
+        "watchFiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Pliki, ktorych hash/rozmiar/czas sledzimy jako 'odcisk wersji' (zwykle exe gry)."
+        },
+        "onUpdate": {
+          "type": "string",
+          "enum": ["verify-and-redeploy", "purge-and-warn", "warn"],
+          "default": "verify-and-redeploy"
+        }
+      }
+    },
+
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nexus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["domain"],
+          "properties": { "domain": { "type": "string" } }
+        },
+        "thunderstore": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["community"],
+          "properties": { "community": { "type": "string" } }
+        },
+        "modrinth": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "projectTypes": { "type": "array", "items": { "type": "string", "enum": ["mod", "modpack", "resourcepack", "shader", "datapack", "plugin"] } }
+          }
+        },
+        "curseforge": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["gameId"],
+          "properties": {
+            "gameId": { "type": "integer" },
+            "classIds": { "type": "array", "items": { "type": "integer" } }
+          }
+        },
+        "steamWorkshop": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Tylko odczyt: mody subskrybowane przez Steam sa wykrywane i pokazywane, ale nie zarzadzane.",
+          "properties": { "readOnly": { "const": true } }
+        }
+      }
+    },
+
+    "warning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "level", "text"],
+      "properties": {
+        "id": { "type": "string" },
+        "level": { "type": "string", "enum": ["info", "warn", "danger"] },
+        "text": { "type": "string" },
+        "when": {
+          "type": "string",
+          "enum": ["always", "on-first-mod", "on-executable-content", "on-game-update", "on-online-launch"],
+          "default": "always"
+        }
+      }
+    }
+  }
+}
