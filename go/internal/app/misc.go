@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/snakex21/game-launcher/go/internal/bridge"
-	"github.com/snakex21/game-launcher/go/internal/chatdb"
 	"github.com/snakex21/game-launcher/go/internal/ojson"
 	"github.com/snakex21/game-launcher/go/internal/paths"
 	"github.com/snakex21/game-launcher/go/internal/scan"
@@ -1082,34 +1081,4 @@ func (a *App) musicState(_ context.Context, in struct {
 		}
 		return nil
 	})
-}
-
-// -------------------------------------------------------------------- chat
-
-// ChatView: configured servers (no credentials) + the local archive.
-type ChatView struct {
-	Servers []map[string]any `json:"servers"`
-	Active  string           `json:"active"`
-	Archive *chatdb.Summary  `json:"archive"`
-	Error   string           `json:"error"`
-	DBPath  string           `json:"dbPath"`
-}
-
-func (a *App) chatArchive() ChatView {
-	v := ChatView{Servers: []map[string]any{}, DBPath: a.S.L.ChatDB}
-	a.S.ReadLocal(func(l *ojson.Object) {
-		for _, s := range l.Arr("chat_servers") {
-			if o, ok := s.(*ojson.Object); ok {
-				v.Servers = append(v.Servers, map[string]any{"id": o.Str("id"), "name": o.Str("name"), "url": o.Str("url"), "default": o.Bool("is_default", false)})
-			}
-		}
-		v.Active = l.Str("active_chat_server_id")
-	})
-	s, err := chatdb.Read(a.S.L.ChatDB, 50)
-	if err != nil {
-		v.Error = err.Error()
-	} else {
-		v.Archive = s
-	}
-	return v
 }

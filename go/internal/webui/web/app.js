@@ -1059,22 +1059,200 @@
   }
 
   // ---- chat
+  var C = { st: null, rooms: [], users: [], cur: null, msgs: [], typing: {}, me: null, unread: {}, reply: null, typingTimer: null }
+  var EMOJI = '😀 😂 😊 😍 😎 🤔 😅 😭 😡 👍 👎 👏 🙏 🔥 💯 🎮 🕹️ 🏆 ⭐ ❤️ 💀 🎉 😴 🤝 👀 ✅ ❌ ⚡ 🍕 ☕'.split(' ')
+  function chatSend(type, data) { return call('chat.send', { type: type, data: data || {} }).catch(fail) }
+  function chatKey(m) { return m.room_id ? 'r' + m.room_id : 'u' + (m.sender_id === (C.me && C.me.id) ? m.receiver_id : m.sender_id) }
+  function curKey() { return C.cur ? (C.cur.kind === 'room' ? 'r' : 'u') + C.cur.id : '' }
+  gl.on('chat:event', function (ev) {
+    var d = ev.data || {}
+    switch (ev.type) {
+      case 'hello': C.me = d.user; chatSend('list_rooms'); chatSend('list_users'); break
+      case 'rooms': C.rooms = d || []; break
+      case 'users': C.users = d || []; (C.users).forEach(function (u) { if (u.unread) C.unread['u' + u.id] = u.unread }); break
+      case 'rooms_changed': chatSend('list_rooms'); return
+      case 'presence': C.users.forEach(function (u) { if (u.id === d.user_id) u.online = d.online }); break
+      case 'room_joined': C.cur = { kind: 'room', id: d.room.id, name: d.room.name, members: d.members || [] }; C.msgs = d.messages || []; delete C.unread['r' + d.room.id]; chatSend('list_rooms'); break
+      case 'history':
+        if ((d.room_id && curKey() === 'r' + d.room_id) || (d.user_id && curKey() === 'u' + d.user_id)) C.msgs = d.messages || []
+        break
+      case 'message':
+        if (chatKey(d) === curKey()) {
+          C.msgs.push(d)
+          if (!d.room_id && C.me && d.sender_id !== C.me.id) chatSend('mark_read', { from_user_id: d.sender_id })
+        } else {
+          C.unread[chatKey(d)] = (C.unread[chatKey(d)] || 0) + 1
+          if (C.me && d.sender_id !== C.me.id) toast((d.content || '📎 plik').slice(0, 120), '', '✉ ' + d.sender)
+        }
+        break
+      case 'message_edited': C.msgs.forEach(function (m, i) { if (m.id === d.id) C.msgs[i] = d }); break
+      case 'message_deleted': C.msgs.forEach(function (m) { if (m.id === d.message_id) { m.deleted = true; m.content = ''; m.attachment = null } }); break
+      case 'typing': C.typing[d.username] = d.on ? Date.now() : 0; drawTyping(); return
+      case 'read': C.msgs.forEach(function (m) { if (C.me && m.sender_id === C.me.id) m.read = true }); break
+      case 'blocked': chatSend('list_users'); return
+      case 'error': toast(d.message || 'Błąd czatu', 'err'); return
+      case 'disconnected': toast('Rozłączono z czatem', 'err'); C.cur = null; C.me = null; break
+      case 'room_left': if (curKey() === 'r' + d.room_id) { C.cur = null; C.msgs = [] } chatSend('list_rooms'); break
+    }
+    if (S.page === 'chat') drawChat()
+  })
+  function drawTyping() {
+    var el = $('#chat-typing'); if (!el) return
+    var now = Date.now(), who = Object.keys(C.typing).filter(function (k) { return now - C.typing[k] < 6000 })
+    el.textContent = who.length ? who.join(', ') + ' pisze…' : ''
+  }
   PAGES.chat = function (root) {
-    root.appendChild(h('h1', { text: 'Czat' }))
-    root.appendChild(h('div', { class: 'card', style: 'margin-bottom:14px' }, h('p', { style: 'margin:0', text: 'Klient czatu (Socket.IO) nie jest jeszcze przeniesiony do wersji Go. Poniżej: skonfigurowane serwery i archiwum lokalnego serwera (tylko odczyt, plik nie jest zmieniany).' })))
-    call('chat.archive').then(function (v) {
-      root.appendChild(h('h2', { text: 'Serwery czatu' }))
-      v.servers.forEach(function (s) { root.appendChild(h('div', { class: 'check-item' }, h('span', { class: 'grow', text: s.name + (s.id === v.active ? '  (aktywny)' : '') }), h('span', { class: 'mono muted', text: s.url }))) })
-      root.appendChild(h('h2', { text: 'Archiwum: data\\chat\\chat.db' }))
-      if (v.error) { root.appendChild(h('p', { style: 'color:var(--warn)', text: v.error })); return }
-      var a = v.archive
-      root.appendChild(h('div', { class: 'cards' }, stat(String(a.users), 'użytkowników'), stat(String(a.messages), 'wiadomości'), stat(String(a.private), 'prywatnych'), stat(String(a.rooms.length), 'pokoi')))
-      if (a.rooms.length) root.appendChild(h('p', { class: 'muted', text: 'Pokoje: ' + a.rooms.map(function (r) { return r.name + (r.locked ? ' 🔒' : '') + ' (' + r.messages + ')' }).join(', ') }))
-      a.recent.forEach(function (m) {
-        root.appendChild(h('div', { class: 'check-item' }, h('span', { class: 'muted small', style: 'width:150px', text: m.timestamp.slice(0, 16) }),
-          h('b', { text: m.sender }), h('span', { class: 'muted small', text: m.room ? '#' + m.room : '→ ' + m.receiver }), h('span', { class: 'grow', text: m.content + (m.attachment ? ' 📎 ' + m.attachment : '') + (m.edited ? ' (edytowano)' : '') })))
+    root.appendChild(h('div', { id: 'chat-root' }))
+    call('chat.status').then(function (st) { C.st = st; drawChat() }).catch(fail)
+  }
+  function drawChat() {
+    var root = $('#chat-root'); if (!root) return
+    clear(root)
+    var st = C.st || { servers: [], host: {} }
+    if (!C.me) return drawChatLogin(root, st)
+    var head = h('div', { class: 'row', style: 'margin-bottom:12px' }, h('h1', { class: 'grow', style: 'margin:0', text: 'Czat' }),
+      h('span', { class: 'muted', text: 'Zalogowano: ' + C.me.username }),
+      h('button', { class: 'btn', onclick: function () { call('chat.logout').then(function (s) { C.st = s; C.me = null; C.cur = null; drawChat() }).catch(fail) } }, 'Wyloguj'))
+    root.appendChild(head)
+    var left = h('div', { class: 'card', style: 'max-height:calc(100vh - 140px);overflow:auto' })
+    left.appendChild(h('div', { class: 'row' }, h('b', { class: 'grow', text: 'Pokoje' }), h('button', { class: 'btn small', onclick: function () {
+      promptBox('Nowy pokój', 'Nazwa pokoju').then(function (n) {
+        if (!n || !n.trim()) return
+        promptBox('Hasło pokoju', 'Hasło (puste = pokój otwarty)', '', 'password').then(function (pw) { chatSend('create_room', { name: n.trim(), password: pw || '' }) })
       })
-    }).catch(fail)
+    } }, '+')))
+    C.rooms.forEach(function (r) {
+      var key = 'r' + r.id
+      left.appendChild(h('button', { class: 'list-btn' + (curKey() === key ? ' on' : ''), onclick: function () {
+        if (r.locked && !r.member) promptBox('Pokój „' + r.name + '”', 'Hasło pokoju', '', 'password').then(function (pw) { if (pw !== null) chatSend('join_specific_room', { room_id: r.id, password: pw }) })
+        else chatSend('join_specific_room', { room_id: r.id })
+      } }, '# ' + r.name + (r.locked ? ' 🔒' : '') + (C.unread[key] ? '  (' + C.unread[key] + ')' : '')))
+    })
+    left.appendChild(h('div', { class: 'row', style: 'margin-top:12px' }, h('b', { text: 'Użytkownicy' })))
+    C.users.forEach(function (u) {
+      var key = 'u' + u.id
+      left.appendChild(h('div', { class: 'row' }, h('button', { class: 'list-btn grow' + (curKey() === key ? ' on' : ''), onclick: function () {
+        C.cur = { kind: 'dm', id: u.id, name: u.username }; C.msgs = []; delete C.unread[key]
+        chatSend('history', { user_id: u.id }); chatSend('mark_read', { from_user_id: u.id }); drawChat()
+      } }, (u.online ? '● ' : '○ ') + u.username + (u.blocked ? ' ⛔' : '') + (C.unread[key] ? '  (' + C.unread[key] + ')' : '')),
+        h('button', { class: 'btn small', title: u.blocked ? 'Odblokuj' : 'Zablokuj', onclick: function () { chatSend('block', { user_id: u.id, on: !u.blocked }) } }, u.blocked ? 'Odblokuj' : 'Blokuj')))
+    })
+    var center = h('div', { class: 'card', style: 'display:flex;flex-direction:column;height:calc(100vh - 140px)' })
+    if (!C.cur) center.appendChild(h('p', { class: 'muted', text: 'Wybierz pokój albo użytkownika.' }))
+    else {
+      center.appendChild(h('div', { class: 'row' }, h('b', { class: 'grow', text: (C.cur.kind === 'room' ? '# ' : '@ ') + C.cur.name }),
+        C.cur.kind === 'room' ? h('span', { class: 'muted small', text: (C.cur.members || []).map(function (m) { return m.username }).join(', ') }) : null,
+        C.cur.kind === 'room' ? h('button', { class: 'btn small', onclick: function () { chatSend('leave_room', { room_id: C.cur.id }) } }, 'Opuść') : null,
+        h('button', { class: 'btn small', onclick: function () {
+          var first = C.msgs[0]; if (first) chatSend('history', C.cur.kind === 'room' ? { room_id: C.cur.id, before_id: first.id } : { user_id: C.cur.id, before_id: first.id })
+        } }, 'Starsze')))
+      var list = h('div', { style: 'flex:1;overflow:auto;margin:10px 0', id: 'chat-msgs' })
+      C.msgs.forEach(function (m) { list.appendChild(chatMsg(m)) })
+      center.appendChild(list)
+      center.appendChild(h('div', { class: 'muted small', id: 'chat-typing' }))
+      var input = h('input', { type: 'text', class: 'grow', placeholder: 'Napisz wiadomość… (Enter = wyślij)', maxlength: 4000 })
+      var send = function (att) {
+        var data = C.cur.kind === 'room' ? { room_id: C.cur.id } : { to_user_id: C.cur.id }
+        data.content = input.value
+        if (C.reply) data.reply_to = C.reply.id
+        if (att) data.attachment = att
+        if (!data.content.trim() && !att) return
+        chatSend('send_message', data); input.value = ''; C.reply = null; drawReply()
+      }
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+        if (!C.typingTimer) {
+          chatSend('typing', C.cur.kind === 'room' ? { room_id: C.cur.id, on: true } : { to_user_id: C.cur.id, on: true })
+          C.typingTimer = setTimeout(function () { C.typingTimer = null }, 3000)
+        }
+      })
+      var emo = h('div', { class: 'card hidden', style: 'position:absolute;bottom:60px;left:0;display:grid;grid-template-columns:repeat(10,1fr);gap:4px;z-index:5' },
+        EMOJI.map(function (e) { return h('button', { class: 'btn small', onclick: function () { input.value += e; input.focus() } }, e) }))
+      center.appendChild(h('div', { id: 'chat-reply', class: 'muted small' }))
+      center.appendChild(h('div', { class: 'row', style: 'position:relative' }, emo,
+        h('button', { class: 'btn', title: 'Emoji', onclick: function () { emo.classList.toggle('hidden') } }, '😀'),
+        h('button', { class: 'btn', title: 'Załącz plik (maks. 10 MB)', onclick: function () { call('chat.upload').then(function (att) { if (att) send(att) }).catch(fail) } }, '📎'),
+        input, h('button', { class: 'btn primary', onclick: function () { send() } }, 'Wyślij')))
+      setTimeout(function () { list.scrollTop = list.scrollHeight; input.focus() }, 0)
+    }
+    root.appendChild(h('div', { class: 'cols2' }, left, center))
+    drawReply()
+  }
+  function drawReply() {
+    var el = $('#chat-reply'); if (!el) return
+    clear(el)
+    if (C.reply) el.appendChild(h('span', null, '↩ Odpowiedź do ' + C.reply.sender + ': ' + (C.reply.content || '').slice(0, 80) + ' ', h('button', { class: 'btn small', onclick: function () { C.reply = null; drawReply() } }, '×')))
+  }
+  function chatMsg(m) {
+    var mine = C.me && m.sender_id === C.me.id
+    var box = h('div', { class: 'check-item', style: 'align-items:flex-start' })
+    var body = h('div', { class: 'grow' }, h('div', { class: 'small' }, h('b', { text: m.sender }), h('span', { class: 'muted', text: '  ' + (m.timestamp || '').slice(0, 16) + (m.edited ? ' (edytowano)' : '') + (mine && !m.room_id && m.read ? ' ✓✓' : '') })))
+    if (m.reply_to) {
+      var orig = C.msgs.filter(function (x) { return x.id === m.reply_to })[0]
+      body.appendChild(h('div', { class: 'muted small', text: '↩ ' + (orig ? orig.sender + ': ' + (orig.content || '').slice(0, 60) : 'wcześniejsza wiadomość') }))
+    }
+    body.appendChild(h('div', { class: 'pre', style: m.deleted ? 'font-style:italic;color:var(--muted)' : '', text: m.deleted ? 'wiadomość usunięta' : m.content }))
+    if (m.attachment) {
+      var a = m.attachment
+      if (/^image\//.test(a.mimetype)) {
+        var img = h('img', { alt: a.original_filename, style: 'max-width:280px;max-height:220px;border-radius:8px;margin-top:6px;display:block' })
+        call('chat.fetch', { name: a.server_filename }).then(function (u) { img.src = u }).catch(function () { img.remove() })
+        body.appendChild(img)
+      }
+      body.appendChild(h('button', { class: 'btn small', style: 'margin-top:4px', onclick: function () { call('chat.fetch', { name: a.server_filename, open: true }).catch(fail) } }, '📎 ' + a.original_filename))
+    }
+    box.appendChild(body)
+    if (!m.deleted) {
+      box.appendChild(h('div', { class: 'row' },
+        h('button', { class: 'btn small', title: 'Odpowiedz', onclick: function () { C.reply = m; drawReply() } }, '↩'),
+        mine ? h('button', { class: 'btn small', title: 'Edytuj', onclick: function () { promptBox('Edytuj wiadomość', 'Treść', m.content).then(function (v) { if (v && v.trim()) chatSend('edit_message', { message_id: m.id, content: v }) }) } }, '✎') : null,
+        mine || (C.me && C.me.admin) ? h('button', { class: 'btn small danger', title: 'Usuń', onclick: function () { confirmBox('Usunąć wiadomość?', 'Usuń', true).then(function (ok) { if (ok) chatSend('delete_message', { message_id: m.id }) }) } }, '🗑') : null))
+    }
+    return box
+  }
+  function drawChatLogin(root, st) {
+    root.appendChild(h('h1', { text: 'Czat' }))
+    var srv = h('select', null, st.servers.map(function (s) { return h('option', { value: s.id, text: s.name + ' – ' + s.url }) }))
+    if (st.active) srv.value = st.active
+    var cur = function () { return st.servers.filter(function (s) { return s.id === srv.value })[0] || {} }
+    var login = h('input', { type: 'text', value: cur().login || '', placeholder: 'nazwa użytkownika lub e-mail' })
+    var pass = h('input', { type: 'password', placeholder: cur().hasPassword ? '(zapamiętane – puste = użyj zapamiętanego)' : 'hasło', autocomplete: 'off' })
+    var email = h('input', { type: 'text', placeholder: 'e-mail (tylko przy rejestracji)' })
+    var rem = h('input', { type: 'checkbox', checked: cur().remember })
+    var auto = h('input', { type: 'checkbox', checked: cur().autoLogin })
+    srv.onchange = function () { login.value = cur().login || ''; rem.checked = !!cur().remember; auto.checked = !!cur().autoLogin }
+    var go2 = function (register) {
+      call('chat.connect', { serverId: srv.value, login: login.value, password: pass.value, email: email.value, register: register, remember: rem.checked, autoLogin: auto.checked })
+        .then(function (s) { C.st = s; toast('Połączono z czatem', 'ok') }).catch(fail)
+    }
+    var c1 = section('Logowanie', 'Hasło zapamiętane w launcherze jest szyfrowane DPAPI (tylko to konto Windows). Połączenie: WebSocket z tokenem sesji.')
+    c1.appendChild(h('div', { class: 'form' }, h('label', { class: 'field full' }, 'Serwer', srv), h('label', { class: 'field' }, 'Login', login), h('label', { class: 'field' }, 'Hasło', pass),
+      h('label', { class: 'field' }, 'E-mail', email), h('div', null, h('label', { class: 'check' }, rem, 'Zapamiętaj'), ' ', h('label', { class: 'check' }, auto, 'Loguj automatycznie'))))
+    c1.appendChild(h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn primary', onclick: function () { go2(false) } }, 'Zaloguj'), h('button', { class: 'btn', onclick: function () { go2(true) } }, 'Załóż konto')))
+    root.appendChild(c1)
+    var c2 = section('Serwery')
+    st.servers.forEach(function (s) {
+      c2.appendChild(h('div', { class: 'check-item' }, h('b', { text: s.name + (s.default ? ' (domyślny)' : '') }), h('span', { class: 'grow mono muted', text: s.url }),
+        h('button', { class: 'btn small', onclick: function () { serverDialog(s) } }, 'Edytuj'),
+        h('button', { class: 'btn small danger', onclick: function () { confirmBox('Usunąć serwer „' + s.name + '”?', 'Usuń', true).then(function (ok) { if (ok) call('chat.serverDelete', { id: s.id }).then(function (x) { C.st = x; drawChat() }).catch(fail) }) } }, 'Usuń')))
+    })
+    c2.appendChild(h('button', { class: 'btn', style: 'margin-top:8px', onclick: function () { serverDialog(null) } }, '+ Dodaj serwer'))
+    root.appendChild(c2)
+    var hs = st.host || {}
+    var en = h('input', { type: 'checkbox', checked: hs.enabled }), port = h('input', { type: 'number', value: hs.port || 5000, style: 'width:100px' }), lan = h('input', { type: 'checkbox', checked: hs.lan })
+    var c3 = section('Własny serwer czatu', 'Launcher może sam być serwerem czatu (baza: ' + (hs.db || 'data\\chat\\chat.db') + ', tworzona przy pierwszym włączeniu). Pierwsze założone konto jest administratorem.')
+    c3.appendChild(h('div', { class: 'row' }, h('label', { class: 'check' }, en, 'Uruchamiaj serwer'), h('span', { text: 'Port' }), port, h('label', { class: 'check' }, lan, 'Dostęp z LAN'),
+      h('button', { class: 'btn primary', onclick: function () { call('chat.host', { enabled: en.checked, port: Number(port.value), lan: lan.checked }).then(function (x) { C.st = x; drawChat() }).catch(fail) } }, 'Zastosuj')))
+    c3.appendChild(h('p', { class: 'small', style: hs.running ? 'color:var(--ok)' : 'color:var(--muted)', text: hs.running ? '● Działa na ' + hs.addr : (hs.error ? 'Błąd: ' + hs.error : 'Wyłączony') }))
+    root.appendChild(c3)
+  }
+  function serverDialog(s) {
+    var n = h('input', { type: 'text', value: s ? s.name : '' }), u = h('input', { type: 'text', value: s ? s.url : 'http://127.0.0.1:5000' }), d = h('input', { type: 'checkbox', checked: s && s.default })
+    var m = modal({ title: s ? 'Edytuj serwer' : 'Dodaj serwer', narrow: true,
+      body: [h('label', { class: 'field' }, 'Nazwa', n), h('label', { class: 'field', style: 'margin-top:8px' }, 'Adres (http:// lub https://)', u), h('label', { class: 'check', style: 'margin-top:8px' }, d, 'Domyślny')],
+      footer: [h('button', { class: 'btn', onclick: function () { m.close() } }, 'Anuluj'), h('button', { class: 'btn primary', onclick: function () {
+        call('chat.serverSave', { id: s ? s.id : '', name: n.value, url: u.value, default: d.checked }).then(function (x) { m.close(); C.st = x; drawChat() }).catch(fail)
+      } }, 'Zapisz')] })
   }
 
   // ---- settings

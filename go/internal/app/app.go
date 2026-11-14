@@ -78,6 +78,8 @@ type App struct {
 	started   time.Time
 	missing   map[string]bool
 
+	chat chatState
+
 	scanMu     sync.Mutex
 	scanCancel context.CancelFunc
 
@@ -194,7 +196,15 @@ func (a *App) Register(d *bridge.Dispatcher) {
 	reg("music.deletePlaylist", handler(a.musicDeletePlaylist))
 	reg("music.addFolder", handler(a.musicAddFolder))
 	reg("music.state", handler(a.musicState))
-	reg("chat.archive", handler(func(_ context.Context, _ empty) (any, error) { return a.chatArchive(), nil }))
+	reg("chat.status", handler(func(_ context.Context, _ empty) (any, error) { return a.chatStatus(), nil }))
+	reg("chat.connect", handler(a.chatConnect))
+	reg("chat.logout", handler(a.chatLogout))
+	reg("chat.send", handler(a.chatSend))
+	reg("chat.upload", handler(a.chatUpload))
+	reg("chat.fetch", handler(a.chatFetch))
+	reg("chat.host", handler(a.chatHost))
+	reg("chat.serverSave", handler(a.chatServerSave))
+	reg("chat.serverDelete", handler(a.chatServerDelete))
 }
 
 // --------------------------------------------------------------- helpers
@@ -306,6 +316,7 @@ func (a *App) Shutdown() {
 	a.remote = nil
 	a.mu.Unlock()
 	r.Stop()
+	a.stopChat()
 	a.recordUsage()
 }
 
@@ -352,6 +363,8 @@ func (a *App) Start(ctx context.Context) {
 		a.markRunDay()
 		a.remoteFromSettings()
 		a.emit("library:files", a.CheckFiles())
+		a.startChatHost()
+		a.chatAutoConnect()
 	}()
 	go a.monitor(ctx)
 }

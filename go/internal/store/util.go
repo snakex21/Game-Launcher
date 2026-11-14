@@ -13,3 +13,6 @@ func newUUID() string {
 	b[8] = (b[8] & 0x3f) | 0x80
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }
+
+// NewID returns a random UUID (ids of chat servers etc.).
+func NewID() string { return newUUID() }

@@ -9,6 +9,11 @@ replace github.com/webview/webview_go => ./third_party/webview_go
 require golang.org/x/sys v0.50.0
 
 require (
+	github.com/gorilla/websocket v1.5.3 // indirect
+	golang.org/x/crypto v0.54.0 // indirect
+)
+
+require (
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect

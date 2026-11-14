@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +13,7 @@ import (
 	"time"
 
 	"github.com/snakex21/game-launcher/go/internal/bridge"
+	"github.com/snakex21/game-launcher/go/internal/chatserver"
 	"github.com/snakex21/game-launcher/go/internal/ojson"
 	"github.com/snakex21/game-launcher/go/internal/procwatch"
 	"github.com/snakex21/game-launcher/go/internal/scan"
@@ -340,7 +343,7 @@ func TestAchievements(t *testing.T) {
 func TestSettingsNeverReturnSecrets(t *testing.T) {
 	e := newEnv(t)
 	b, _ := json.Marshal(e.a.Settings())
-	c, _ := json.Marshal(e.a.chatArchive())
+	c, _ := json.Marshal(e.a.chatStatus())
 	for _, s := range []string{"SEKRET-123", "HASLO"} {
 		if strings.Contains(string(b), s) || strings.Contains(string(c), s) {
 			t.Fatalf("secret %s leaked to the UI", s)
@@ -410,4 +413,72 @@ func TestRelocate(t *testing.T) {
 	if got := e.game(t).Str("exe_path"); got != `Z:\Nowe\Gothic\Gothic.exe` {
 		t.Fatal(got)
 	}
+}
+
+// Hosting the chat creates data/chat/chat.db only then; a client logs in
+// through the launcher, the password is remembered with DPAPI.
+func TestChatHostAndConnect(t *testing.T) {
+	e := newEnv(t)
+	chatserver.BcryptCost = 4
+	ctx := context.Background()
+	if _, err := os.Stat(e.a.S.L.ChatDB); err == nil {
+		t.Fatal("chat.db exists before chat is used")
+	}
+	port := freePort(t)
+	if _, err := e.a.chatHost(ctx, struct {
+		Enabled bool  `json:"enabled"`
+		Port    int64 `json:"port"`
+		LAN     bool  `json:"lan"`
+	}{true, int64(port), false}); err != nil {
+		t.Fatal(err)
+	}
+	defer e.a.stopChat()
+	if _, err := os.Stat(e.a.S.L.ChatDB); err != nil {
+		t.Fatal("chat.db not created when hosting")
+	}
+	st, err := e.a.chatServerSave(ctx, struct {
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		URL     string `json:"url"`
+		Default bool   `json:"default"`
+	}{"", "Test", fmt.Sprintf("http://127.0.0.1:%d", port), true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var id string
+	for _, s := range st.(ChatStatus).Servers {
+		if s.Name == "Test" {
+			id = s.ID
+		}
+	}
+	if _, err := e.a.chatConnect(ctx, chatConnectIn{ServerID: id, Login: "gracz", Email: "g@example.invalid", Password: "haslo-1234", Register: true, Remember: true}); err != nil {
+		t.Fatal(err)
+	}
+	if !e.a.chatStatus().Connected {
+		t.Fatal("not connected")
+	}
+	raw, _ := os.ReadFile(e.a.S.L.LocalFile)
+	if strings.Contains(string(raw), "haslo-1234") || !strings.Contains(string(raw), "dpapi:") {
+		t.Fatal("chat password not protected")
+	}
+	if _, err := e.a.chatSend(ctx, struct {
+		Type string         `json:"type"`
+		Data map[string]any `json:"data"`
+	}{"drop_database", nil}); err == nil {
+		t.Fatal("unknown event type relayed")
+	}
+	e.a.chatDisconnect()
+	// reconnect with the remembered password
+	if _, err := e.a.chatConnect(ctx, chatConnectIn{ServerID: id, Remember: true}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func freePort(t *testing.T) int {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port
 }
