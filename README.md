@@ -2,526 +2,268 @@
 
 [English](#english) | [Polski](#polski)
 
+Game Launcher 2.0 is a rewrite in **Go + WebView2**: one `GameLauncher.exe` (~16 MB), starts in ~60 ms, reads the data of version 1.5.0 without conversion and adds a real **mod manager** (journaled deployment, conflicts, profiles, one-click return to vanilla).
+
+![Biblioteka](docs/screenshots/01_biblioteka.png)
+
 ---
 
 <a name="english"></a>
 ## 🇬🇧 English
 
+### 📑 Table of contents
+
+- [Overview](#overview)
+- [Screenshots](#screenshots)
+- [Key features](#key-features)
+- [Mod manager](#mod-manager)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Upgrading from 1.5.0 (Python)](#upgrading-from-150-python)
+- [Configuration and secrets](#configuration-and-secrets)
+- [Portable use](#portable-use)
+- [Building from source](#building-from-source)
+- [Tests](#tests)
+- [Known limitations](#known-limitations)
+- [License](#license)
+
 ### Overview
-A comprehensive game launcher designed for managing cracked, old, and DRM-free games. Perfect for organizing your personal game collection with advanced features like playtime tracking, achievements, integrated music player, and social chat.
 
-### ✨ Key Features
+A launcher for a personal game collection – old classics, DRM-free and store games alike: library with covers, playtime and sessions, save backups, statistics, roadmap, achievements, music player, chat, web remote and a mod manager that keeps every game folder restorable. The UI is Polish.
 
-#### 🎯 Game Management
-- **Library Organization**: Grid and list views with search, filters, and custom groups
-- **Multiple Profiles**: Different mod configurations per game
-- **Emulator Support**: Configure and launch games through emulators (DOSBox, RetroArch, etc.)
-- **Smart Scanning**: Automatic game detection from folders
-- **Playtime Tracking**: Detailed statistics and session history
-- **Completion Tracking**: Track your progress percentage per game
-- **Custom Covers**: Manual upload or automatic fetch from RAWG API
-- **Tags & Genres**: Organize with custom tags and genre categories
+The previous Python/Tkinter version (1.5.0) is still in the repository root (`game_launcher.py`) for reference, but it is no longer developed; releases from 2.0.0 on are the Go version in `go/`.
 
-#### 💾 Save Management
-- **Manual & Auto Saves**: Create backups manually or automatically
-- **Version Control**: Multiple save states with timestamps
-- **Easy Restore**: One-click save restoration
-- **Cloud Backup**: Sync saves to GitHub or Google Drive
+### Screenshots
 
-#### 🎨 Mod Manager
-- **Multiple Profiles**: Switch between different mod setups
-- **Load Order**: Manage mod priority
-- **Easy Installation**: Install from folder or ZIP
-- **Safe Uninstall**: Automatic backup before mod changes
+| | |
+|---|---|
+| ![Library](docs/screenshots/01_biblioteka.png) | ![Game details](docs/screenshots/02_szczegoly_gry.png) |
+| ![Mod manager](docs/screenshots/03_mody.png) | ![Mod conflicts](docs/screenshots/04_mody_konflikty.png) |
+| ![Statistics](docs/screenshots/05_statystyki.png) | ![Settings](docs/screenshots/06_ustawienia.png) |
 
-#### 📊 Statistics & Analytics
-- **Playtime Charts**: Visual graphs of your gaming habits
-- **Period Analysis**: Daily, weekly, monthly, yearly stats
-- **Most Played**: Rankings and detailed breakdowns
-- **Session Tracking**: Monitor individual gaming sessions
+### Key features
 
-#### 🎵 Music Player
-- **Full-Featured Player**: Play music while gaming
-- **Playlists**: Create and manage multiple playlists
-- **Global Hotkeys**: Control music from any game
-- **Track Overlay**: Always-on-top display of current track
-- **Album Covers**: Automatic cover art from Last.fm
-- **Multiple Sources**: Internal library + external folders
+- 🎯 **Library**: tiles and list, search, groups, saved advanced filters, genres, tags, sorting, folder scan with a review dialog, emulators (`emulator [args] ROM`), launch profiles; editing never drops checklists, screenshots, RAWG data or stats.
+- ⏱️ **Playtime**: sessions (also for games started outside the launcher), statistics for any date range, achievements (same rules as 1.5.0) with an editor.
+- 💾 **Saves**: backups after the game exits, a save manager with a safety copy before restoring.
+- 🗓️ **Roadmap** with deadlines, archive, reminders (system notifications).
+- 🎵 **Music**: playlists, shuffle/repeat, Last.fm covers, global hotkeys (opt-in).
+- 💬 **Chat**: server built into the launcher (or `glchat.exe`) and client – WebSocket, bcrypt, session tokens, rate limits, rooms, DMs, files.
+- 🌐 **Web remote**: token, POST-only actions, localhost by default (LAN optional), own port 5050.
+- ☁️ **Backup**: GitHub (always a private repository, diff-based upload), full `.zip` backup/restore.
+- 🔄 **Updater**: newest release by semver, the right asset, mandatory SHA-256, exe swap with rollback.
+- 🖥️ **System**: tray, autostart, Discord Rich Presence, keyboard and gamepad navigation, RSS news, duplicate finder, theme editor.
 
-#### 💬 Social Features
-- **Real-time Chat**: Socket.IO based messaging
-- **Private & Group Chat**: 1-on-1 conversations and chat rooms
-- **File Sharing**: Send images and files
-- **Rich Features**: Emojis, replies, message editing, read receipts
-- **Multiple Servers**: Connect to different chat servers
-- **User Management**: Blocking, profiles, online status
+### Mod manager
 
-#### 🏆 Achievements System
-- **Custom Achievements**: Define your own goals
-- **Progress Tracking**: Monitor achievement progress
-- **Multiple Types**: Playtime, completion, library size, and more
-- **Notifications**: Get notified when unlocking achievements
+Page **Mody** (also "⚒ Mody" in game details). Built-in definitions: Skyrim SE/AE, Fallout 4, Fallout New Vegas, Starfield, Morrowind, Valheim (BepInEx/Thunderstore), Minecraft Java, Stardew Valley (SMAPI), RimWorld, Baldur's Gate 3, Cyberpunk 2077, The Witcher 3, Doom source ports, Half-Life (GoldSrc), GTA San Andreas – and **"any game"** (copy into a folder) for everything else. Definitions are JSON; your own go into `data\modmgr\gamedefs\`.
 
-#### 🗓️ Roadmap & Planning
-- **Game Backlog**: Plan which games to play
-- **Calendar View**: Visualize your gaming schedule
-- **Archive**: Track completed games with dates
-- **Time Estimates**: Plan your gaming time
+- Mods live in a **store** outside the game (`data\modmgr\store`), installed from `.zip`, `.7z`, a folder or a single file (`.esp`, `.pak`, `.wad`, `.pk3`, `.jar`…). The archive layout is recognised (wrapper folders, `Data\` on top, Thunderstore packages, several SMAPI mods in one archive); a preview shows where every file goes and lets you choose the folder and type by hand.
+- **Deployment** uses hardlinks (same drive) or copies. Every overwritten game file is backed up first; the plan is written to a journal before the first change, so a crash or power loss is finished or rolled back on the next start. **"Przywróć vanilla"** returns the folder bit-for-bit.
+- **Conflicts** per file: the later mod wins, or you pick the winner of a single file. Identical files are shown separately.
+- **Profiles** per game (switching is one transaction that changes only what differs).
+- **Load order files**: `plugins.txt` (Skyrim/Fallout/Starfield formats), `Morrowind.ini` + plugin dates, Cyberpunk `modlist.txt`, Witcher 3 `mods.settings`, RimWorld `ModsConfig.xml`, Doom `-iwad/-file` arguments.
+- **Game updates**: changed files are detected; the new game file becomes the new original, uninstalling after an update keeps it.
+- **Safety**: nothing from an archive is ever executed; enabling a mod with code (DLL/ASI/scripts) and overwriting protected files need consent; no deployment while the game runs; unsafe archive paths (traversal, NTFS streams, reserved names, links, ZIP bombs) are rejected.
 
-#### 🎨 Customization
-- **Themes**: Multiple built-in themes + custom theme creator
-- **Fonts**: Choose your preferred font
-- **Background Images**: Personalize with custom backgrounds
-- **Big Picture Mode**: Gamepad-optimized interface
+Details and the full design: [docs/MOD_MANAGER.md](docs/MOD_MANAGER.md).
 
-#### 🌐 Remote Control
-- **Web Interface**: Control launcher from phone/tablet
-- **Launch Games Remotely**: Start games from anywhere on your network
-- **Mobile-Friendly**: Responsive web UI
+### Requirements
 
-### 📋 Requirements
+- Windows 10/11 x64
+- Microsoft Edge **WebView2 Runtime** (preinstalled on current Windows 10/11)
 
-- **OS**: Windows 10/11
-- **Python**: 3.12 or 3.13 (tested on 3.13.7; CI runs 3.12 and 3.13)
-- **Dependencies**: see `requirements.txt` (dev tools: `requirements-dev.txt`)
+### Installation
 
-### 🚀 Installation (from source)
+1. Download `GameLauncher-<version>-windows-x64.exe` and `SHA256SUMS` from [Releases](https://github.com/snakex21/Game-Launcher/releases) and check the hash:
+   `certutil -hashfile GameLauncher-2.0.0-windows-x64.exe SHA256`
+2. Put the exe into the launcher folder (rename it to `GameLauncher.exe` if you like). Data is kept **next to the exe** in `data\`.
+3. Optional flags: `-app-dir <folder>` (another data folder), `-minimized` (start in the tray), `-debug` (WebView2 dev tools).
+
+### Upgrading from 1.5.0 (Python)
+
+Put the exe into the folder of 1.5.0 (the one with `data\`, `images\`, `internal_music\`). No conversion step is needed:
+
+| Data | In 2.0.0 |
+|---|---|
+| `data\config\config.json` | read and written in the same format (key order, unknown fields, number formatting and line endings kept); `config.json.bak` before the first save of a session; a broken file is set aside, never overwritten |
+| `data\config\local_settings.json` | same format; **secrets** (API keys, GitHub token, remote token, chat passwords) are encrypted with **DPAPI** (`dpapi:<base64>`) on the first start – 1.5.0 cannot read them afterwards, and on another PC/user they must be entered again |
+| `data\games_saves\…` | same layout |
+| `config.json → mods_data` (old mod manager) | kept unchanged and shown read-only on the Mody page; the old manager copied files straight into the game, so to manage such a mod in 2.0 install it again from its archive/folder (its old backup is in the game's `_backup_…` folder) |
+| `data\chat\chat.db` | new schema, a valid 1.5.0 database is upgraded (old passwords are rehashed with bcrypt at the next login); the Python chat client cannot connect to the new WebSocket server |
+| new | `data\modmgr\` (mod manager), `data\webview2\` (browser profile), `data\go_cache\` (thumbnails), `data\logs\go_launcher.log` |
+
+Back up `data\` before the first start if you want to be able to go back to 1.5.0.
+
+### Configuration and secrets
+
+API keys are entered in **Settings** and stored DPAPI-encrypted; they never reach the UI or the log. Environment variables win over the file and are never written: `GL_RAWG_API_KEY`, `GL_LASTFM_API_KEY`, `GL_GITHUB_TOKEN`, `GL_REMOTE_TOKEN`.
+
+### Portable use
+
+The app folder is the folder of the exe. Game paths on the launcher's drive are stored without the drive letter and resolve again after the letter changes (USB drive E: → F:). The WebView2 profile is kept in `data\webview2`, not in `%APPDATA%`. Mod manager data uses paths relative to named roots; game folders on the launcher's drive are portable too.
+
+### Building from source
+
+Go 1.26 (toolchain 1.26.11 is fetched automatically) and MinGW-w64 `gcc` (CGO for WebView2):
 
 ```bat
 git clone https://github.com/snakex21/Game-Launcher.git
-cd Game-Launcher
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-python game_launcher.py
+cd Game-Launcher\go
+build.bat 2.0.0          :: build\GameLauncher.exe  (-trimpath -s -w -H windowsgui, icon + version info)
+go build -trimpath -ldflags "-s -w" -o build\glchat.exe .\cmd\glchat
 ```
 
-On the first start the launcher creates `data\config\config.json` and `data\config\local_settings.json` **next to the program** (not in the current working directory), asks for a username and shows an empty library. You can also start from the templates:
+### Tests
 
 ```bat
-mkdir data\config
-copy config.example.json data\config\config.json
-copy local_settings.example.json data\config\local_settings.json
+cd go
+go vet ./...
+go test -race ./...
+go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 ```
 
-### 🔐 Configuration and secrets
+Mod manager tests use only fake games and generated mods in temporary folders (never real games or user folders). Manual checks before a release: [docs/TESTY.md](docs/TESTY.md). CI: `.github/workflows/go-ci.yml`.
 
-- No keys or tokens live in the repository. `data\` (config, `local_settings.json`, `chat.db`, saves), `images\`, `internal_music\` and all `*.mp3` files are ignored by git.
-- API keys are entered in **Settings → API keys** and stored only in `data\config\local_settings.json`. Alternatively set environment variables (they win over the file and are never written to it):
+### Known limitations
 
-| Variable | Used for |
-|---|---|
-| `GL_GITHUB_TOKEN` | GitHub cloud sync |
-| `GL_RAWG_API_KEY` | covers/metadata from RAWG |
-| `GL_LASTFM_API_KEY` | album covers in the music player |
-| `GL_REMOTE_TOKEN` | fixed token for the web remote |
-| `GL_CHAT_SECRET_KEY`, `FLASK_ADMIN_USER`, `FLASK_ADMIN_PASS` | chat server (`chat_server.py`); without `FLASK_ADMIN_PASS` the admin panel is disabled |
-| `GL_CHAT_PORT`, `GL_CHAT_HOST` | chat server port/host (default `127.0.0.1:5000`) |
+- Mod manager: no FOMOD wizard, no Nexus/Thunderstore/Modrinth downloads yet, RAR must be unpacked first, no symlinks/staging cache (a store on a USB drive and a game on another drive means copies), BG3 `modsettings.lsx` is not written. See [docs/MOD_MANAGER.md](docs/MOD_MANAGER.md).
+- Google Drive backup was dropped (it never worked in 1.5.0); UI only in Polish.
+- Game folders on a drive other than the launcher's drive need "Settings → Move paths" after their letter changes.
 
-- Logs: `data\logs\game_launcher.log` (secrets are redacted).
+### License
 
-### 💽 Portable use (USB drive, changing drive letters)
+**GNU General Public License v3.0** – see [LICENSE](LICENSE). You may use, modify and distribute the software; derivative works must stay open source under GPL-3.0.
 
-- Game, ROM, save and emulator paths **on the same drive as the launcher** are stored without the drive letter (`\Games\Gothic\Gothic.exe`); games inside the launcher folder are stored relative to it. When the drive gets a different letter (E: → F:), the paths are resolved for the new letter automatically.
-- Old configs with absolute paths are remapped as soon as the launcher has recorded its drive once (`settings.launcher_drive`).
-- When an `.exe`/ROM is missing, the launcher also tries the same path on the launcher's drive; tiles of games whose file cannot be found are marked **"⚠ Brak pliku gry"**.
-- Games are started with the working directory set to the game's folder (emulated games: the emulator's folder).
-
-### 📦 Building the .exe (PyInstaller)
-
-```bat
-pip install -r requirements-dev.txt
-pyinstaller --noconfirm game_launcher.spec
-```
-
-The result is `dist\GameLauncher\GameLauncher.exe` (one-folder build: faster start, data folder created next to the exe). Copy the whole `dist\GameLauncher` folder. The build contains only icons, `icon.ico` and the `*.example.json` templates – never your `data\` or music.
-
-### 🧪 Tests
-
-```bat
-pip install -r requirements-dev.txt
-python -m pytest
-```
-
-Tests cover path resolution/portability, config loading (defaults, env secrets, port migration), launch command building and web-remote authentication. GitHub Actions runs them on `windows-latest` (`.github/workflows/ci.yml`).
-
-### 📦 Dependencies
-
-Main libraries used:
-- `tkinter` - GUI framework
-- `Pillow` - Image processing
-- `pygame` - Music player
-- `socketio` - Real-time chat
-- `matplotlib` - Statistics charts
-- `psutil` - Process monitoring
-- `requests` - API calls
-- `mutagen` - Music metadata
-
-### 🎮 Usage
-
-#### First Launch
-1. Set your username
-2. Choose to scan folders or add games manually
-3. Configure your preferences in Settings
-
-#### Adding Games
-- **Manual**: Library → Add Game → Fill in details
-- **Emulated Games**: Configure emulator first, then add ROM
-
-#### Chat Setup
-1. Start the server: `python chat_server.py` (port 5000, see `GL_CHAT_PORT`)
-2. Go to Chat page and add the server (default: `http://127.0.0.1:5000`)
-3. Register or login
-4. Start chatting!
-
-#### Music Player
-1. Go to Music page
-2. Add music folder or files
-3. Create playlists
-4. Configure global hotkeys in Settings
-
-### ⚙️ Configuration
-
-#### Data Layout
-
-Application data is separated from source code:
-
-- `data/config/config.json` - main app config
-- `data/config/local_settings.json` - local/private settings
-- `data/config/achievements_def.json` - achievement definitions
-- `data/games_saves/` - game save data
-- `data/chat/chat.db` - chat SQLite database
-- `data/chat/uploads/` - uploaded chat files
-- `custom_themes/` - custom themes
-- `external/ScriptHookConfig.ini` - external integration config
-
-#### Compatibility and Migration
-
-The app keeps backward compatibility with old locations:
-
-- `config.json`, `local_settings.json`, `achievements_def.json`
-- `games_saves/`
-- `chat.db`
-- `chat_uploads/` and `uploads/`
-
-On startup, data is migrated to the new structure when needed.
-
-### 🔧 Advanced Features
-
-#### Web remote
-Enable in Settings → Remote control. The page shows the full address **with a token**
-(e.g. `http://127.0.0.1:5050/?token=...`). Without the token every request gets HTTP 401;
-games are started/closed only with POST requests.
-- Default port **5050** (the chat server uses 5000), listening only on `127.0.0.1`.
-- To use a phone on the same Wi-Fi, tick "Available on the local network" (binds `0.0.0.0`).
-- "New token" invalidates old links.
-
-#### Discord Rich Presence
-Enable in Settings → Discord Integration
-Shows what game you're playing on Discord
-
-#### Global Hotkeys
-Configure in Settings → Music Hotkeys
-Control music player from any application
-
-#### Cloud Sync
-- **GitHub**: Settings → Cloud → Configure GitHub token
-- **Google Drive**: not implemented yet (see `docs/ROADMAP.md`)
-
-### ⚠️ Known limitations
-
-- Google Drive sync is not implemented (only GitHub works).
-- Interface translations are disabled (Polish UI only).
-- Folder scanning for games exists in code (`launcher/scan_pipeline.py`) but has no menu entry yet.
-- Moving games to another drive letter that is *not* the launcher's drive still requires editing the game paths.
-- See `docs/ROADMAP.md` for planned features.
-
-### 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest features
-- Submit pull requests
-
-### 📄 License
-
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
-
-This means:
-- ✅ You can use, modify, and distribute this software freely
-- ✅ You can use it for commercial purposes
-- ⚠️ **Any modifications or derivative works MUST also be open source under GPL-3.0**
-- ⚠️ You must include the original license and copyright notice
-- ⚠️ You must state any changes made to the code
-
-**This ensures the project and all its derivatives remain open source forever.**
-
-See the [LICENSE](LICENSE) file for full details or visit https://www.gnu.org/licenses/gpl-3.0.html
-
-### ⚠️ Disclaimer
-
-This launcher is designed for managing personal game collections. Users are responsible for ensuring they have legal rights to any games they add to the launcher.
+This launcher is meant for personal game collections; you are responsible for having the rights to the games and mods you use.
 
 ---
 
 <a name="polski"></a>
 ## 🇵🇱 Polski
 
+### 📑 Spis treści
+
+- [Opis](#opis)
+- [Zrzuty ekranu](#zrzuty-ekranu)
+- [Główne funkcje](#główne-funkcje)
+- [Menedżer modów](#menedżer-modów)
+- [Wymagania](#wymagania)
+- [Instalacja](#instalacja)
+- [Przejście z wersji 1.5.0 (Python)](#przejście-z-wersji-150-python)
+- [Konfiguracja i sekrety](#konfiguracja-i-sekrety)
+- [Praca z pendrive'a](#praca-z-pendrivea)
+- [Budowanie ze źródeł](#budowanie-ze-źródeł)
+- [Testy](#testy)
+- [Znane ograniczenia](#znane-ograniczenia)
+- [Licencja](#licencja)
+
 ### Opis
-Kompleksowy launcher do zarządzania crackedowymi, starymi i grami bez DRM. Idealny do organizacji osobistej kolekcji gier z zaawansowanymi funkcjami jak śledzenie czasu gry, osiągnięcia, zintegrowany odtwarzacz muzyki i czat społecznościowy.
 
-### ✨ Główne Funkcje
+Launcher do własnej kolekcji gier – starych klasyków, gier bez DRM i ze sklepów: biblioteka z okładkami, czas gry i sesje, kopie zapisów, statystyki, roadmapa, osiągnięcia, odtwarzacz muzyki, czat, pilot WWW i menedżer modów, po którym każdy folder gry da się przywrócić do oryginału.
 
-#### 🎯 Zarządzanie Grami
-- **Organizacja Biblioteki**: Widok siatki i listy z wyszukiwaniem, filtrami i własnymi grupami
-- **Wiele Profili**: Różne konfiguracje modów na grę
-- **Wsparcie Emulatorów**: Konfiguruj i uruchamiaj gry przez emulatory (DOSBox, RetroArch, itp.)
-- **Inteligentne Skanowanie**: Automatyczne wykrywanie gier z folderów
-- **Śledzenie Czasu Gry**: Szczegółowe statystyki i historia sesji
-- **Śledzenie Ukończenia**: Śledź procent postępu w każdej grze
-- **Własne Okładki**: Ręczne dodawanie lub automatyczne pobieranie z RAWG API
-- **Tagi i Gatunki**: Organizuj za pomocą własnych tagów i kategorii gatunków
+Wersja 2.0.0 to przepisany od zera launcher w **Go + WebView2**: jeden plik `GameLauncher.exe` (~16 MB), okno po ~60 ms, odczyt danych wersji 1.5.0 bez konwersji. Poprzednia wersja Python/Tkinter (1.5.0) zostaje w katalogu głównym repozytorium (`game_launcher.py`) tylko do wglądu i nie jest już rozwijana.
 
-#### 💾 Zarządzanie Zapisami
-- **Zapisy Ręczne i Auto**: Twórz kopie zapasowe ręcznie lub automatycznie
-- **Kontrola Wersji**: Wiele stanów zapisu z datami
-- **Łatwe Przywracanie**: Przywracanie zapisu jednym kliknięciem
-- **Backup w Chmurze**: Synchronizuj zapisy do GitHub lub Google Drive
+### Zrzuty ekranu
 
-#### 🎨 Menedżer Modów
-- **Wiele Profili**: Przełączaj się między różnymi setupami modów
-- **Kolejność Ładowania**: Zarządzaj priorytetem modów
-- **Łatwa Instalacja**: Instaluj z folderu lub ZIP
-- **Bezpieczna Deinstalacja**: Automatyczny backup przed zmianami modów
+| | |
+|---|---|
+| ![Biblioteka](docs/screenshots/01_biblioteka.png) | ![Szczegóły gry](docs/screenshots/02_szczegoly_gry.png) |
+| ![Menedżer modów](docs/screenshots/03_mody.png) | ![Konflikty modów](docs/screenshots/04_mody_konflikty.png) |
+| ![Statystyki](docs/screenshots/05_statystyki.png) | ![Ustawienia](docs/screenshots/06_ustawienia.png) |
 
-#### 📊 Statystyki i Analityka
-- **Wykresy Czasu Gry**: Wizualne grafy twoich nawyków gamingowych
-- **Analiza Okresów**: Statystyki dzienne, tygodniowe, miesięczne, roczne
-- **Najczęściej Grane**: Rankingi i szczegółowe zestawienia
-- **Śledzenie Sesji**: Monitoruj pojedyncze sesje grania
+### Główne funkcje
 
-#### 🎵 Odtwarzacz Muzyki
-- **Pełnofunkcyjny Odtwarzacz**: Słuchaj muzyki podczas grania
-- **Playlisty**: Twórz i zarządzaj wieloma playlistami
-- **Globalne Skróty**: Steruj muzyką z dowolnej gry
-- **Nakładka Utworu**: Wyświetlanie zawsze na wierzchu aktualnego utworu
-- **Okładki Albumów**: Automatyczne okładki z Last.fm
-- **Wiele Źródeł**: Wewnętrzna biblioteka + zewnętrzne foldery
+- 🎯 **Biblioteka**: kafelki i lista, wyszukiwanie, grupy, zapisane filtry zaawansowane, gatunki, tagi, sortowanie, skanowanie folderów z oknem weryfikacji, emulatory (`emulator [argumenty] ROM`), profile uruchamiania; edycja nie gubi checklisty, screenshotów, danych RAWG ani statystyk.
+- ⏱️ **Czas gry**: sesje (także gier uruchomionych poza launcherem), statystyki dla dowolnego zakresu dat, osiągnięcia (te same reguły co w 1.5.0) z edytorem.
+- 💾 **Zapisy**: kopia po wyjściu z gry, menedżer kopii z kopią bezpieczeństwa przed wczytaniem.
+- 🗓️ **Roadmapa** z terminami, archiwum, przypomnienia (powiadomienia systemowe).
+- 🎵 **Muzyka**: playlisty, losowo/powtarzanie, okładki z Last.fm, globalne skróty (po włączeniu).
+- 💬 **Czat**: serwer wbudowany w launcher (albo `glchat.exe`) i klient – WebSocket, bcrypt, tokeny sesji, limity, pokoje, wiadomości prywatne, pliki.
+- 🌐 **Pilot WWW**: token, akcje tylko przez POST, domyślnie tylko localhost (LAN opcjonalnie), port 5050.
+- ☁️ **Kopie**: GitHub (zawsze prywatne repozytorium, wysyłanie różnicowe), pełna kopia `.zip` z przywracaniem.
+- 🔄 **Aktualizator**: najnowsze wydanie wg semver, właściwy plik, obowiązkowe SHA-256, podmiana exe z wycofaniem.
+- 🖥️ **System**: zasobnik, autostart, Discord Rich Presence, obsługa klawiaturą i padem, newsy RSS, wyszukiwarka duplikatów, edytor motywów.
 
-#### 💬 Funkcje Społecznościowe
-- **Czat w Czasie Rzeczywistym**: Komunikacja oparta na Socket.IO
-- **Czat Prywatny i Grupowy**: Rozmowy 1-na-1 i pokoje czatowe
-- **Udostępnianie Plików**: Wysyłaj obrazy i pliki
-- **Bogate Funkcje**: Emoji, odpowiedzi, edycja wiadomości, potwierdzenia odczytu
-- **Wiele Serwerów**: Łącz się z różnymi serwerami czatu
-- **Zarządzanie Użytkownikami**: Blokowanie, profile, status online
+### Menedżer modów
 
-#### 🏆 System Osiągnięć
-- **Własne Osiągnięcia**: Definiuj własne cele
-- **Śledzenie Postępu**: Monitoruj postęp osiągnięć
-- **Wiele Typów**: Czas gry, ukończenie, rozmiar biblioteki i więcej
-- **Powiadomienia**: Otrzymuj powiadomienia przy odblokowywaniu osiągnięć
+Strona **Mody** (także przycisk „⚒ Mody” w szczegółach gry). Wbudowane definicje: Skyrim SE/AE, Fallout 4, Fallout New Vegas, Starfield, Morrowind, Valheim (BepInEx/Thunderstore), Minecraft Java, Stardew Valley (SMAPI), RimWorld, Baldur's Gate 3, Cyberpunk 2077, Wiedźmin 3, Doom (source porty), Half-Life (GoldSrc), GTA San Andreas – oraz **„Dowolna gra”** (kopiuj do folderu) dla wszystkich pozostałych. Definicje to pliki JSON; własne wkłada się do `data\modmgr\gamedefs\`.
 
-#### 🗓️ Roadmapa i Planowanie
-- **Backlog Gier**: Planuj które gry zagrać
-- **Widok Kalendarza**: Wizualizuj swój harmonogram grania
-- **Archiwum**: Śledź ukończone gry z datami
-- **Szacowanie Czasu**: Planuj swój czas na granie
+- Mody leżą w **magazynie** poza grą (`data\modmgr\store`); instalacja z `.zip`, `.7z`, folderu albo pojedynczego pliku (`.esp`, `.pak`, `.wad`, `.pk3`, `.jar`…). Układ archiwum jest rozpoznawany (foldery-opakowania, `Data\` na wierzchu, paczki Thunderstore, kilka modów SMAPI w jednym archiwum); podgląd pokazuje, gdzie trafi każdy plik, i pozwala ręcznie wskazać folder i typ.
+- **Wdrażanie** dowiązaniami twardymi (ten sam dysk) albo kopiami. Każdy nadpisywany plik gry ma najpierw kopię; plan trafia do dziennika przed pierwszą zmianą, więc po awarii lub zaniku prądu operacja jest dokańczana albo wycofywana przy następnym starcie. **„Przywróć vanilla”** przywraca folder bit w bit.
+- **Konflikty** na poziomie pliku: wygrywa późniejszy mod albo wskazany ręcznie zwycięzca pojedynczego pliku; identyczne pliki oznaczone osobno.
+- **Profile** dla każdej gry (przełączenie to jedna transakcja, która zmienia tylko różnice).
+- **Pliki kolejności**: `plugins.txt` (formaty Skyrim/Fallout/Starfield), `Morrowind.ini` + daty pluginów, `modlist.txt` Cyberpunka, `mods.settings` Wiedźmina 3, `ModsConfig.xml` RimWorlda, argumenty `-iwad/-file` Dooma.
+- **Aktualizacje gier**: zmienione pliki są wykrywane; nowy plik gry staje się nowym oryginałem, a odinstalowanie moda po aktualizacji go zostawia.
+- **Bezpieczeństwo**: nic z archiwum nie jest uruchamiane; włączenie moda z kodem (DLL/ASI/skrypty) i nadpisanie chronionych plików wymagają zgody; brak wdrażania przy uruchomionej grze; niebezpieczne ścieżki w archiwach (`..`, strumienie NTFS, nazwy zarezerwowane, linki, bomby ZIP) są odrzucane.
 
-#### 🎨 Personalizacja
-- **Motywy**: Wiele wbudowanych motywów + kreator własnych motywów
-- **Czcionki**: Wybierz preferowaną czcionkę
-- **Obrazy Tła**: Personalizuj własnymi tłami
-- **Tryb Big Picture**: Interfejs zoptymalizowany pod gamepad
+Szczegóły i pełny projekt: [docs/MOD_MANAGER.md](docs/MOD_MANAGER.md).
 
-#### 🌐 Zdalne Sterowanie
-- **Interfejs Webowy**: Steruj launcherem z telefonu/tabletu
-- **Zdalne Uruchamianie Gier**: Uruchamiaj gry z dowolnego miejsca w sieci
-- **Przyjazny Mobilnie**: Responsywny interfejs webowy
+### Wymagania
 
-### 📋 Wymagania
+- Windows 10/11 x64
+- Microsoft Edge **WebView2 Runtime** (jest w aktualnym Windows 10/11)
 
-- **System**: Windows 10/11
-- **Python**: 3.12 lub 3.13 (testowane na 3.13.7; CI sprawdza 3.12 i 3.13)
-- **Zależności**: zobacz `requirements.txt` (narzędzia deweloperskie: `requirements-dev.txt`)
+### Instalacja
 
-### 🚀 Instalacja (ze źródeł)
+1. Pobierz `GameLauncher-<wersja>-windows-x64.exe` i `SHA256SUMS` z [Releases](https://github.com/snakex21/Game-Launcher/releases) i sprawdź sumę:
+   `certutil -hashfile GameLauncher-2.0.0-windows-x64.exe SHA256`
+2. Połóż exe w folderze launchera (możesz zmienić nazwę na `GameLauncher.exe`). Dane są trzymane **obok exe** w `data\`.
+3. Opcje: `-app-dir <folder>` (inny folder danych), `-minimized` (start w zasobniku), `-debug` (narzędzia deweloperskie WebView2).
+
+### Przejście z wersji 1.5.0 (Python)
+
+Połóż exe w folderze wersji 1.5.0 (tym z `data\`, `images\`, `internal_music\`). Konwersja nie jest potrzebna:
+
+| Dane | W 2.0.0 |
+|---|---|
+| `data\config\config.json` | odczyt i zapis w tym samym formacie (kolejność kluczy, nieznane pola, zapis liczb i końce linii zachowane); `config.json.bak` przed pierwszym zapisem w sesji; uszkodzony plik jest odkładany na bok, nigdy nadpisywany |
+| `data\config\local_settings.json` | ten sam format; **sekrety** (klucze API, token GitHub, token pilota, hasła czatu) są przy pierwszym starcie szyfrowane **DPAPI** (`dpapi:<base64>`) – wersja 1.5.0 ich potem nie odczyta, a na innym komputerze/koncie trzeba je wpisać ponownie |
+| `data\games_saves\…` | ten sam układ |
+| `config.json → mods_data` (stary menedżer modów) | zachowane bez zmian, widoczne tylko do odczytu na stronie Mody; stary menedżer kopiował pliki prosto do gry, więc żeby zarządzać takim modem w 2.0, zainstaluj go ponownie z archiwum/folderu (stara kopia jest w folderze `_backup_…` gry) |
+| `data\chat\chat.db` | nowy schemat; poprawna baza z 1.5.0 jest podnoszona (stare hasła dostają hash bcrypt przy następnym logowaniu); klient czatu z Pythona nie połączy się z nowym serwerem WebSocket |
+| nowe | `data\modmgr\` (menedżer modów), `data\webview2\` (profil przeglądarki), `data\go_cache\` (miniatury), `data\logs\go_launcher.log` |
+
+Jeśli chcesz móc wrócić do 1.5.0, zrób kopię `data\` przed pierwszym uruchomieniem.
+
+### Konfiguracja i sekrety
+
+Klucze API wpisuje się w **Ustawieniach**; są zapisywane zaszyfrowane DPAPI i nigdy nie trafiają do interfejsu ani logu. Zmienne środowiskowe mają pierwszeństwo przed plikiem i nie są do niego zapisywane: `GL_RAWG_API_KEY`, `GL_LASTFM_API_KEY`, `GL_GITHUB_TOKEN`, `GL_REMOTE_TOKEN`.
+
+### Praca z pendrive'a
+
+Folder aplikacji to folder exe. Ścieżki gier na dysku launchera są zapisywane bez litery dysku i rozwiązywane na nowo po jej zmianie (pendrive E: → F:). Profil WebView2 leży w `data\webview2`, nie w `%APPDATA%`. Dane menedżera modów używają ścieżek względem nazwanych folderów; foldery gier na dysku launchera też są przenośne.
+
+### Budowanie ze źródeł
+
+Go 1.26 (toolchain 1.26.11 pobierany automatycznie) i MinGW-w64 `gcc` (CGO dla WebView2):
 
 ```bat
 git clone https://github.com/snakex21/Game-Launcher.git
-cd Game-Launcher
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-python game_launcher.py
+cd Game-Launcher\go
+build.bat 2.0.0          :: build\GameLauncher.exe  (-trimpath -s -w -H windowsgui, ikona + informacje o wersji)
+go build -trimpath -ldflags "-s -w" -o build\glchat.exe .\cmd\glchat
 ```
 
-Przy pierwszym starcie launcher tworzy `data\config\config.json` i `data\config\local_settings.json` **obok programu** (nie w bieżącym katalogu), pyta o nazwę użytkownika i pokazuje pustą bibliotekę. Można też zacząć od szablonów:
+### Testy
 
 ```bat
-mkdir data\config
-copy config.example.json data\config\config.json
-copy local_settings.example.json data\config\local_settings.json
+cd go
+go vet ./...
+go test -race ./...
+go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 ```
 
-### 🔐 Konfiguracja i sekrety
+Testy menedżera modów używają wyłącznie fałszywych gier i wygenerowanych modów w folderach tymczasowych (nigdy prawdziwych gier ani folderów użytkownika). Ręczna lista kontrolna przed wydaniem: [docs/TESTY.md](docs/TESTY.md). CI: `.github/workflows/go-ci.yml`.
 
-- W repozytorium nie ma żadnych kluczy ani tokenów. `data\` (config, `local_settings.json`, `chat.db`, zapisy), `images\`, `internal_music\` i wszystkie pliki `*.mp3` są ignorowane przez git.
-- Klucze API wpisuje się w **Ustawienia → Klucze API** – trafiają tylko do `data\config\local_settings.json`. Zamiast tego można ustawić zmienne środowiskowe (mają pierwszeństwo przed plikiem i nigdy nie są do niego zapisywane):
+### Znane ograniczenia
 
-| Zmienna | Do czego |
-|---|---|
-| `GL_GITHUB_TOKEN` | synchronizacja z chmurą GitHub |
-| `GL_RAWG_API_KEY` | okładki i metadane z RAWG |
-| `GL_LASTFM_API_KEY` | okładki albumów w odtwarzaczu |
-| `GL_REMOTE_TOKEN` | stały token pilota WWW |
-| `GL_CHAT_SECRET_KEY`, `FLASK_ADMIN_USER`, `FLASK_ADMIN_PASS` | serwer czatu (`chat_server.py`); bez `FLASK_ADMIN_PASS` panel admina jest wyłączony |
-| `GL_CHAT_PORT`, `GL_CHAT_HOST` | port/host serwera czatu (domyślnie `127.0.0.1:5000`) |
+- Menedżer modów: bez kreatora FOMOD, bez pobierania z Nexus/Thunderstore/Modrinth, RAR trzeba najpierw rozpakować, bez symlinków i cache na dysku gry (magazyn na pendrivie i gra na innym dysku = kopie), `modsettings.lsx` BG3 nie jest zapisywany. Zob. [docs/MOD_MANAGER.md](docs/MOD_MANAGER.md).
+- Kopia na Google Drive została usunięta (w 1.5.0 nie działała); interfejs tylko po polsku.
+- Foldery gier na innym dysku niż dysk launchera wymagają „Ustawienia → Przenieś ścieżki” po zmianie jego litery.
 
-- Logi: `data\logs\game_launcher.log` (sekrety są w nim zamaskowane).
+### Licencja
 
-### 💽 Praca z pendrive'a (zmiana litery dysku)
+**GNU General Public License v3.0** – zob. [LICENSE](LICENSE). Możesz używać, zmieniać i rozpowszechniać program; prace pochodne muszą pozostać otwarte na licencji GPL-3.0.
 
-- Ścieżki gier, ROM-ów, zapisów i emulatorów **na tym samym dysku co launcher** są zapisywane bez litery dysku (`\Gry\Gothic\Gothic.exe`), a gry w folderze launchera – względnie do niego. Gdy dysk dostanie inną literę (E: → F:), ścieżki są automatycznie rozwiązywane dla nowej litery.
-- Stare configi ze ścieżkami bezwzględnymi są przemapowywane, gdy launcher raz zapamięta swój dysk (`settings.launcher_drive`).
-- Gdy brakuje `.exe`/ROM-u, launcher próbuje też tej samej ścieżki na swoim dysku; kafelki gier, których pliku nie da się znaleźć, mają oznaczenie **„⚠ Brak pliku gry”**.
-- Gry startują z katalogiem roboczym ustawionym na folder gry (gry emulowane: folder emulatora).
-
-### 📦 Budowanie .exe (PyInstaller)
-
-```bat
-pip install -r requirements-dev.txt
-pyinstaller --noconfirm game_launcher.spec
-```
-
-Wynik: `dist\GameLauncher\GameLauncher.exe` (build „onedir”: szybszy start, folder `data` powstaje obok exe). Kopiuj cały folder `dist\GameLauncher`. Do paczki trafiają tylko ikony, `icon.ico` i szablony `*.example.json` – nigdy Twój `data\` ani muzyka.
-
-### 🧪 Testy
-
-```bat
-pip install -r requirements-dev.txt
-python -m pytest
-```
-
-Testy obejmują rozwiązywanie i przenośność ścieżek, wczytywanie konfiguracji (domyślne wartości, sekrety ze zmiennych, migracja portu), budowanie polecenia uruchomienia gry oraz autoryzację pilota WWW. GitHub Actions uruchamia je na `windows-latest` (`.github/workflows/ci.yml`).
-
-### 📦 Zależności
-
-Główne używane biblioteki:
-- `tkinter` - Framework GUI
-- `Pillow` - Przetwarzanie obrazów
-- `pygame` - Odtwarzacz muzyki
-- `socketio` - Czat w czasie rzeczywistym
-- `matplotlib` - Wykresy statystyk
-- `psutil` - Monitorowanie procesów
-- `requests` - Wywołania API
-- `mutagen` - Metadane muzyki
-
-### 🎮 Użytkowanie
-
-#### Pierwsze Uruchomienie
-1. Ustaw swoją nazwę użytkownika
-2. Wybierz skanowanie folderów lub dodaj gry ręcznie
-3. Skonfiguruj preferencje w Ustawieniach
-
-#### Dodawanie Gier
-- **Ręcznie**: Biblioteka → Dodaj Grę → Wypełnij szczegóły
-- **Gry Emulowane**: Najpierw skonfiguruj emulator, potem dodaj ROM
-
-#### Konfiguracja Czatu
-1. Uruchom serwer: `python chat_server.py` (port 5000, zob. `GL_CHAT_PORT`)
-2. Przejdź do strony Czat i dodaj serwer (domyślnie: `http://127.0.0.1:5000`)
-3. Zarejestruj się lub zaloguj
-4. Zacznij czatować!
-
-#### Odtwarzacz Muzyki
-1. Przejdź do strony Muzyka
-2. Dodaj folder z muzyką lub pliki
-3. Twórz playlisty
-4. Skonfiguruj globalne skróty w Ustawieniach
-
-### ⚙️ Konfiguracja
-
-#### Struktura Danych
-
-Dane aplikacji są oddzielone od kodu źródłowego:
-
-- `data/config/config.json` - główna konfiguracja aplikacji
-- `data/config/local_settings.json` - ustawienia lokalne/prywatne
-- `data/config/achievements_def.json` - definicje osiągnięć
-- `data/games_saves/` - dane zapisów gier
-- `data/chat/chat.db` - baza danych czatu SQLite
-- `data/chat/uploads/` - przesłane pliki czatu
-- `custom_themes/` - własne motywy
-- `external/ScriptHookConfig.ini` - konfiguracja integracji zewnętrznych
-
-#### Kompatybilność i Migracja
-
-Aplikacja zachowuje kompatybilność wsteczną ze starymi lokalizacjami:
-
-- `config.json`, `local_settings.json`, `achievements_def.json`
-- `games_saves/`
-- `chat.db`
-- `chat_uploads/` i `uploads/`
-
-Przy starcie dane są migrowane do nowej struktury gdy jest to potrzebne.
-
-### 🔧 Zaawansowane Funkcje
-
-#### Pilot WWW
-Włącz w Ustawienia → Zdalne sterowanie. Launcher pokazuje pełny adres **z tokenem**
-(np. `http://127.0.0.1:5050/?token=...`). Bez tokenu każde żądanie dostaje HTTP 401,
-a gry uruchamia/zamyka się wyłącznie żądaniami POST.
-- Domyślny port **5050** (serwer czatu używa 5000), nasłuch tylko na `127.0.0.1`.
-- Telefon w tej samej sieci Wi-Fi: zaznacz „Dostępny w sieci lokalnej” (nasłuch na `0.0.0.0`).
-- „Nowy token” unieważnia stare linki.
-
-#### Discord Rich Presence
-Włącz w Ustawienia → Integracja Discord
-Pokazuje w jaką grę grasz na Discordzie
-
-#### Globalne Skróty Klawiszowe
-Konfiguruj w Ustawienia → Skróty Muzyki
-Steruj odtwarzaczem muzyki z dowolnej aplikacji
-
-#### Synchronizacja w Chmurze
-- **GitHub**: Ustawienia → Chmura → Skonfiguruj token GitHub
-- **Google Drive**: jeszcze niezaimplementowane (zob. `docs/ROADMAP.md`)
-
-### ⚠️ Znane ograniczenia
-
-- Synchronizacja z Google Drive nie jest zaimplementowana (działa tylko GitHub).
-- Tłumaczenia interfejsu są wyłączone (UI tylko po polsku).
-- Skanowanie folderów w poszukiwaniu gier istnieje w kodzie (`launcher/scan_pipeline.py`), ale nie ma jeszcze pozycji w menu.
-- Przeniesienie gier na dysk o innej literze, który *nie* jest dyskiem launchera, nadal wymaga edycji ścieżek gier.
-- Planowane funkcje: `docs/ROADMAP.md`.
-
-### 🤝 Współpraca
-
-Wkład jest mile widziany! Możesz:
-- Zgłaszać błędy
-- Sugerować funkcje
-- Wysyłać pull requesty
-
-### 📄 Licencja
-
-Ten projekt jest objęty licencją **GNU General Public License v3.0 (GPL-3.0)**.
-
-Oznacza to:
-- ✅ Możesz używać, modyfikować i dystrybuować to oprogramowanie swobodnie
-- ✅ Możesz używać go do celów komercyjnych
-- ⚠️ **Wszelkie modyfikacje lub prace pochodne MUSZĄ również być open source na licencji GPL-3.0**
-- ⚠️ Musisz dołączyć oryginalną licencję i informację o prawach autorskich
-- ⚠️ Musisz zaznaczyć wszelkie zmiany wprowadzone w kodzie
-
-**To gwarantuje, że projekt i wszystkie jego pochodne pozostaną open source na zawsze.**
-
-Zobacz plik [LICENSE](LICENSE) po szczegóły lub odwiedź https://www.gnu.org/licenses/gpl-3.0.html
-
-### ⚠️ Zastrzeżenie
-
-Ten launcher jest zaprojektowany do zarządzania osobistymi kolekcjami gier. Użytkownicy są odpowiedzialni za upewnienie się, że posiadają legalne prawa do gier, które dodają do launchera.
-
----
-
-**Made with ❤️ for retro and indie game enthusiasts**
+Launcher służy do zarządzania własną kolekcją gier; odpowiadasz za posiadanie praw do gier i modów, których używasz.

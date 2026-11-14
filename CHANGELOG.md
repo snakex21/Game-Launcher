@@ -1,6 +1,31 @@
 # Changelog
 
-## v1.5.0 (w przygotowaniu)
+## v2.0.0 (2026-11-15) – wersja Go
+
+Launcher przepisany w Go + WebView2 (folder `go/`); wersja Python nie jest dalej rozwijana.
+
+### Nowe
+- Menedżer modów: magazyn poza grą, instalacja z `.zip`/`.7z`/folderu/pliku z podglądem, wdrażanie dowiązaniami lub kopiami z kopią oryginałów i dziennikiem transakcji, odzyskiwanie po awarii, „Przywróć vanilla”, konflikty per plik, profile, pliki kolejności ładowania, 15 gier + „Dowolna gra”, wykrywanie aktualizacji gry, gry ze Steam (`docs/MOD_MANAGER.md`).
+- Jeden plik exe (~16 MB), start okna ~60 ms, profil WebView2 obok danych (pendrive).
+- Czat po WebSockecie (serwer w launcherze i `glchat.exe`), kopia na GitHub tylko do prywatnego repozytorium, aktualizator z obowiązkowym SHA-256, sekrety szyfrowane DPAPI.
+
+### Zgodność z 1.5.0
+- `config.json`, `local_settings.json`, zapisy gier czytane bez konwersji; format zapisu zachowany. Zmiany: sekrety → DPAPI, nowy schemat `chat.db` (stara baza podnoszona), `mods_data` tylko do odczytu, Google Drive usunięty. Szczegóły w README.
+
+### Poprawki względem portu
+- Pakiet `go/internal/saves` był ignorowany przez `.gitignore` (czysty klon się nie budował).
+- Zasób wersji exe podawał licencję MIT zamiast GPL-3.0.
+- Zależności: x/crypto 0.59.0, klauspost/compress 1.20.2, brotli 1.2.7 (govulncheck bez znalezisk).
+
+### Poprawki po niezależnym QA menedżera modów (16 błędów, każdy z testem regresyjnym)
+- Wdrożenie nie włącza już pluginów wyłączonych przez użytkownika w `plugins.txt` (także po zmianie w zewnętrznym narzędziu); purge przywraca oryginalny `plugins.txt` mimo zewnętrznych edycji.
+- Configi (`*.cfg`, `*.ini`, `*.json`…) i pliki kolejności są wdrażane jako zapisywalne kopie: zmiany gry są zachowywane, purge nadal wraca do vanilla.
+- Zapis „w miejscu” przez dowiązanie twarde nie zostawia już pliku moda w grze po purge.
+- Dwie instalacje tej samej gry nie mogą wdrażać do wspólnego pliku w Dokumentach/AppData; gra nie może leżeć w folderze launchera ani w folderze innej zarządzanej gry; brak wdrażania przez junction/symlink.
+- Uszkodzone archiwum z nazwą `.zip`/`.7z` jest odrzucane (zamiast instalacji jako „luźny plik”); nazwy w kodowaniu OEM (CP852, Eksplorator Windows) są dekodowane; bomba ZIP zatrzymywana w trakcie rozpakowania; nazwy `COM¹`–`LPT³` odrzucane.
+- Nieudane odinstalowanie (gra uruchomiona) nie zmienia profili; prośba o zgodę na nadpisanie chronionych plików dociera do interfejsu także przy automatycznym wdrożeniu; plugin z nazwą spoza Windows-1252 jest pomijany z ostrzeżeniem zamiast blokować wdrożenie; usunięcie gry nie zostawia pustych folderów.
+
+## v1.5.0 (2026-11-14)
 
 ### Bezpieczeństwo
 - Brak sekretów w repozytorium: `.gitignore` obejmuje `local_settings.json`, `config.json`, `chat.db`, zapisy gier i pliki audio; usunięto zacommitowane `__pycache__`.

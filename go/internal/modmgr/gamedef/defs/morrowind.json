@@ -1,0 +1,68 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "morrowind",
+  "name": "The Elder Scrolls III: Morrowind (silnik oryginalny)",
+  "extends": "template.bethesda",
+  "engine": "gamebryo",
+  "notes": "Dla OpenMW osobna definicja 'openmw' (kolejnosc i foldery danych w openmw.cfg: linie data= i content=; mozliwe wdrozenie bez kopiowania plikow - strategia external-folder).",
+  "detection": {
+    "steam": { "appIds": [22320] },
+    "gog": { "gameIds": ["1440163901"] },
+    "registry": [
+      { "hive": "HKLM", "key": "SOFTWARE\\Bethesda Softworks\\Morrowind", "value": "Installed Path", "view": "32" }
+    ],
+    "requiredFiles": ["Morrowind.exe", "Data Files/Morrowind.esm"]
+  },
+  "paths": {
+    "data": "{game}/Data Files"
+  },
+  "modTypes": [
+    {
+      "id": "root",
+      "name": "MGE XE / MWSE / pliki korzenia",
+      "target": "{game}",
+      "priority": 8,
+      "match": { "anyFiles": ["MGEXEgui.exe", "MWSE.dll", "d3d8.dll", "MWSE-Update.exe"] },
+      "executableContent": true
+    },
+    {
+      "id": "data",
+      "name": "Data Files",
+      "target": "{paths.data}",
+      "default": true,
+      "priority": 50,
+      "rootMarkers": ["*.esp", "*.esm", "*.bsa", "meshes", "textures", "icons", "bookart", "sound", "music", "splash", "fonts", "mwse", "mwse-lua", "distantland", "video"]
+    }
+  ],
+  "loadOrder": {
+    "kind": "bethesda-plugins",
+    "file": "{game}/Morrowind.ini",
+    "pluginsDir": "{paths.data}",
+    "pluginGlobs": ["*.esm", "*.esp"],
+    "format": "ini-gamefile",
+    "encoding": "windows-1252",
+    "implicitPlugins": [],
+    "lightPlugins": { "supported": false },
+    "maxFullPlugins": 255,
+    "sortHints": "masters-first"
+  },
+  "deployment": {
+    "strategies": ["hardlink", "copy"],
+    "caseInsensitivePaths": true,
+    "protectedPaths": ["*.exe"],
+    "postDeploy": [
+      { "kind": "write-load-order", "requiresConsent": false },
+      { "kind": "touch-timestamps", "requiresConsent": false }
+    ]
+  },
+  "sources": { "nexus": { "domain": "morrowind" } },
+  "warnings": [
+    {
+      "id": "mw-timestamps",
+      "level": "info",
+      "when": "always",
+      "text": "Morrowind ustala kolejnosc po dacie modyfikacji plikow; menedzer ustawia daty pluginow. Hardlinki wspoldziela daty z magazynem - przy hardlinkach zmieniamy daty kopii w magazynie profilu."
+    }
+  ]
+}

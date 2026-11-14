@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Game Launcher – pilot</title>
+<style>
+:root{--bg:#14161b;--panel:#1d2027;--text:#e6e8ee;--muted:#8a90a0;--accent:#5b8cff;--green:#3ecf8e;--red:#ff6b6b}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:12px}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:1.3rem;margin:4px 0 12px}
+#status{background:var(--panel);border-radius:10px;padding:10px 12px;margin-bottom:12px;color:var(--muted)}
+#status.on{color:var(--green)}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid #2b2f39;background:var(--panel);color:var(--text);font-size:1rem}
+ul{list-style:none;padding:0;margin:12px 0}
+li{display:flex;gap:12px;align-items:center;background:var(--panel);border-radius:10px;padding:8px;margin-bottom:8px}
+li.hidden{display:none}
+img{width:54px;height:72px;object-fit:cover;border-radius:6px;background:#2b2f39}
+.info{flex:1;min-width:0}
+.name{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.time{color:var(--muted);font-size:.85rem}
+button{border:0;border-radius:8px;padding:10px 14px;font-weight:600;font-size:.95rem;cursor:pointer}
+.launch{background:var(--accent);color:#fff}
+.close{background:var(--red);color:#fff;display:none}
+.empty{color:var(--muted);text-align:center;padding:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Game Launcher – pilot</h1>
+<div id="status">Ładowanie…</div>
+<input id="q" type="search" placeholder="Szukaj gry…" autocomplete="off">
+<ul id="list"><li class="empty">Ładowanie listy gier…</li></ul>
+</div>
+<script>
+(function(){
+  var list=document.getElementById('list'),status=document.getElementById('status'),q=document.getElementById('q');
+  var rows=[],running=[];
+  function api(path,opts){
+    opts=opts||{};opts.credentials='same-origin';
+    return fetch(path,opts).then(function(r){return r.json().catch(function(){return {}}).then(function(d){if(!r.ok)throw new Error(d.error||('HTTP '+r.status));return d})});
+  }
+  function show(text,on){status.textContent=text;status.className=on?'on':''}
+  function refresh(){
+    api('/api/status').then(function(d){
+      running=d.running||[];
+      show(running.length?('Uruchomiona: '+running.join(', ')):'Brak uruchomionej gry',running.length>0);
+      rows.forEach(function(li){var on=running.indexOf(li.dataset.name)>=0;li.querySelector('.close').style.display=on?'inline-block':'none';li.querySelector('.launch').style.display=on?'none':'inline-block'});
+    }).catch(function(e){show('Błąd: '+e.message,false)});
+  }
+  function act(kind,name){
+    api('/api/'+kind+'/'+encodeURIComponent(name),{method:'POST'}).then(function(){show((kind==='launch'?'Uruchamianie: ':'Zamykanie: ')+name,true);setTimeout(refresh,1500)}).catch(function(e){show('Błąd: '+e.message,false)});
+  }
+  api('/api/games').then(function(games){
+    list.textContent='';rows=[];
+    if(!games.length){var e=document.createElement('li');e.className='empty';e.textContent='Biblioteka jest pusta.';list.appendChild(e);return}
+    games.forEach(function(g){
+      var li=document.createElement('li');li.dataset.name=g.name;
+      var img=document.createElement('img');img.loading='lazy';img.src=g.cover_url;img.alt='';img.onerror=function(){this.style.visibility='hidden'};
+      var info=document.createElement('div');info.className='info';
+      var n=document.createElement('span');n.className='name';n.textContent=g.name;
+      var t=document.createElement('span');t.className='time';t.textContent='Czas gry: '+g.playtime;
+      info.append(n,t);
+      var b1=document.createElement('button');b1.className='launch';b1.textContent='▶ Uruchom';b1.onclick=function(){act('launch',g.name)};
+      var b2=document.createElement('button');b2.className='close';b2.textContent='■ Zamknij';b2.onclick=function(){act('close',g.name)};
+      li.append(img,info,b1,b2);list.appendChild(li);rows.push(li);
+    });
+    refresh();
+  }).catch(function(e){list.textContent='';var li=document.createElement('li');li.className='empty';li.textContent='Błąd: '+e.message;list.appendChild(li)});
+  q.addEventListener('input',function(){var s=q.value.toLowerCase();rows.forEach(function(li){li.classList.toggle('hidden',li.dataset.name.toLowerCase().indexOf(s)<0)})});
+  setInterval(refresh,5000);
+})();
+</script>
+</body>
+</html>

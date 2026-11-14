@@ -1,0 +1,92 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "starfield",
+  "name": "Starfield",
+  "extends": "template.bethesda",
+  "engine": "creation",
+  "detection": {
+    "steam": { "appIds": [1716740] },
+    "xbox": { "moddable": "content-folder" },
+    "requiredFiles": ["Starfield.exe", "Data/Starfield.esm"]
+  },
+  "paths": {
+    "data": "{game}/Data",
+    "docs": "{myGames}/Starfield",
+    "docsData": "{myGames}/Starfield/Data",
+    "appdata": "{localAppData}/Starfield"
+  },
+  "modTypes": [
+    {
+      "id": "script-extender",
+      "name": "SFSE (korzen gry)",
+      "target": "{game}",
+      "priority": 5,
+      "match": { "anyFiles": ["sfse_loader.exe", "sfse_*.dll"] },
+      "executableContent": true
+    },
+    {
+      "id": "plugins",
+      "name": "Pluginy i archiwa (.esm/.esp/.ba2)",
+      "target": "{paths.data}",
+      "priority": 20,
+      "match": { "anyFiles": ["*.esm", "*.esp", "*.esl", "*.ba2"] },
+      "includeGlobs": ["*.esm", "*.esp", "*.esl", "*.ba2", "SFSE/**"]
+    },
+    {
+      "id": "loose",
+      "name": "Luzne pliki",
+      "target": "{paths.docsData}",
+      "default": true,
+      "priority": 50,
+      "rootMarkers": ["textures", "meshes", "interface", "materials", "geometries", "sound", "strings"],
+      "notes": "Gra ma tez folder Data w Dokumentach, ktory ma pierwszenstwo dla luznych plikow; trzymamy luzne pliki tam, zeby nie zalezaly od INI."
+    }
+  ],
+  "loadOrder": {
+    "kind": "bethesda-plugins",
+    "file": "{paths.appdata}/plugins.txt",
+    "pluginsDir": "{paths.data}",
+    "pluginGlobs": ["*.esm", "*.esp", "*.esl"],
+    "format": "asterisk",
+    "encoding": "utf-8",
+    "implicitPlugins": ["Starfield.esm", "Constellation.esm", "OldMars.esm", "BlueprintShips-Starfield.esm"],
+    "implicitListFile": "{game}/Starfield.ccc",
+    "lightPlugins": { "supported": true, "extensions": [".esl"], "flagged": true, "maxCount": 4096 },
+    "mediumPlugins": true,
+    "maxFullPlugins": 253,
+    "sortHints": "masters-first"
+  },
+  "frameworks": [
+    {
+      "id": "sfse",
+      "name": "Starfield Script Extender",
+      "required": "if-mod-requires",
+      "detect": { "allFiles": ["sfse_loader.exe"] },
+      "modRequiresIf": { "anyFiles": ["SFSE/Plugins/*.dll", "Data/SFSE/Plugins/*.dll"] },
+      "install": "as-mod",
+      "gameVersionLocked": true,
+      "launchVia": "sfse"
+    }
+  ],
+  "executables": [
+    { "id": "game", "name": "Starfield", "path": "{game}/Starfield.exe", "kind": "game" },
+    { "id": "sfse", "name": "SFSE", "path": "{game}/sfse_loader.exe", "default": true, "requiresFramework": "sfse", "kind": "loader" }
+  ],
+  "sources": { "nexus": { "domain": "starfield" } },
+  "updates": { "steamBuildId": true, "watchFiles": ["Starfield.exe"], "onUpdate": "verify-and-redeploy" },
+  "warnings": [
+    {
+      "id": "sf-ini",
+      "level": "warn",
+      "when": "on-first-mod",
+      "text": "Luzne pliki wymagaja StarfieldCustom.ini w Dokumentach z [Archive] bInvalidateOlderFiles=1 i sResourceDataDirsFinal=. Menedzer zaproponuje zmiane z kopia zapasowa."
+    },
+    {
+      "id": "sf-creations",
+      "level": "info",
+      "when": "always",
+      "text": "Kreacje z oficjalnego menu gry sa zarzadzane przez gre; menedzer pokazuje je w kolejnosci ladowania, ale ich nie usuwa. Lista pluginow niejawnych musi byc weryfikowana po kazdej aktualizacji gry."
+    }
+  ]
+}

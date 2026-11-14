@@ -121,3 +121,7 @@ playlists/
 # Rzeczy z dysku uzytkownika (pendrive / stara kopia)
 mods_storage/
 launcher/pages/
+
+# Go source packages whose names match the data patterns above
+!go/internal/saves/
+!docs/screenshots/

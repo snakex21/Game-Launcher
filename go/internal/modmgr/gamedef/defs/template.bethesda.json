@@ -1,0 +1,81 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "template.bethesda",
+  "name": "Szablon: gry Bethesdy (Gamebryo/Creation)",
+  "abstract": true,
+  "engine": "creation",
+  "adapter": "bethesda",
+  "detection": { "requiredFiles": [] },
+  "paths": {
+    "data": "{game}/Data"
+  },
+  "modTypes": [
+    {
+      "id": "script-extender",
+      "name": "Script Extender (pliki w korzeniu gry)",
+      "target": "{game}",
+      "priority": 5,
+      "match": { "anyFiles": ["*_loader.exe", "*se_*.dll", "*se64_*.dll", "f4se_*.dll", "sfse_*.dll"] },
+      "rootMarkers": ["*_loader.exe"],
+      "executableContent": true,
+      "notes": "SKSE/F4SE/SFSE/NVSE/OBSE: loader + DLL w korzeniu gry, skrypty .pex w Data/Scripts (te trafiaja do typu 'data')."
+    },
+    {
+      "id": "root",
+      "name": "Pliki korzenia (ENB, ReShade, preloadery)",
+      "target": "{game}",
+      "priority": 8,
+      "match": { "anyFiles": ["d3d11.dll", "d3d9.dll", "dxgi.dll", "enbseries.ini", "enblocal.ini", "dinput8.dll"] },
+      "executableContent": true
+    },
+    {
+      "id": "data",
+      "name": "Data",
+      "target": "{paths.data}",
+      "default": true,
+      "priority": 50,
+      "rootMarkers": ["*.esp", "*.esm", "*.esl", "*.bsa", "*.ba2", "meshes", "textures", "scripts", "interface", "sound", "music", "skse", "f4se", "sfse", "seq", "strings", "materials", "shadersfx", "lodsettings", "grass", "nvse", "obse", "mwse", "video", "icons", "bookart", "splash", "fonts", "distantlod", "lsdata", "trees", "geometries"],
+      "notes": "Archiwa z folderem 'Data/' na wierzchu: wykrywanie korzenia zdejmuje go automatycznie."
+    }
+  ],
+  "installer": {
+    "fomod": true,
+    "maxRootSearchDepth": 3,
+    "ignoreGlobs": ["readme*", "*.url", "fomod/**", "meta.ini", "screenshot*", "*.psd"]
+  },
+  "deployment": {
+    "strategies": ["hardlink", "symlink", "copy"],
+    "caseInsensitivePaths": true,
+    "protectedPaths": ["*.exe"],
+    "preferStagingOnGameVolume": true,
+    "postDeploy": [ { "kind": "write-load-order", "requiresConsent": false } ]
+  },
+  "loadOrder": {
+    "kind": "bethesda-plugins",
+    "pluginsDir": "{paths.data}",
+    "pluginGlobs": ["*.esm", "*.esp", "*.esl"],
+    "format": "asterisk",
+    "encoding": "windows-1252",
+    "sortHints": "masters-first",
+    "readExternalChanges": true
+  },
+  "updates": {
+    "steamBuildId": true,
+    "onUpdate": "verify-and-redeploy"
+  },
+  "warnings": [
+    {
+      "id": "bethesda-se-update",
+      "level": "warn",
+      "when": "on-game-update",
+      "text": "Aktualizacja gry zwykle psuje Script Extender i mody DLL od niego zalezne - sprawdz wersje przed uruchomieniem lub wylacz automatyczne aktualizacje w kliencie sklepu."
+    },
+    {
+      "id": "bethesda-saves",
+      "level": "info",
+      "when": "on-first-mod",
+      "text": "Usuwanie pluginow z trwajacej gry moze uszkodzic zapis. Uzywaj osobnych profili do nowych rozgrywek."
+    }
+  ]
+}

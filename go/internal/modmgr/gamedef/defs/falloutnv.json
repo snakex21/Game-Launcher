@@ -1,0 +1,64 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "falloutnv",
+  "name": "Fallout: New Vegas",
+  "extends": "template.bethesda",
+  "engine": "gamebryo",
+  "detection": {
+    "steam": { "appIds": [22380] },
+    "gog": { "gameIds": ["1454587428"] },
+    "requiredFiles": ["FalloutNV.exe", "Data/FalloutNV.esm"]
+  },
+  "paths": {
+    "data": "{game}/Data",
+    "docs": "{myGames}/FalloutNV",
+    "appdata": "{localAppData}/FalloutNV"
+  },
+  "executables": [
+    { "id": "game", "name": "Fallout NV", "path": "{game}/FalloutNV.exe", "kind": "game" },
+    { "id": "nvse", "name": "xNVSE", "path": "{game}/nvse_loader.exe", "requiresFramework": "xnvse", "kind": "loader" }
+  ],
+  "loadOrder": {
+    "kind": "bethesda-plugins",
+    "file": "{paths.appdata}/plugins.txt",
+    "pluginsDir": "{paths.data}",
+    "pluginGlobs": ["*.esm", "*.esp"],
+    "format": "timestamp",
+    "encoding": "windows-1252",
+    "implicitPlugins": ["FalloutNV.esm"],
+    "lightPlugins": { "supported": false },
+    "maxFullPlugins": 255,
+    "sortHints": "masters-first"
+  },
+  "deployment": {
+    "strategies": ["hardlink", "copy"],
+    "caseInsensitivePaths": true,
+    "protectedPaths": ["*.exe"],
+    "postDeploy": [
+      { "kind": "write-load-order", "requiresConsent": false },
+      { "kind": "touch-timestamps", "requiresConsent": false }
+    ]
+  },
+  "frameworks": [
+    {
+      "id": "xnvse",
+      "name": "xNVSE",
+      "required": "if-mod-requires",
+      "detect": { "allFiles": ["nvse_loader.exe"] },
+      "modRequiresIf": { "anyFiles": ["NVSE/Plugins/*.dll", "Data/NVSE/Plugins/*.dll"] },
+      "install": "as-mod",
+      "source": { "kind": "github" },
+      "notes": "Nowsze wersje xNVSE potrafia ladowac sie bez nvse_loader (przez proxy DLL) - wykrywamy oba warianty."
+    }
+  ],
+  "sources": { "nexus": { "domain": "newvegas" } },
+  "warnings": [
+    {
+      "id": "fnv-4gb",
+      "level": "info",
+      "when": "on-first-mod",
+      "text": "Popularne poradniki zalecaja patcher 4GB, ktory modyfikuje exe gry. Menedzer nie uruchamia patcherow - zrob to recznie; wykryjemy zmiane exe i oznaczymy ja jako 'swiadoma modyfikacje'."
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "rimworld",
+  "name": "RimWorld",
+  "engine": "rimworld",
+  "adapter": "rimworld",
+  "detection": {
+    "steam": { "appIds": [294100] },
+    "gog": { "gameIds": ["1094900565"] },
+    "requiredFiles": ["Data/Core/About/About.xml"],
+    "anyOfFiles": ["RimWorldWin64.exe", "RimWorldWin.exe"]
+  },
+  "paths": {
+    "config": "{localLow}/Ludeon Studios/RimWorld by Ludeon Studios/Config"
+  },
+  "executables": [
+    { "id": "game", "name": "RimWorld", "path": "{game}/RimWorldWin64.exe", "default": true, "kind": "game" }
+  ],
+  "modTypes": [
+    {
+      "id": "rimworld-mod",
+      "name": "Mod RimWorld",
+      "target": "{game}/Mods",
+      "perModSubfolder": "{mod.folderName}",
+      "default": true,
+      "priority": 10,
+      "match": { "manifestFile": "About/About.xml" },
+      "rootMarkers": ["About", "Assemblies", "Defs", "Patches", "Textures", "LoadFolders.xml", "1.*"],
+      "notes": "Identyfikator = <packageId> z About.xml (case-insensitive). Assemblies/*.dll = kod (Harmony)."
+    }
+  ],
+  "installer": {
+    "packageFormat": "rimworld-about",
+    "maxRootSearchDepth": 3
+  },
+  "deployment": {
+    "strategies": ["hardlink", "symlink", "copy"],
+    "caseInsensitivePaths": true
+  },
+  "loadOrder": {
+    "kind": "rimworld-modsconfig",
+    "file": "{paths.config}/ModsConfig.xml",
+    "format": "xml",
+    "encoding": "utf-8",
+    "baseEntries": [
+      { "packageId": "brrainz.harmony", "position": "first-if-present" },
+      { "packageId": "ludeon.rimworld", "position": "first" },
+      { "packageId": "ludeon.rimworld.royalty", "dlc": true },
+      { "packageId": "ludeon.rimworld.ideology", "dlc": true },
+      { "packageId": "ludeon.rimworld.biotech", "dlc": true },
+      { "packageId": "ludeon.rimworld.anomaly", "dlc": true },
+      { "packageId": "ludeon.rimworld.odyssey", "dlc": true }
+    ],
+    "sortHints": "about-xml-loadbefore",
+    "readExternalChanges": true
+  },
+  "frameworks": [
+    {
+      "id": "harmony",
+      "name": "Harmony (mod brrainz.harmony)",
+      "required": "if-mod-requires",
+      "detect": { "anyFiles": ["Mods/*/About/About.xml"] },
+      "modRequiresIf": { "manifestDependency": "brrainz.harmony" },
+      "install": "as-mod",
+      "notes": "Harmony to zwykly mod, ktory musi byc pierwszy na liscie."
+    }
+  ],
+  "launch": {
+    "args": ["-savedatafolder={profileDir}/SaveData"],
+    "preferStoreLaunch": false
+  },
+  "sources": {
+    "steamWorkshop": { "readOnly": true }
+  },
+  "updates": { "steamBuildId": true, "onUpdate": "warn" },
+  "warnings": [
+    {
+      "id": "rw-profiles",
+      "level": "info",
+      "when": "always",
+      "text": "Opcjonalnie profil moze uzywac -savedatafolder, by miec osobne ModsConfig.xml i zapisy. Bez tego nadpisujemy wspolny ModsConfig.xml (z kopia)."
+    },
+    {
+      "id": "rw-workshop",
+      "level": "info",
+      "when": "always",
+      "text": "Mody z Warsztatu Steam sa widoczne i mozna je ukladac w kolejnosci, ale ich pliki nalezy do Steam - nie modyfikujemy ich."
+    },
+    {
+      "id": "rw-version",
+      "level": "warn",
+      "when": "always",
+      "text": "Sprawdzaj <supportedVersions> w About.xml - mod bez wsparcia biezacej wersji gry jest oznaczany."
+    }
+  ]
+}

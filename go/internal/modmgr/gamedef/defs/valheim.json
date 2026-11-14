@@ -1,0 +1,38 @@
+{
+  "$schema": "./game-definition.schema.json",
+  "schemaVersion": 1,
+  "id": "valheim",
+  "name": "Valheim",
+  "extends": "template.bepinex",
+  "engine": "unity",
+  "detection": {
+    "steam": { "appIds": [892970] },
+    "xbox": { "moddable": "content-folder" },
+    "requiredFiles": ["valheim.exe", "UnityPlayer.dll"]
+  },
+  "executables": [
+    { "id": "game", "name": "Valheim", "path": "{game}/valheim.exe", "default": true, "kind": "game" }
+  ],
+  "frameworks": [
+    {
+      "id": "bepinex",
+      "name": "BepInExPack Valheim",
+      "required": "always",
+      "detect": { "allFiles": ["winhttp.dll", "BepInEx/core/BepInEx.dll"] },
+      "install": "as-mod",
+      "source": { "kind": "thunderstore", "id": "denikson-BepInExPack_Valheim" }
+    }
+  ],
+  "sources": {
+    "thunderstore": { "community": "valheim" },
+    "nexus": { "domain": "valheim" }
+  },
+  "warnings": [
+    {
+      "id": "valheim-server",
+      "level": "info",
+      "when": "on-first-mod",
+      "text": "Mody zmieniajace rozgrywke musza byc zainstalowane takze na serwerze dedykowanym."
+    }
+  ]
+}
