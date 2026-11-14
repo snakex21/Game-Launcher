@@ -254,3 +254,40 @@ func copyFile(t *testing.T, from, to string) {
 		t.Fatal(err)
 	}
 }
+
+// The launcher folder moved to another drive letter (config written on Q:,
+// loaded from a temp folder on this machine's drive): paths that were on the
+// old launcher drive follow it, others stay, and a save writes them back
+// without the drive letter.
+func TestDriveLetterChangeThroughStore(t *testing.T) {
+	dir := t.TempDir()
+	drive := filepath.VolumeName(dir) // e.g. "C:"
+	writeFile(t, filepath.Join(dir, "data", "config", "config.json"), `{
+    "games": {
+        "A": {"exe_path": "Q:\\Gry\\A\\a.exe", "save_path": "D:\\Saves\\A"},
+        "B": {"exe_path": "\\Gry\\B\\b.exe"}
+    },
+    "emulators": {"PCSX2": {"path": "Q:\\Emu\\pcsx2.exe"}},
+    "settings": {"launcher_drive": "Q:"}
+}`)
+	s := openWithEnv(t, dir, nil)
+	if s.Remapped != 2 {
+		t.Fatalf("remapped %d", s.Remapped)
+	}
+	s.ReadConfig(func(c *ojson.Object) {
+		g := c.Obj("games")
+		if g.Obj("A").Str("exe_path") != drive+`\Gry\A\a.exe` || g.Obj("A").Str("save_path") != `D:\Saves\A` || g.Obj("B").Str("exe_path") != drive+`\Gry\B\b.exe` {
+			t.Fatalf("%s", ojson.MarshalCompact(g))
+		}
+		if c.Obj("settings").Str("launcher_drive") != strings.ToUpper(drive) {
+			t.Fatal("launcher_drive not updated")
+		}
+	})
+	if err := s.UpdateConfig(func(*ojson.Object) error { return nil }); err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := os.ReadFile(s.L.ConfigFile)
+	if !bytes.Contains(raw, []byte(`"exe_path": "\\Gry\\A\\a.exe"`)) || !bytes.Contains(raw, []byte(`"path": "\\Emu\\pcsx2.exe"`)) {
+		t.Fatalf("not stored portably:\n%s", raw)
+	}
+}
