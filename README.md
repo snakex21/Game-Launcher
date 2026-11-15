@@ -31,7 +31,7 @@ Game Launcher 2.0 is a rewrite in **Go + WebView2**: one `GameLauncher.exe` (~16
 
 A launcher for a personal game collection – old classics, DRM-free and store games alike: library with covers, playtime and sessions, save backups, statistics, roadmap, achievements, music player, chat, web remote and a mod manager that keeps every game folder restorable. The UI is Polish.
 
-The previous Python/Tkinter version (1.5.0) is still in the repository root (`game_launcher.py`) for reference, but it is no longer developed; releases from 2.0.0 on are the Go version in `go/`.
+The code of the previous Python/Tkinter version (1.5.0) has been removed from `main`; it is still available under the tag [`python-final`](https://github.com/snakex21/Game-Launcher/tree/python-final). Releases from 2.0.0 on are the Go version in `go/`.
 
 ### Screenshots
 
@@ -162,7 +162,7 @@ This launcher is meant for personal game collections; you are responsible for ha
 
 Launcher do własnej kolekcji gier – starych klasyków, gier bez DRM i ze sklepów: biblioteka z okładkami, czas gry i sesje, kopie zapisów, statystyki, roadmapa, osiągnięcia, odtwarzacz muzyki, czat, pilot WWW i menedżer modów, po którym każdy folder gry da się przywrócić do oryginału.
 
-Wersja 2.0.0 to przepisany od zera launcher w **Go + WebView2**: jeden plik `GameLauncher.exe` (~16 MB), okno po ~60 ms, odczyt danych wersji 1.5.0 bez konwersji. Poprzednia wersja Python/Tkinter (1.5.0) zostaje w katalogu głównym repozytorium (`game_launcher.py`) tylko do wglądu i nie jest już rozwijana.
+Wersja 2.0.0 to przepisany od zera launcher w **Go + WebView2**: jeden plik `GameLauncher.exe` (~16 MB), okno po ~60 ms, odczyt danych wersji 1.5.0 bez konwersji. Kod poprzedniej wersji Python/Tkinter (1.5.0) został usunięty z `main`; jest dostępny pod tagiem [`python-final`](https://github.com/snakex21/Game-Launcher/tree/python-final).
 
 ### Zrzuty ekranu
 

@@ -11,7 +11,7 @@ Game Launcher 2.0 – wersja w Go + WebView2 (główny opis: README.md w katalog
 obsługa klawiatury i pada. **Czyta dane wersji Pythona bez konwersji**, więc exe
 można położyć obok `game_launcher.py` w tym samym folderze.
 
-Kod Go jest w folderze `go/` repozytorium (Python zostaje w katalogu głównym).
+Kod Go jest w folderze `go/` repozytorium (kod Pythona usunięty z `main`, dostępny pod tagiem `python-final`).
 
 ### Uruchamianie
 
